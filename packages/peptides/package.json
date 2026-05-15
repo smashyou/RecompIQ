@@ -1,0 +1,23 @@
+{
+  "name": "@peptide/peptides",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./safety": "./src/safety.ts",
+    "./contraindications": "./src/contraindications.ts",
+    "./reconstitution": "./src/reconstitution.ts",
+    "./compounds": "./src/compounds.ts",
+    "./alerts": "./src/alerts.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'no lint configured' && exit 0",
+    "test": "echo 'no tests yet' && exit 0",
+    "build": "echo 'sources consumed directly' && exit 0",
+    "clean": "rm -rf .turbo *.tsbuildinfo"
+  },
+  "dependencies": { "@peptide/shared": "workspace:*", "zod": "^3.24.1" },
+  "devDependencies": { "typescript": "^5.7.3" }
+}

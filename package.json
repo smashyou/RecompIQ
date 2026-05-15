@@ -1,0 +1,35 @@
+{
+  "name": "peptide-agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.27.0",
+  "engines": {
+    "node": ">=20.18.0",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "supabase": "node_modules/.pnpm/supabase@2.98.2/node_modules/supabase/bin/supabase",
+    "db:link": "pnpm supabase link --project-ref hbxdvqjamtutqdvxxgat",
+    "db:push": "pnpm supabase db push",
+    "db:reset": "pnpm supabase db reset",
+    "db:pull": "pnpm supabase db pull"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@vercel/config": "^0.4.0",
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "supabase": "^2.98.2",
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.3"
+  }
+}

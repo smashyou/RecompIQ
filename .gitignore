@@ -1,0 +1,43 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# build output
+.next
+.turbo
+dist
+build
+out
+.tsbuildinfo
+*.tsbuildinfo
+
+# env
+.env
+.env.*
+!.env.example
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+*.log
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+.idea/
+
+# os
+.DS_Store
+Thumbs.db
+
+# testing
+coverage
+.nyc_output
+
+# supabase
+.supabase
+supabase/.temp/
+
+# vercel
+.vercel

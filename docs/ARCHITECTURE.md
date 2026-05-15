@@ -1,0 +1,283 @@
+# Architecture — Peptide Body Recomposition Expert Agent
+
+**Status:** Draft v0.1
+**Date:** 2026-05-14
+
+---
+
+## 1. High-level diagram
+
+```
+                ┌────────────────────────────────────────┐
+                │  Clients                                │
+                │  ┌──────────────┐   ┌──────────────┐    │
+                │  │ Next.js Web  │   │ Expo Mobile  │    │
+                │  └──────┬───────┘   └──────┬───────┘    │
+                └─────────┼──────────────────┼────────────┘
+                          │ HTTPS / JSON     │
+                          ▼                  ▼
+                ┌─────────────────────────────────────────┐
+                │  Vercel (Fluid Compute, Node.js)        │
+                │  ┌─────────────────────────────────────┐│
+                │  │  Next.js Route Handlers /api/*      ││
+                │  │   - auth (Supabase SSR)             ││
+                │  │   - food, peptides, projections     ││
+                │  │   - coach (streaming), vision       ││
+                │  │   - safety alerts (cron)            ││
+                │  └────────┬───────────────────┬────────┘│
+                └───────────┼───────────────────┼─────────┘
+                            │                   │
+              ┌─────────────┘                   └───────────────┐
+              ▼                                                 ▼
+   ┌────────────────────┐               ┌─────────────────────────────┐
+   │ Supabase           │               │ Vercel AI Gateway           │
+   │  - Postgres + RLS  │               │  - anthropic/claude-sonnet  │
+   │  - Auth            │               │  - openai/gpt-4o, gpt-5     │
+   │  - Storage (KMS)   │               │  - google/gemini-2.5-flash  │
+   │  - Realtime (opt)  │               │  - openai/text-embedding-3  │
+   └────────────────────┘               └─────────────────────────────┘
+              ▲                                          ▲
+              │                                          │
+              │             ┌────────────────────────────┘
+              │             ▼
+              │   ┌────────────────────┐
+              │   │ Vercel Blob        │
+              │   │  (food photos,     │
+              │   │   progress photos) │
+              │   └────────────────────┘
+              │
+              ▼
+   ┌──────────────────────────────────────────┐
+   │ External Nutrition APIs                  │
+   │  USDA FDC → Open Food Facts → Nutritionix│
+   └──────────────────────────────────────────┘
+```
+
+## 2. Monorepo layout
+
+```
+.
+├── apps/
+│   ├── web/                   Next.js 15 App Router (primary; hosts API)
+│   │   ├── app/
+│   │   │   ├── (marketing)/   landing, /pricing, /about
+│   │   │   ├── (auth)/        /signin, /signup, /reset
+│   │   │   ├── (app)/         authenticated app shell
+│   │   │   │   ├── dashboard/
+│   │   │   │   ├── log/
+│   │   │   │   ├── coach/
+│   │   │   │   ├── peptides/
+│   │   │   │   ├── food/
+│   │   │   │   ├── workouts/
+│   │   │   │   ├── projections/
+│   │   │   │   └── settings/
+│   │   │   └── api/           Route Handlers
+│   │   ├── components/
+│   │   ├── lib/
+│   │   └── vercel.ts
+│   └── mobile/                Expo (later phase)
+│       ├── app/                Expo Router screens
+│       └── components/
+├── packages/
+│   ├── shared/                Zod schemas, types, enums, constants
+│   │   ├── schemas/
+│   │   ├── enums/
+│   │   ├── errors.ts
+│   │   └── logger.ts
+│   ├── agent/                 AI orchestration
+│   │   ├── gateway.ts         single chokepoint to Vercel AI Gateway
+│   │   ├── coach/             system prompts, tool defs, streaming
+│   │   ├── stacker/           auto-stacker (educational frameworks)
+│   │   ├── vision/            food photo parser (OpenAI/Gemini/Claude)
+│   │   └── rag/               peptide knowledge base + embeddings
+│   ├── projections/           weight projection engine
+│   ├── nutrition/             USDA / OFF / Nutritionix adapters
+│   ├── peptides/              compound DB, evidence levels, safety, alerts
+│   │   ├── compounds.ts
+│   │   ├── evidence.ts
+│   │   ├── contraindications.ts
+│   │   ├── reconstitution.ts
+│   │   ├── safety.ts
+│   │   └── alerts.ts
+│   └── ui/                    cross-platform UI primitives
+├── supabase/                 Supabase CLI managed
+│   ├── config.toml           generated by `supabase init`
+│   ├── migrations/           YYYYMMDDHHMMSS_name.sql (linked to project hbxdvqjamtutqdvxxgat)
+│   └── seed.sql              local-only seed (auto-run by `supabase db reset`)
+├── db/
+│   └── seeds/                custom seeds applied via scripts (e.g., demo_user_a.sql)
+├── docs/                      PRD, ARCH, SCHEMA, API, SCREENS, MILESTONES
+├── .claude/                   Claude agents, commands, settings (excluded)
+├── CLAUDE.md                  Project memory (excluded)
+├── pnpm-workspace.yaml
+├── turbo.json
+└── package.json
+```
+
+## 3. Runtime topology (Vercel)
+
+- **All routes default to `runtime = "nodejs"`.** No Edge runtime — Fluid
+  Compute on Node.js gives full Node API + reuses instances across requests.
+- **Streaming** for `/api/coach/chat` via the AI SDK v6 streaming response.
+- **Crons** (Vercel Crons via `vercel.ts`):
+  - `0 9 * * *` → `/api/cron/daily-insights` — generate per-user insight card
+  - `*/15 * * * *` → `/api/cron/safety-scan` — scan recent logs for alert triggers
+  - `0 3 * * *` → `/api/cron/projection-refresh` — recompute weight projections
+- **Blob**: private bucket, signed URLs (5-minute TTL) only.
+
+## 4. Auth + session
+
+- Supabase Auth, email/password + magic link.
+- SSR via `@supabase/ssr` package in App Router (`createServerClient` per request).
+- A `middleware.ts` at the project root refreshes the session cookie on every
+  request — does NOT block routes (auth checks happen at the segment layout
+  layer, e.g. `(app)/layout.tsx` redirects to `/signin` if no user).
+- All API routes call `await getServerUser()` (helper) which throws a typed
+  `UnauthorizedError` → caught by `error.tsx`.
+
+## 5. Data flow — daily logging
+
+```
+User logs weight (262 lb)
+    │
+    ▼
+POST /api/log/weight  ── Zod validate ──► supabase.insert(weights, ...)
+    │
+    ├──► trigger:  alerts.ts evaluate  (rapid-loss check)
+    │
+    └──► projections.recompute(user_id)  (idempotent)
+                                  │
+                                  ▼
+                       weights_projection.upsert(...)
+                                  │
+                                  ▼
+                       Dashboard fetches latest projection
+```
+
+## 6. Data flow — AI coach (streaming chat)
+
+```
+User types: "I had 8oz chicken and rice for dinner — what should I aim for tomorrow?"
+    │
+    ▼
+POST /api/coach/chat (streaming)
+    │
+    ├──► load user context (profile, last 14d logs, active peptides)
+    ├──► load relevant evidence (RAG hits from peptide_kb)
+    ├──► build system prompt (non-prescribing guardrails inline)
+    └──► gateway.streamText({
+              model: "anthropic/claude-sonnet-4-6",
+              system: COACH_SYSTEM_PROMPT,
+              tools: { logFood, recommendLab, flagSafety }
+          })
+    │
+    ▼
+Stream tokens → client (RSC stream via AI SDK useChat)
+    │
+    ▼
+On finish: persist ai_messages row, run safety post-check
+```
+
+## 7. Data flow — photo food logging
+
+```
+User snaps photo
+    │
+    ▼
+POST /api/food/photo/upload  ── multipart ──► Vercel Blob (private)
+    │
+    ▼ (returns signed url + asset_id)
+POST /api/food/photo/parse { asset_id, provider }
+    │
+    ▼
+gateway.generateObject({
+    model: chosen vision model,
+    schema: foodPhotoSchema (Zod),
+    messages: [{ role: "user", content: [text, image_url] }]
+})
+    │
+    ▼
+For each item:  nutrition.lookup(name)  (USDA → OFF → Nutritionix)
+    │
+    ▼
+Return draft food log to client for user confirmation
+    │
+    ▼ user confirms
+POST /api/food/log → insert
+```
+
+## 8. AI provider routing (Vercel AI Gateway)
+
+A single helper `packages/agent/gateway.ts`:
+
+```ts
+import { gateway } from "@ai-sdk/gateway";
+
+export const models = {
+  coachDefault: "anthropic/claude-sonnet-4-6",
+  coachFallback: "openai/gpt-5",
+  coachLite: "anthropic/claude-haiku-4-5",
+  visionOpenAI: "openai/gpt-4o",
+  visionGemini: "google/gemini-2.5-flash",
+  visionClaude: "anthropic/claude-sonnet-4-6",
+  embed: "openai/text-embedding-3-small",
+} as const;
+```
+
+All chat/vision/embed calls go through this file. Direct provider SDK imports
+are banned by ESLint rule (custom no-restricted-imports config).
+
+## 9. RAG (peptide knowledge base)
+
+- `peptide_kb` table: `(id, compound, section, text, source_url, evidence_level, embedding vector(1536))`.
+- Seeded from FDA labels + curated PubMed abstracts + ADA/AHA guideline excerpts.
+- Retrieval: `pgvector` cosine-similarity, top-k=6, filtered by compound when known.
+- Used in coach prompts as a `<context>` block; sources also surfaced as
+  citation chips in the UI.
+
+## 10. Security model
+
+| Surface | Control |
+|---|---|
+| Database | RLS on every user-scoped table; service role only on the server. |
+| Storage | Vercel Blob private bucket; signed URLs only. |
+| Secrets | Vercel env vars; never committed; `vercel env pull` for local dev. |
+| AI prompts | Coach system prompt forbids dose emission; safety post-check on every response. |
+| PII in logs | `redactedLogger` masks weight, glucose, lab values, dose. |
+| Audit | `audit_log` table on `peptide_doses`, `health_metrics`, `ai_messages`, `safety_alerts`. |
+| Account deletion | `DELETE /api/me` cascades through Postgres + Blob; 30-day soft-delete grace. |
+
+## 11. Observability
+
+- **Vercel Analytics** for client perf + web vitals.
+- **Vercel Logs** for server logs (redacted PII).
+- **Sentry** for client + server errors (free tier sufficient for solo MVP).
+- **AI Gateway dashboard** for token / cost / latency by route.
+
+## 12. Local development
+
+```
+pnpm install
+cp .env.example .env.local         # populate Supabase + AI Gateway keys
+pnpm supabase start                # local Postgres + Studio
+pnpm --filter @app/db migrate
+pnpm --filter @app/db seed:demo
+pnpm dev                           # turbo runs web + mobile
+```
+
+## 13. Deployment
+
+- **Web**: `vercel deploy` (or auto via git push to `main`).
+- **Mobile**: Expo EAS Build (later phase).
+- **DB**: Supabase managed Postgres (free tier ok for MVP).
+- **Domain**: TBD — owner to pick.
+
+## 14. Risks + mitigations
+
+| Risk | Mitigation |
+|---|---|
+| LLM emits a dose | Guarded system prompt + post-response safety regex + safety-reviewer agent |
+| Vision misidentifies food → wrong macros | Always require user confirmation before save |
+| Projections oversold as predictions | Always show 3 lines + "projection, not prediction" footnote |
+| Demo data leaked to real users | `is_demo = true` flag enforced via RLS predicate |
+| Vendor lock-in (Vercel) | Architecture works on any Node host; only `vercel.ts` + Blob bind us |
