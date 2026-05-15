@@ -6,6 +6,7 @@ import { ProjectionCard } from "./cards/projection-card";
 import { VitalsCard } from "./cards/vitals-card";
 import { SymptomsCard } from "./cards/symptoms-card";
 import { ActivityCard } from "./cards/activity-card";
+import { MacrosCard } from "./cards/macros-card";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +32,8 @@ export default async function DashboardPage() {
         <VitalsCard snapshot={snapshot} />
         <SymptomsCard snapshot={snapshot} />
         <ActivityCard snapshot={snapshot} />
+        <MacrosCard snapshot={snapshot} macros={snapshot.macrosToday} />
 
-        <Card title="Today's macros" hint="Phase 4">
-          <ComingSoon phase={4} />
-        </Card>
         <Card title="Peptide adherence" hint="Phase 6">
           <ComingSoon phase={6} />
         </Card>

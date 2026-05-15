@@ -30,13 +30,19 @@ export interface DashboardSnapshot {
   } | null;
   todaySteps: number | null;
   todaySleepMin: number | null;
+  macrosToday: {
+    calories_kcal: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+  };
 }
 
 export async function loadDashboard(userId: string): Promise<DashboardSnapshot> {
   const supabase = await createSupabaseServerClient();
   const today = new Date().toISOString().slice(0, 10);
 
-  const [profile, goal, weights, latestVital, latestSymptom, todaySteps, todaySleep] =
+  const [profile, goal, weights, latestVital, latestSymptom, todaySteps, todaySleep, todayFoods] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -84,6 +90,12 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         .eq("user_id", userId)
         .eq("night_of", today)
         .maybeSingle(),
+      supabase
+        .from("food_logs")
+        .select("calories_kcal,protein_g,carbs_g,fat_g")
+        .eq("user_id", userId)
+        .gte("logged_at", `${today}T00:00:00`)
+        .lte("logged_at", `${today}T23:59:59.999`),
     ]);
 
   const weightSeries = (weights.data ?? []).map((w) => ({
@@ -131,6 +143,15 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
       : null,
     todaySteps: todaySteps.data?.count ?? null,
     todaySleepMin: todaySleep.data?.duration_min ?? null,
+    macrosToday: (todayFoods.data ?? []).reduce(
+      (acc, row) => ({
+        calories_kcal: acc.calories_kcal + Number(row.calories_kcal),
+        protein_g: acc.protein_g + Number(row.protein_g),
+        carbs_g: acc.carbs_g + Number(row.carbs_g),
+        fat_g: acc.fat_g + Number(row.fat_g),
+      }),
+      { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+    ),
   };
 }
 

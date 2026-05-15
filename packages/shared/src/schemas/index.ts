@@ -3,6 +3,7 @@ import { SEX, UNIT_LENGTH, UNIT_WEIGHT, GOAL_PHASE } from "../enums/index";
 
 export * from "./onboarding/index";
 export * from "./logging/index";
+export * from "./food/index";
 
 export const profileSchema = z.object({
   id: z.string().uuid().optional(),

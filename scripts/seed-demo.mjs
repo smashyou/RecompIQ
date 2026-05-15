@@ -175,8 +175,36 @@ function jitter(amp) {
   return (Math.random() - 0.5) * amp;
 }
 
+// Three-meal templates aiming roughly at 170 g protein, 2000 kcal/day for Demo User A.
+// Values are per portion (already scaled), so we just insert them.
+const MEAL_TEMPLATES = {
+  breakfast: [
+    { description: "Greek yogurt + berries + oats", amount: 1, unit: "serving", kcal: 410, p: 38, c: 52, f: 8 },
+    { description: "Egg whites + 2 whole eggs + avocado", amount: 1, unit: "serving", kcal: 380, p: 36, c: 8, f: 22 },
+    { description: "Cottage cheese + pineapple", amount: 1, unit: "serving", kcal: 290, p: 32, c: 24, f: 6 },
+  ],
+  lunch: [
+    { description: "Grilled chicken breast (6 oz) + rice + broccoli", amount: 1, unit: "serving", kcal: 540, p: 58, c: 62, f: 8 },
+    { description: "Turkey & avocado wrap", amount: 1, unit: "serving", kcal: 470, p: 42, c: 38, f: 16 },
+    { description: "Salmon (5 oz) + quinoa + asparagus", amount: 1, unit: "serving", kcal: 520, p: 46, c: 44, f: 16 },
+  ],
+  dinner: [
+    { description: "Lean ground beef (5 oz) + sweet potato + green beans", amount: 1, unit: "serving", kcal: 580, p: 48, c: 58, f: 18 },
+    { description: "Shrimp stir-fry over cauliflower rice", amount: 1, unit: "serving", kcal: 420, p: 44, c: 22, f: 16 },
+    { description: "Chicken thigh + brown rice + roasted veg", amount: 1, unit: "serving", kcal: 600, p: 50, c: 60, f: 18 },
+  ],
+};
+
 async function seedLogs(uid) {
-  for (const t of ["weights", "vitals", "symptoms", "sleep_logs", "water_logs", "steps_logs"]) {
+  for (const t of [
+    "weights",
+    "vitals",
+    "symptoms",
+    "sleep_logs",
+    "water_logs",
+    "steps_logs",
+    "food_logs",
+  ]) {
     await del(t, `user_id=eq.${uid}&is_demo=eq.true`);
   }
   const today = new Date();
@@ -187,7 +215,7 @@ async function seedLogs(uid) {
     return x.toISOString();
   };
 
-  const weights = [], vitals = [], symptoms = [], sleep = [], steps = [];
+  const weights = [], vitals = [], symptoms = [], sleep = [], steps = [], foods = [];
   for (let dAgo = 0; dAgo <= 13; dAgo++) {
     const d = new Date(today);
     d.setDate(today.getDate() - dAgo);
@@ -235,6 +263,32 @@ async function seedLogs(uid) {
       source: "manual",
       is_demo: true,
     });
+
+    // 3 meals/day, rotating through templates so the dashboard looks lived-in.
+    for (const [mealType, time] of [
+      ["breakfast", [7, 45]],
+      ["lunch", [12, 30]],
+      ["dinner", [19, 0]],
+    ]) {
+      const templates = MEAL_TEMPLATES[mealType];
+      const pick = templates[(dAgo + mealType.length) % templates.length];
+      foods.push({
+        user_id: uid,
+        description: pick.description,
+        brand: null,
+        source: "custom",
+        source_id: null,
+        amount: pick.amount,
+        unit: pick.unit,
+        calories_kcal: pick.kcal,
+        protein_g: pick.p,
+        carbs_g: pick.c,
+        fat_g: pick.f,
+        meal_type: mealType,
+        logged_at: atTime(d, time[0], time[1]),
+        is_demo: true,
+      });
+    }
   }
 
   await insert("weights", weights);
@@ -242,7 +296,10 @@ async function seedLogs(uid) {
   await insert("symptoms", symptoms);
   await insert("sleep_logs", sleep);
   await insert("steps_logs", steps);
-  console.log(`✓ 14 days × 5 log types (${weights.length + vitals.length + symptoms.length + sleep.length + steps.length} rows)`);
+  await insert("food_logs", foods);
+  console.log(
+    `✓ 14 days × 6 log types (${weights.length + vitals.length + symptoms.length + sleep.length + steps.length + foods.length} rows)`,
+  );
 }
 
 // ---------- run ----------
