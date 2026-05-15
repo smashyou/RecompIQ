@@ -1,5 +1,18 @@
-import { naiveProjection, type DashboardSnapshot } from "@/lib/queries/dashboard";
+import Link from "next/link";
+import { buildProjection } from "@peptide/projections";
+import type { DashboardSnapshot } from "@/lib/queries/dashboard";
 import { Card, Empty } from "./card";
+
+const ADHERENCE: Record<
+  string,
+  { label: string; tone: "good" | "warn" | "neutral" }
+> = {
+  ahead: { label: "Ahead", tone: "good" },
+  "on-target": { label: "On target", tone: "good" },
+  behind: { label: "Behind", tone: "warn" },
+  stalled: { label: "Stalled", tone: "warn" },
+  "insufficient-data": { label: "Need data", tone: "neutral" },
+};
 
 export function ProjectionCard({ snapshot }: { snapshot: DashboardSnapshot }) {
   const { weightSeries, goal, latestWeight } = snapshot;
@@ -10,50 +23,73 @@ export function ProjectionCard({ snapshot }: { snapshot: DashboardSnapshot }) {
       </Card>
     );
   }
-  const { etaWeeks, weeklyLossLb } = naiveProjection(
-    weightSeries,
-    goal.goal_weight_lb_min,
-    goal.goal_weight_lb_max,
-  );
-  const etaDate =
-    etaWeeks !== null
-      ? new Date(Date.now() + etaWeeks * 7 * 24 * 3600 * 1000).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : null;
+  const projection = buildProjection({
+    weights: weightSeries,
+    startWeightLb: goal.start_weight_lb,
+    goalWeightLbMin: goal.goal_weight_lb_min,
+    goalWeightLbMax: goal.goal_weight_lb_max,
+    timelineWeeks: goal.timeline_weeks,
+  });
+  if (!projection) {
+    return (
+      <Card title="Projection" hint="ETA">
+        <Empty>Log a few weigh-ins to start projecting.</Empty>
+      </Card>
+    );
+  }
+
+  const target = projection.series.target;
+  const adherence = ADHERENCE[projection.adherence]!;
+  const trend = projection.weeklyTrendLb;
 
   return (
-    <Card title="Projection" hint="naive linear">
-      {etaWeeks === null ? (
-        <Empty>Need more weigh-ins (≥4) or a downward trend to project.</Empty>
-      ) : (
-        <div className="space-y-3">
+    <Card title="Projection" hint={`Target ${target.lbsPerWeek} lb/wk`}>
+      <div className="space-y-3">
+        <div className="flex items-baseline justify-between gap-3">
           <p className="text-3xl font-semibold tabular-nums">
-            ~{etaWeeks}
+            {target.etaWeeks !== null ? `~${target.etaWeeks}` : "—"}
             <span className="ml-1 text-sm font-normal text-[var(--color-muted-foreground)]">
-              weeks to target band
+              wk to target
             </span>
           </p>
-          <dl className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <dt className="text-[var(--color-muted-foreground)]">Weekly trend</dt>
-              <dd className="tabular-nums">
-                −{weeklyLossLb !== null ? weeklyLossLb.toFixed(2) : "—"} lb
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[var(--color-muted-foreground)]">Est. arrival</dt>
-              <dd className="tabular-nums">{etaDate ?? "—"}</dd>
-            </div>
-          </dl>
-          <p className="rounded-md border border-[var(--color-border)] bg-[var(--color-muted)] p-2 text-[10px] leading-relaxed text-[var(--color-muted-foreground)]">
-            Projection, not prediction. Real progress is non-linear. Curve-based modeling lands in
-            Phase 5.
-          </p>
+          <span
+            className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+              adherence.tone === "good"
+                ? "border-[var(--color-accent)] text-[var(--color-accent)]"
+                : adherence.tone === "warn"
+                  ? "border-[var(--color-destructive)] text-[var(--color-destructive)]"
+                  : "border-[var(--color-border)] text-[var(--color-muted-foreground)]"
+            }`}
+          >
+            {adherence.label}
+          </span>
         </div>
-      )}
+        <dl className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <dt className="text-[var(--color-muted-foreground)]">Trend (14d)</dt>
+            <dd className="tabular-nums">
+              {trend !== null ? `−${trend.toFixed(2)} lb/wk` : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[var(--color-muted-foreground)]">Target ETA</dt>
+            <dd className="tabular-nums">
+              {target.etaDate
+                ? new Date(target.etaDate).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })
+                : "—"}
+            </dd>
+          </div>
+        </dl>
+        <Link
+          href="/projections"
+          className="text-xs text-[var(--color-muted-foreground)] underline-offset-2 hover:underline"
+        >
+          See full chart →
+        </Link>
+      </div>
     </Card>
   );
 }

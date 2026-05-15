@@ -155,25 +155,4 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
   };
 }
 
-// Tiny linear projection: use most recent 14d slope, project forward to target band.
-export function naiveProjection(
-  series: { logged_at: string; value_lb: number }[],
-  goalMin: number,
-  goalMax: number,
-): { etaWeeks: number | null; weeklyLossLb: number | null } {
-  if (series.length < 4) return { etaWeeks: null, weeklyLossLb: null };
-  const recent = series.slice(-14);
-  const first = recent[0]!;
-  const last = recent[recent.length - 1]!;
-  const daysSpan =
-    (new Date(last.logged_at).getTime() - new Date(first.logged_at).getTime()) /
-    (1000 * 60 * 60 * 24);
-  if (daysSpan < 1) return { etaWeeks: null, weeklyLossLb: null };
-  const totalChange = first.value_lb - last.value_lb; // positive = losing
-  const weeklyLossLb = (totalChange / daysSpan) * 7;
-  if (weeklyLossLb <= 0) return { etaWeeks: null, weeklyLossLb };
-  const targetMid = (goalMin + goalMax) / 2;
-  if (last.value_lb <= goalMax) return { etaWeeks: 0, weeklyLossLb };
-  const lbsToGo = last.value_lb - targetMid;
-  return { etaWeeks: Math.ceil(lbsToGo / weeklyLossLb), weeklyLossLb };
-}
+// naiveProjection removed — use buildProjection from @peptide/projections instead.
