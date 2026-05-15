@@ -74,7 +74,7 @@
 │   │   │   └── api/           Route Handlers
 │   │   ├── components/
 │   │   ├── lib/
-│   │   └── vercel.ts
+│   │   └── vercel.json
 │   └── mobile/                Expo (later phase)
 │       ├── app/                Expo Router screens
 │       └── components/
@@ -119,7 +119,7 @@
 - **All routes default to `runtime = "nodejs"`.** No Edge runtime — Fluid
   Compute on Node.js gives full Node API + reuses instances across requests.
 - **Streaming** for `/api/coach/chat` via the AI SDK v6 streaming response.
-- **Crons** (Vercel Crons via `vercel.ts`):
+- **Crons** (Vercel Crons via `apps/web/vercel.json`):
   - `0 9 * * *` → `/api/cron/daily-insights` — generate per-user insight card
   - `*/15 * * * *` → `/api/cron/safety-scan` — scan recent logs for alert triggers
   - `0 3 * * *` → `/api/cron/projection-refresh` — recompute weight projections
@@ -280,4 +280,4 @@ pnpm dev                           # turbo runs web + mobile
 | Vision misidentifies food → wrong macros | Always require user confirmation before save |
 | Projections oversold as predictions | Always show 3 lines + "projection, not prediction" footnote |
 | Demo data leaked to real users | `is_demo = true` flag enforced via RLS predicate |
-| Vendor lock-in (Vercel) | Architecture works on any Node host; only `vercel.ts` + Blob bind us |
+| Vendor lock-in (Vercel) | Architecture works on any Node host; only `apps/web/vercel.json` + Blob bind us |

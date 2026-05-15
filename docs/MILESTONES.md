@@ -16,7 +16,7 @@ phases land on `main`; feature branches optional (solo).
 - [ ] `pnpm` workspace + Turborepo
 - [ ] `apps/web` (Next.js 15 App Router) scaffolded with Tailwind v4 + shadcn/ui
 - [ ] `packages/{shared,ui,agent,projections,nutrition,peptides}` empty workspaces with TS configs
-- [ ] `vercel.ts` configured (no `vercel.json`)
+- [x] `apps/web/vercel.json` configured; rootDirectory = `apps/web` on the Vercel project
 - [ ] Supabase project provisioned; local dev via `supabase start`
 - [x] `supabase/migrations/20260514000000_init.sql` applied to remote (profiles + enums + RLS)
 - [ ] Supabase Auth wired with `@supabase/ssr`
