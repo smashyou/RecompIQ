@@ -14,6 +14,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { getServerUser } from "@/lib/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Sidebar, type SidebarItem } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 
@@ -33,6 +34,14 @@ const items: SidebarItem[] = [
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await getServerUser();
   if (!user) redirect("/signin");
+
+  const supabase = await createSupabaseServerClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarding_done")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!profile?.onboarding_done) redirect("/onboarding");
 
   return (
     <div className="flex min-h-screen">

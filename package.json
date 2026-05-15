@@ -21,7 +21,8 @@
     "db:link": "pnpm supabase link --project-ref hbxdvqjamtutqdvxxgat",
     "db:push": "pnpm supabase db push",
     "db:reset": "pnpm supabase db reset",
-    "db:pull": "pnpm supabase db pull"
+    "db:pull": "pnpm supabase db pull",
+    "db:seed:demo": "node scripts/seed-demo.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

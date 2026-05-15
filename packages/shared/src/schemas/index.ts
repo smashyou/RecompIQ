@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { SEX, UNIT_LENGTH, UNIT_WEIGHT, GOAL_PHASE } from "../enums/index";
 
+export * from "./onboarding/index";
+
 export const profileSchema = z.object({
   id: z.string().uuid().optional(),
   user_id: z.string().uuid(),
