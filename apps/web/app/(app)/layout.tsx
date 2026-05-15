@@ -17,6 +17,7 @@ import { getServerUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Sidebar, type SidebarItem } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
+import { ToastProvider } from "@/components/ui/toast";
 
 const items: SidebarItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -44,15 +45,17 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   if (!profile?.onboarding_done) redirect("/onboarding");
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar
-        items={items}
-        brand={{ href: "/dashboard", label: "Peptide Agent", icon: Activity }}
-      />
-      <div className="flex flex-1 flex-col">
-        <Topbar email={user.email ?? ""} />
-        <main className="flex-1 px-6 py-6">{children}</main>
+    <ToastProvider>
+      <div className="flex min-h-screen">
+        <Sidebar
+          items={items}
+          brand={{ href: "/dashboard", label: "Peptide Agent", icon: Activity }}
+        />
+        <div className="flex flex-1 flex-col">
+          <Topbar email={user.email ?? ""} />
+          <main className="flex-1 px-6 py-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </ToastProvider>
   );
 }
