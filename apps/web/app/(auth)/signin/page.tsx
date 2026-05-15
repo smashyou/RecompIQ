@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +18,18 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SigninPage() {
+  return (
+    <Suspense fallback={null}>
+      <SigninForm />
+    </Suspense>
+  );
+}
+
+function SigninForm() {
   const router = useRouter();
+  const params = useSearchParams();
+  const nextRaw = params.get("next");
+  const next = nextRaw && nextRaw.startsWith("/") ? nextRaw : "/dashboard";
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -34,7 +45,7 @@ export default function SigninPage() {
       setServerError(error.message);
       return;
     }
-    router.push("/dashboard");
+    router.push(next);
     router.refresh();
   }
 

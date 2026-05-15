@@ -1,12 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { goalStepSchema, type GoalStep } from "@peptide/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+// Protein recommendation: 0.6 g/lb (low) to 0.8 g/lb (high) of starting weight.
+// Bounded by Zod (20–400 g/day) so extreme inputs don't break submission.
+function clampProtein(g: number) {
+  return Math.min(400, Math.max(20, Math.round(g)));
+}
+function proteinFromStartWeight(lb: number) {
+  return {
+    low: clampProtein(lb * 0.6),
+    high: clampProtein(lb * 0.8),
+  };
+}
 
 export function GoalStepForm({
   initial,
@@ -18,23 +31,54 @@ export function GoalStepForm({
   onSaved: () => void;
   onBack: () => void;
 }) {
+  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const initialStart = (initial?.["start_weight_lb"] as number) ?? 200;
+  const initialProtein =
+    initial?.["protein_target_g_min"] !== undefined
+      ? {
+          low: initial["protein_target_g_min"] as number,
+          high: initial["protein_target_g_max"] as number,
+        }
+      : proteinFromStartWeight(initialStart);
+
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<GoalStep>({
     resolver: zodResolver(goalStepSchema),
     defaultValues: {
-      start_weight_lb: (initial?.["start_weight_lb"] as number) ?? 200,
+      start_weight_lb: initialStart,
       goal_weight_lb_min: (initial?.["goal_weight_lb_min"] as number) ?? 180,
       goal_weight_lb_max: (initial?.["goal_weight_lb_max"] as number) ?? 190,
       timeline_weeks: (initial?.["timeline_weeks"] as number) ?? 26,
       phase: (initial?.["phase"] as GoalStep["phase"]) ?? "P1",
-      protein_target_g_min: (initial?.["protein_target_g_min"] as number) ?? 140,
-      protein_target_g_max: (initial?.["protein_target_g_max"] as number) ?? 170,
+      protein_target_g_min: initialProtein.low,
+      protein_target_g_max: initialProtein.high,
     },
   });
+
+  const start = watch("start_weight_lb");
+  const proteinLow = watch("protein_target_g_min");
+  const proteinHigh = watch("protein_target_g_max");
+
+  function handleStartWeightChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.valueAsNumber;
+    if (!isNaN(v) && v > 0) {
+      const { low, high } = proteinFromStartWeight(v);
+      setValue("protein_target_g_min", low, { shouldValidate: true });
+      setValue("protein_target_g_max", high, { shouldValidate: true });
+    }
+  }
+
+  const proteinMatchesFormula =
+    !isNaN(start) &&
+    start > 0 &&
+    proteinLow === proteinFromStartWeight(start).low &&
+    proteinHigh === proteinFromStartWeight(start).high;
 
   async function onSubmit(values: GoalStep) {
     setServerError(null);
@@ -42,7 +86,13 @@ export function GoalStepForm({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
+      credentials: "same-origin",
     });
+    if (res.status === 401) {
+      router.replace("/signin?next=/onboarding");
+      router.refresh();
+      return;
+    }
     if (!res.ok) {
       const body = (await res.json()) as { error?: { message?: string } };
       setServerError(body.error?.message ?? "Could not save goal");
@@ -70,7 +120,10 @@ export function GoalStepForm({
           id="start_weight_lb"
           type="number"
           step="0.1"
-          {...register("start_weight_lb", { valueAsNumber: true })}
+          {...register("start_weight_lb", {
+            valueAsNumber: true,
+            onChange: handleStartWeightChange,
+          })}
         />
         {errors.start_weight_lb && (
           <p className="text-xs text-[var(--color-destructive)]">
@@ -122,33 +175,47 @@ export function GoalStepForm({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="protein_target_g_min">Protein target (g/day) — low</Label>
-          <Input
-            id="protein_target_g_min"
-            type="number"
-            {...register("protein_target_g_min", { valueAsNumber: true })}
-          />
-          {errors.protein_target_g_min && (
-            <p className="text-xs text-[var(--color-destructive)]">
-              {errors.protein_target_g_min.message}
-            </p>
-          )}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>Protein target (g/day)</Label>
+          <span className="text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
+            {proteinMatchesFormula
+              ? "Auto · 0.6–0.8 g/lb"
+              : "Custom"}
+          </span>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="protein_target_g_max">Protein target (g/day) — high</Label>
-          <Input
-            id="protein_target_g_max"
-            type="number"
-            {...register("protein_target_g_max", { valueAsNumber: true })}
-          />
-          {errors.protein_target_g_max && (
-            <p className="text-xs text-[var(--color-destructive)]">
-              {errors.protein_target_g_max.message}
-            </p>
-          )}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Input
+              id="protein_target_g_min"
+              type="number"
+              {...register("protein_target_g_min", { valueAsNumber: true })}
+            />
+            <p className="text-[10px] text-[var(--color-muted-foreground)]">Low</p>
+            {errors.protein_target_g_min && (
+              <p className="text-xs text-[var(--color-destructive)]">
+                {errors.protein_target_g_min.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <Input
+              id="protein_target_g_max"
+              type="number"
+              {...register("protein_target_g_max", { valueAsNumber: true })}
+            />
+            <p className="text-[10px] text-[var(--color-muted-foreground)]">High</p>
+            {errors.protein_target_g_max && (
+              <p className="text-xs text-[var(--color-destructive)]">
+                {errors.protein_target_g_max.message}
+              </p>
+            )}
+          </div>
         </div>
+        <p className="text-[11px] text-[var(--color-muted-foreground)]">
+          Auto-calculated from starting weight (0.6–0.8 g/lb body weight). Edit if your clinician
+          recommends a different target.
+        </p>
       </div>
 
       {serverError && <p className="text-xs text-[var(--color-destructive)]">{serverError}</p>}
