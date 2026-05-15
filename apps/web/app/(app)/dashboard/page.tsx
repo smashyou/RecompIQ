@@ -1,37 +1,52 @@
 import { requireUser } from "@/lib/auth";
+import { loadDashboard } from "@/lib/queries/dashboard";
+import { Card, ComingSoon } from "./cards/card";
+import { WeightCard } from "./cards/weight-card";
+import { ProjectionCard } from "./cards/projection-card";
+import { VitalsCard } from "./cards/vitals-card";
+import { SymptomsCard } from "./cards/symptoms-card";
+import { ActivityCard } from "./cards/activity-card";
+
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  const snapshot = await loadDashboard(user.id);
+  const name = snapshot.profile?.display_name ?? user.email ?? "there";
+
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+      <header className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {name}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          Signed in as {user.email}. Dashboard cards arrive in Phase 2.
+          {snapshot.profile?.is_demo
+            ? "Viewing the demo profile — values are illustrative."
+            : "Educational tracking. Not medical advice."}
         </p>
-      </div>
+      </header>
+
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[
-          "Weight",
-          "Projection",
-          "Today's macros",
-          "Vitals",
-          "Peptide adherence",
-          "Symptoms",
-          "AI insight",
-          "Safety alerts",
-          "Today's workout",
-        ].map((title) => (
-          <div
-            key={title}
-            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5"
-          >
-            <p className="text-sm font-medium">{title}</p>
-            <p className="mt-2 text-xs text-[var(--color-muted-foreground)]">
-              No data yet — empty state.
-            </p>
-          </div>
-        ))}
+        <WeightCard snapshot={snapshot} />
+        <ProjectionCard snapshot={snapshot} />
+        <VitalsCard snapshot={snapshot} />
+        <SymptomsCard snapshot={snapshot} />
+        <ActivityCard snapshot={snapshot} />
+
+        <Card title="Today's macros" hint="Phase 4">
+          <ComingSoon phase={4} />
+        </Card>
+        <Card title="Peptide adherence" hint="Phase 6">
+          <ComingSoon phase={6} />
+        </Card>
+        <Card title="Today's workout" hint="Phase 7">
+          <ComingSoon phase={7} />
+        </Card>
+        <Card title="Safety alerts" hint="Phase 8">
+          <ComingSoon phase={8} />
+        </Card>
+        <Card title="AI insight" hint="Phase 9">
+          <ComingSoon phase={9} />
+        </Card>
       </section>
     </div>
   );

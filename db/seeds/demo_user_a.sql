@@ -102,5 +102,74 @@ begin
     (v_user_id, 'L foot weakness',             'Cannot do single-leg jumps or balance work on left foot.',          true, true),
     (v_user_id, 'Deconditioned',               'Currently not lifting. P1 is walking + mobility + bands.',          true, true);
 
+  -- 8. 14 days of logs — weights 265 → ~261 (~2 lb/week loss) with realistic noise.
+  --    Vitals trend gently downward on glucose + BP. Symptoms mostly stable.
+  delete from public.weights    where user_id = v_user_id and is_demo;
+  delete from public.vitals     where user_id = v_user_id and is_demo;
+  delete from public.symptoms   where user_id = v_user_id and is_demo;
+  delete from public.sleep_logs where user_id = v_user_id and is_demo;
+  delete from public.water_logs where user_id = v_user_id and is_demo;
+  delete from public.steps_logs where user_id = v_user_id and is_demo;
+
+  insert into public.weights (user_id, value_lb, logged_at, source, is_demo)
+  select
+    v_user_id,
+    265 - (13 - d_ago) * 0.30 + (random() - 0.5) * 0.6,
+    (current_date - d_ago) + time '07:30',
+    'manual',
+    true
+  from generate_series(0, 13) as d_ago;
+
+  insert into public.vitals (
+    user_id, logged_at, bp_systolic, bp_diastolic, hr, glucose_mgdl, is_demo
+  )
+  select
+    v_user_id,
+    (current_date - d_ago) + time '07:35',
+    138 - floor((13 - d_ago) * 0.2)::int + floor(random() * 4)::int,
+    86  - floor((13 - d_ago) * 0.1)::int + floor(random() * 3)::int,
+    74 + floor(random() * 8)::int,
+    155 - (13 - d_ago) * 1.0 + (random() - 0.5) * 8,
+    true
+  from generate_series(0, 13) as d_ago;
+
+  insert into public.symptoms (
+    user_id, logged_at, mood, energy, pain, appetite,
+    nausea, reflux, constipation, neuro_note, is_demo
+  )
+  select
+    v_user_id,
+    (current_date - d_ago) + time '20:00',
+    3 + floor(random() * 2)::int,
+    3 + floor(random() * 2)::int,
+    2 + floor(random() * 3)::int,
+    case when d_ago > 10 then 2 else 3 end,
+    case when d_ago between 10 and 13 then true else false end,
+    false,
+    false,
+    case when random() < 0.3 then 'L foot tingling on long walks' else null end,
+    true
+  from generate_series(0, 13) as d_ago;
+
+  insert into public.sleep_logs (
+    user_id, night_of, duration_min, quality, is_demo
+  )
+  select
+    v_user_id,
+    current_date - d_ago,
+    ((6.5 + random() * 2) * 60)::int,
+    2 + floor(random() * 3)::int,
+    true
+  from generate_series(0, 13) as d_ago;
+
+  insert into public.steps_logs (user_id, day, count, source, is_demo)
+  select
+    v_user_id,
+    current_date - d_ago,
+    4000 + floor(random() * 3500)::int,
+    'manual',
+    true
+  from generate_series(0, 13) as d_ago;
+
   raise notice 'Demo User A seeded. Sign in with % / %', v_email, v_pwd;
 end$$;
