@@ -302,6 +302,97 @@ async function seedLogs(uid) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Demo Phase-1 peptide stack + 14 days of dose history.
+// Dose values are illustrative *user-supplied* numbers — RecompIQ does not prescribe.
+// ---------------------------------------------------------------------------
+const DEMO_STACK_ITEMS = [
+  { slug: "retatrutide", dose_value: 6, dose_unit: "mg", route: "sc", frequency: "weekly" },
+  { slug: "aod-9604",    dose_value: 300, dose_unit: "mcg", route: "sc", frequency: "daily" },
+  { slug: "ghk-cu",      dose_value: 2, dose_unit: "mg", route: "sc", frequency: "daily" },
+  { slug: "bpc-157",     dose_value: 250, dose_unit: "mcg", route: "sc", frequency: "daily" },
+  { slug: "tb-500",      dose_value: 2, dose_unit: "mg", route: "sc", frequency: "weekly" },
+  { slug: "kpv",         dose_value: 500, dose_unit: "mcg", route: "oral", frequency: "daily" },
+];
+
+async function seedPeptideStack(uid) {
+  // 1. Look up compound IDs by slug
+  const compoundsRes = await api(`/rest/v1/compounds?select=id,slug`);
+  const slugToId = new Map(compoundsRes.map((c) => [c.slug, c.id]));
+  for (const it of DEMO_STACK_ITEMS) {
+    if (!slugToId.has(it.slug)) {
+      console.warn(`  skip: compound ${it.slug} not in catalog`);
+    }
+  }
+
+  // 2. Clear any prior demo stacks (cascade deletes items + doses via FK)
+  await del("peptide_stacks", `user_id=eq.${uid}&is_demo=eq.true`);
+  // Doses with stack_item_id will null on cascade, but is_demo flag cleans them too.
+  await del("peptide_doses", `user_id=eq.${uid}&is_demo=eq.true`);
+
+  // 3. Create the Phase-1 stack
+  const stackRow = await api("/rest/v1/peptide_stacks", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({
+      user_id: uid,
+      name: "Phase 1 — fat loss + tissue repair",
+      phase: "P1",
+      started_on: new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10),
+      notes: "Demo data. User-supplied dose values, not prescriptions.",
+      is_active: true,
+      is_demo: true,
+    }),
+  });
+  const stackId = Array.isArray(stackRow) ? stackRow[0].id : stackRow.id;
+
+  // 4. Add stack items
+  const items = DEMO_STACK_ITEMS.filter((it) => slugToId.has(it.slug)).map((it) => ({
+    stack_id: stackId,
+    user_id: uid,
+    compound_id: slugToId.get(it.slug),
+    dose_value: it.dose_value,
+    dose_unit: it.dose_unit,
+    route: it.route,
+    frequency: it.frequency,
+    is_demo: true,
+  }));
+  const itemRows = await api("/rest/v1/peptide_stack_items", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify(items),
+  });
+  const itemByCompound = new Map(itemRows.map((r) => [r.compound_id, r.id]));
+
+  // 5. 14 days of dose history with ~90% adherence
+  const doses = [];
+  const today = new Date();
+  for (let dAgo = 0; dAgo <= 13; dAgo++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - dAgo);
+    for (const it of items) {
+      // Weekly compounds only fire on Mondays-ish (every 7 days from start).
+      const itemDef = DEMO_STACK_ITEMS.find((x) => slugToId.get(x.slug) === it.compound_id);
+      if (itemDef?.frequency === "weekly" && dAgo % 7 !== 0) continue;
+      const skipped = Math.random() < 0.1;
+      doses.push({
+        user_id: uid,
+        stack_item_id: it.id,
+        compound_id: it.compound_id,
+        taken_at: new Date(d.setHours(8, 0, 0, 0)).toISOString(),
+        dose_value: it.dose_value,
+        dose_unit: it.dose_unit,
+        route: it.route,
+        injection_site: it.route === "sc" ? ["abd L", "abd R", "thigh L", "thigh R"][dAgo % 4] : null,
+        adherence: skipped ? "skipped" : "taken",
+        is_demo: true,
+      });
+    }
+  }
+  await insert("peptide_doses", doses);
+  console.log(`✓ peptide stack + ${doses.length} doses`);
+}
+
 // ---------- run ----------
 try {
   const uid = await ensureAuthUser();
@@ -309,6 +400,7 @@ try {
   await seedGoal(uid);
   await seedHealthContext(uid);
   await seedLogs(uid);
+  await seedPeptideStack(uid);
   console.log("");
   console.log("=== Demo User A ready ===");
   console.log(`  email:    ${DEMO_EMAIL}`);

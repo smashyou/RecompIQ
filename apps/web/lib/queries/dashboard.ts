@@ -36,14 +36,29 @@ export interface DashboardSnapshot {
     carbs_g: number;
     fat_g: number;
   };
+  hasActiveStack: boolean;
+  recentDoses: { taken_at: string; adherence: string }[];
 }
 
 export async function loadDashboard(userId: string): Promise<DashboardSnapshot> {
   const supabase = await createSupabaseServerClient();
   const today = new Date().toISOString().slice(0, 10);
 
-  const [profile, goal, weights, latestVital, latestSymptom, todaySteps, todaySleep, todayFoods] =
-    await Promise.all([
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+  const [
+    profile,
+    goal,
+    weights,
+    latestVital,
+    latestSymptom,
+    todaySteps,
+    todaySleep,
+    todayFoods,
+    activeStacks,
+    recentDoses,
+  ] = await Promise.all([
       supabase
         .from("profiles")
         .select("display_name,is_demo")
@@ -96,6 +111,18 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         .eq("user_id", userId)
         .gte("logged_at", `${today}T00:00:00`)
         .lte("logged_at", `${today}T23:59:59.999`),
+      supabase
+        .from("peptide_stacks")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("is_active", true)
+        .limit(1),
+      supabase
+        .from("peptide_doses")
+        .select("taken_at,adherence")
+        .eq("user_id", userId)
+        .gte("taken_at", fourteenDaysAgo.toISOString())
+        .order("taken_at", { ascending: false }),
     ]);
 
   const weightSeries = (weights.data ?? []).map((w) => ({
@@ -152,6 +179,11 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
       }),
       { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
     ),
+    hasActiveStack: (activeStacks.data?.length ?? 0) > 0,
+    recentDoses: (recentDoses.data ?? []).map((d) => ({
+      taken_at: d.taken_at as string,
+      adherence: d.adherence as string,
+    })),
   };
 }
 
