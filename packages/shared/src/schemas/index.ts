@@ -5,6 +5,7 @@ export * from "./onboarding/index";
 export * from "./logging/index";
 export * from "./food/index";
 export * from "./peptide/index";
+export * from "./workout/index";
 
 export const profileSchema = z.object({
   id: z.string().uuid().optional(),

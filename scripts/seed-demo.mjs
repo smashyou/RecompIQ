@@ -393,6 +393,71 @@ async function seedPeptideStack(uid) {
   console.log(`✓ peptide stack + ${doses.length} doses`);
 }
 
+// ---------------------------------------------------------------------------
+// Demo workouts — 6 Phase-1 sessions across 14 days
+// ---------------------------------------------------------------------------
+async function seedWorkouts(uid) {
+  await del("workouts", `user_id=eq.${uid}&is_demo=eq.true`);
+
+  // Pull template exercises so the seeded sessions look complete.
+  const templates = await api(
+    `/rest/v1/workout_templates?phase=eq.P1&select=slug,name,session_type,exercises`,
+  );
+  const tBySlug = new Map(templates.map((t) => [t.slug, t]));
+
+  // Pattern: walk+mobility on Mon/Wed/Fri/Sun; bands on Tue/Sat; mobility-only on Thu.
+  const SCHEDULE = [
+    { dAgo: 13, slug: "p1-walk-mobility", duration: 32, rpe: 4 },
+    { dAgo: 11, slug: "p1-banded-fullbody", duration: 38, rpe: 6 },
+    { dAgo: 9, slug: "p1-walk-mobility", duration: 30, rpe: 4 },
+    { dAgo: 7, slug: "p1-mobility-only", duration: 15, rpe: 3 },
+    { dAgo: 4, slug: "p1-banded-fullbody", duration: 36, rpe: 6 },
+    { dAgo: 2, slug: "p1-walk-mobility", duration: 35, rpe: 4 },
+  ];
+
+  for (const s of SCHEDULE) {
+    const template = tBySlug.get(s.slug);
+    if (!template) continue;
+    const date = new Date();
+    date.setDate(date.getDate() - s.dAgo);
+    const dateIso = date.toISOString().slice(0, 10);
+
+    const workoutRow = await api("/rest/v1/workouts", {
+      method: "POST",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({
+        user_id: uid,
+        session_type: template.session_type,
+        phase: "P1",
+        date: dateIso,
+        duration_min: s.duration,
+        perceived_exertion: s.rpe,
+        template_slug: template.slug,
+        name: template.name,
+        is_demo: true,
+      }),
+    });
+    const workoutId = Array.isArray(workoutRow) ? workoutRow[0].id : workoutRow.id;
+
+    const exerciseRows = (template.exercises ?? []).map((ex, idx) => ({
+      workout_id: workoutId,
+      user_id: uid,
+      order_index: idx,
+      name: ex.name,
+      sets: ex.sets ?? null,
+      reps: ex.reps ?? null,
+      load_lb: null,
+      duration_min: ex.duration_min ?? null,
+      notes: ex.notes ?? null,
+      is_demo: true,
+    }));
+    if (exerciseRows.length > 0) {
+      await insert("workout_exercises", exerciseRows);
+    }
+  }
+  console.log(`✓ ${SCHEDULE.length} Phase-1 workout sessions`);
+}
+
 // ---------- run ----------
 try {
   const uid = await ensureAuthUser();
@@ -401,6 +466,7 @@ try {
   await seedHealthContext(uid);
   await seedLogs(uid);
   await seedPeptideStack(uid);
+  await seedWorkouts(uid);
   console.log("");
   console.log("=== Demo User A ready ===");
   console.log(`  email:    ${DEMO_EMAIL}`);

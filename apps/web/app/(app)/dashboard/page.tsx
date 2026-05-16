@@ -8,6 +8,7 @@ import { SymptomsCard } from "./cards/symptoms-card";
 import { ActivityCard } from "./cards/activity-card";
 import { MacrosCard } from "./cards/macros-card";
 import { AdherenceCard } from "./cards/adherence-card";
+import { WorkoutCard } from "./cards/workout-card";
 
 export const dynamic = "force-dynamic";
 
@@ -38,9 +39,10 @@ export default async function DashboardPage() {
           recentDoses={snapshot.recentDoses}
           hasActiveStack={snapshot.hasActiveStack}
         />
-        <Card title="Today's workout" hint="Phase 7">
-          <ComingSoon phase={7} />
-        </Card>
+        <WorkoutCard
+          todayWorkout={snapshot.todayWorkout}
+          suggestion={snapshot.workoutSuggestion}
+        />
         <Card title="Safety alerts" hint="Phase 8">
           <ComingSoon phase={8} />
         </Card>

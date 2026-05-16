@@ -8,6 +8,7 @@ export interface DashboardSnapshot {
     goal_weight_lb_min: number;
     goal_weight_lb_max: number;
     timeline_weeks: number;
+    phase: string | null;
     protein_target_g_min: number;
     protein_target_g_max: number;
     created_at: string;
@@ -38,6 +39,20 @@ export interface DashboardSnapshot {
   };
   hasActiveStack: boolean;
   recentDoses: { taken_at: string; adherence: string }[];
+  todayWorkout: {
+    id: string;
+    name: string | null;
+    session_type: string;
+    duration_min: number | null;
+    perceived_exertion: number | null;
+    exerciseCount: number;
+  } | null;
+  workoutSuggestion: {
+    slug: string;
+    name: string;
+    phase: string;
+    session_type: string;
+  } | null;
 }
 
 export async function loadDashboard(userId: string): Promise<DashboardSnapshot> {
@@ -58,6 +73,7 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
     todayFoods,
     activeStacks,
     recentDoses,
+    todayWorkoutRow,
   ] = await Promise.all([
       supabase
         .from("profiles")
@@ -67,7 +83,7 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
       supabase
         .from("goals")
         .select(
-          "start_weight_lb,goal_weight_lb_min,goal_weight_lb_max,timeline_weeks,protein_target_g_min,protein_target_g_max,created_at",
+          "start_weight_lb,goal_weight_lb_min,goal_weight_lb_max,timeline_weeks,phase,protein_target_g_min,protein_target_g_max,created_at",
         )
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
@@ -123,6 +139,14 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         .eq("user_id", userId)
         .gte("taken_at", fourteenDaysAgo.toISOString())
         .order("taken_at", { ascending: false }),
+      supabase
+        .from("workouts")
+        .select("id,name,session_type,duration_min,perceived_exertion, workout_exercises(id)")
+        .eq("user_id", userId)
+        .eq("date", today)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
   const weightSeries = (weights.data ?? []).map((w) => ({
@@ -142,6 +166,7 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
           goal_weight_lb_min: Number(goal.data.goal_weight_lb_min),
           goal_weight_lb_max: Number(goal.data.goal_weight_lb_max),
           timeline_weeks: goal.data.timeline_weeks,
+          phase: (goal.data.phase as string | null) ?? null,
           protein_target_g_min: goal.data.protein_target_g_min,
           protein_target_g_max: goal.data.protein_target_g_max,
           created_at: goal.data.created_at,
@@ -184,7 +209,40 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
       taken_at: d.taken_at as string,
       adherence: d.adherence as string,
     })),
+    todayWorkout: todayWorkoutRow.data
+      ? {
+          id: todayWorkoutRow.data.id as string,
+          name: (todayWorkoutRow.data.name as string | null) ?? null,
+          session_type: todayWorkoutRow.data.session_type as string,
+          duration_min: (todayWorkoutRow.data.duration_min as number | null) ?? null,
+          perceived_exertion:
+            (todayWorkoutRow.data.perceived_exertion as number | null) ?? null,
+          exerciseCount:
+            (todayWorkoutRow.data.workout_exercises as { id: string }[] | undefined)?.length ?? 0,
+        }
+      : null,
+    workoutSuggestion: await pickWorkoutSuggestion(supabase, goal.data?.phase ?? "P1"),
   };
+}
+
+async function pickWorkoutSuggestion(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  phase: string,
+) {
+  const { data } = await supabase
+    .from("workout_templates")
+    .select("slug,name,phase,session_type")
+    .eq("phase", phase)
+    .limit(1)
+    .maybeSingle();
+  return data
+    ? {
+        slug: data.slug as string,
+        name: data.name as string,
+        phase: data.phase as string,
+        session_type: data.session_type as string,
+      }
+    : null;
 }
 
 // naiveProjection removed — use buildProjection from @peptide/projections instead.
