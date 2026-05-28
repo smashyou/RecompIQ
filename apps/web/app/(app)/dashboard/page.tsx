@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Camera } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { loadDashboard } from "@/lib/queries/dashboard";
 import { Card, ComingSoon } from "./cards/card";
@@ -27,6 +29,30 @@ export default async function DashboardPage() {
             : "Educational tracking. Not medical advice."}
         </p>
       </header>
+
+      {snapshot.bodyShotReminder && (
+        <Link
+          href="/body-shots/capture"
+          className="flex items-center justify-between gap-3 rounded-xl border border-[var(--color-primary)] bg-[var(--color-card)] p-4 transition-colors hover:bg-[var(--color-muted)]"
+        >
+          <div className="flex items-center gap-3">
+            <Camera className="h-5 w-5 text-[var(--color-primary)]" />
+            <div>
+              <p className="text-sm font-medium">Time for new body shots</p>
+              <p className="text-xs text-[var(--color-muted-foreground)]">
+                {snapshot.bodyShotReminder.lastCapturedAt
+                  ? `Last set was ${Math.floor(
+                      (Date.now() -
+                        new Date(snapshot.bodyShotReminder.lastCapturedAt).getTime()) /
+                        86_400_000,
+                    )} days ago. You're set to capture every ${snapshot.bodyShotReminder.frequencyDays} days.`
+                  : `You haven't taken your first set yet. 4 angles, even lighting.`}
+              </p>
+            </div>
+          </div>
+          <span className="text-xs text-[var(--color-primary)]">Capture →</span>
+        </Link>
+      )}
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <WeightCard snapshot={snapshot} />

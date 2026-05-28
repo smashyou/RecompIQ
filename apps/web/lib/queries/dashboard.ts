@@ -53,6 +53,11 @@ export interface DashboardSnapshot {
     phase: string;
     session_type: string;
   } | null;
+  bodyShotReminder: {
+    daysOverdue: number;
+    lastCapturedAt: string | null;
+    frequencyDays: number;
+  } | null;
 }
 
 export async function loadDashboard(userId: string): Promise<DashboardSnapshot> {
@@ -74,6 +79,8 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
     activeStacks,
     recentDoses,
     todayWorkoutRow,
+    latestBodyShot,
+    userSettings,
   ] = await Promise.all([
       supabase
         .from("profiles")
@@ -146,6 +153,18 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         .eq("date", today)
         .order("created_at", { ascending: false })
         .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("body_photos")
+        .select("captured_at")
+        .eq("user_id", userId)
+        .order("captured_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("user_settings")
+        .select("body_photo_frequency_days")
+        .eq("user_id", userId)
         .maybeSingle(),
     ]);
 
@@ -222,7 +241,27 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         }
       : null,
     workoutSuggestion: await pickWorkoutSuggestion(supabase, goal.data?.phase ?? "P1"),
+    bodyShotReminder: computeBodyShotReminder(
+      latestBodyShot.data?.captured_at as string | null | undefined,
+      userSettings.data?.body_photo_frequency_days as number | null | undefined,
+    ),
   };
+}
+
+function computeBodyShotReminder(
+  lastCapturedAt: string | null | undefined,
+  frequencyDays: number | null | undefined,
+) {
+  const freq = frequencyDays ?? 7;
+  if (freq === 0) return null;
+  if (!lastCapturedAt) {
+    return { daysOverdue: 0, lastCapturedAt: null, frequencyDays: freq };
+  }
+  const lastMs = new Date(lastCapturedAt).getTime();
+  const nextMs = lastMs + freq * 86_400_000;
+  const daysOverdue = Math.max(0, Math.floor((Date.now() - nextMs) / 86_400_000));
+  if (daysOverdue === 0 && Date.now() < nextMs) return null;
+  return { daysOverdue, lastCapturedAt, frequencyDays: freq };
 }
 
 async function pickWorkoutSuggestion(
