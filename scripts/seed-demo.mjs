@@ -112,6 +112,7 @@ async function seedProfile(uid) {
         unit_weight: "lb",
         unit_length: "in",
         is_demo: true,
+        is_admin: true,
         onboarding_done: true,
       },
     ],
