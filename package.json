@@ -18,7 +18,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "supabase": "node_modules/.pnpm/supabase@2.98.2/node_modules/supabase/bin/supabase",
-    "db:link": "pnpm supabase link --project-ref hbxdvqjamtutqdvxxgat",
+    "db:link": "pnpm supabase link --project-ref bvsroawvscgksehmjjnl",
     "db:push": "pnpm supabase db push",
     "db:reset": "pnpm supabase db reset",
     "db:pull": "pnpm supabase db pull",
