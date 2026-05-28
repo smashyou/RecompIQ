@@ -23,6 +23,8 @@
     "db:reset": "pnpm supabase db reset",
     "db:pull": "pnpm supabase db pull",
     "db:seed:demo": "node scripts/seed-demo.mjs",
+    "kb:seed": "node scripts/seed-kb.mjs",
+    "kb:embed": "node scripts/embed-kb.mjs",
     "test:projections": "tsx scripts/test-projections.mjs"
   },
   "devDependencies": {
