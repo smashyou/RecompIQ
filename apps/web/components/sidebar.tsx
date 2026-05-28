@@ -2,33 +2,62 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  Bell,
+  ClipboardList,
+  Dumbbell,
+  FlaskConical,
+  Home,
+  MessageCircle,
+  Settings,
+  Syringe,
+  Utensils,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/cn";
 
-export interface SidebarItem {
+// Sidebar items live inside the client component so we don't ship lucide
+// function references across the server→client boundary (Next 15 forbids it).
+interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
 }
 
-export interface SidebarProps {
-  items: SidebarItem[];
-  brand: { href: string; label: string; icon: LucideIcon };
-}
+const ITEMS: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/coach", label: "Coach", icon: MessageCircle },
+  { href: "/log", label: "Quick log", icon: ClipboardList },
+  { href: "/food", label: "Food", icon: Utensils },
+  { href: "/peptides", label: "Peptides", icon: Syringe },
+  { href: "/workouts", label: "Workouts", icon: Dumbbell },
+  { href: "/projections", label: "Projections", icon: BarChart3 },
+  { href: "/alerts", label: "Alerts", icon: Bell },
+  { href: "/labs", label: "Labs", icon: FlaskConical },
+  { href: "/settings", label: "Settings", icon: Settings },
+];
 
-export function Sidebar({ items, brand }: SidebarProps) {
+const BRAND = {
+  href: "/dashboard",
+  label: "RecompIQ",
+  icon: Activity,
+};
+
+export function Sidebar() {
   const pathname = usePathname();
-  const BrandIcon = brand.icon;
+  const BrandIcon = BRAND.icon;
   return (
     <aside className="hidden w-60 shrink-0 border-r border-[var(--color-border)] md:block">
       <div className="flex h-14 items-center gap-2 border-b border-[var(--color-border)] px-4">
         <BrandIcon className="h-5 w-5 text-[var(--color-primary)]" />
-        <Link href={brand.href} className="text-sm font-semibold tracking-tight">
-          {brand.label}
+        <Link href={BRAND.href} className="text-sm font-semibold tracking-tight">
+          {BRAND.label}
         </Link>
       </div>
       <nav className="space-y-1 p-3 text-sm">
-        {items.map((item) => {
+        {ITEMS.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
