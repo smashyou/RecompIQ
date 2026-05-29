@@ -4,6 +4,7 @@ import { SEX, UNIT_LENGTH, UNIT_WEIGHT, GOAL_PHASE } from "../enums/index";
 export * from "./onboarding/index";
 export * from "./logging/index";
 export * from "./food/index";
+export * from "./food/photo";
 export * from "./peptide/index";
 export * from "./workout/index";
 
