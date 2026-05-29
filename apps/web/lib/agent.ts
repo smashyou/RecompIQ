@@ -2,6 +2,7 @@ import "server-only";
 import {
   chat as gatewayChat,
   embed as gatewayEmbed,
+  parseFoodFromImage as gatewayParseFood,
   type AiCallLog,
   type ChatRequest,
   type ChatResponse,
@@ -11,6 +12,8 @@ import {
   type FeatureConfig,
   type GatewayDeps,
   type ModelRow,
+  type ParseFoodFromImageOpts,
+  type ParseFoodFromImageResult,
 } from "@peptide/agent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redactedLogger } from "@peptide/shared";
@@ -115,6 +118,12 @@ export function chat(req: ChatRequest): Promise<ChatResponse> {
 
 export function embed(req: EmbeddingRequest): Promise<EmbeddingResponse> {
   return gatewayEmbed(req, deps);
+}
+
+export function parseFoodFromImage(
+  opts: ParseFoodFromImageOpts,
+): Promise<ParseFoodFromImageResult> {
+  return gatewayParseFood(opts, deps);
 }
 
 export { loadFeatureConfig };

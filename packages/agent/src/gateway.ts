@@ -55,7 +55,14 @@ const REQUEST_EXCERPT_MAX = 200;
 function excerpt(req: ChatRequest | EmbeddingRequest): string {
   if ("messages" in req) {
     const lastUser = [...req.messages].reverse().find((m) => m.role === "user");
-    return (lastUser?.content ?? "").slice(0, REQUEST_EXCERPT_MAX);
+    const content = lastUser?.content ?? "";
+    const text =
+      typeof content === "string"
+        ? content
+        : content
+            .map((part) => (part.type === "text" ? part.text : "[image]"))
+            .join(" ");
+    return text.slice(0, REQUEST_EXCERPT_MAX);
   }
   const input = Array.isArray(req.input) ? req.input[0] ?? "" : req.input;
   return input.slice(0, REQUEST_EXCERPT_MAX);
