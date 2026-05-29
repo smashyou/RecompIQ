@@ -15,7 +15,9 @@ const env = Object.fromEntries(
     .filter((l) => l && !l.startsWith("#"))
     .map((l) => {
       const [k, ...rest] = l.split("=");
-      return [k, rest.join("=").trim()];
+      const raw = rest.join("=").trim();
+      const unquoted = raw.replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
+      return [k, unquoted];
     }),
 );
 
