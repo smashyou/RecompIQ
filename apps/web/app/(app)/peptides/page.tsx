@@ -96,8 +96,8 @@ export default async function PeptidesPage() {
             </Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/peptides/reconstitution">
-              <Calculator className="h-4 w-4" /> Reconstitution
+            <Link href="/peptides/protocols">
+              <Calculator className="h-4 w-4" /> Reconstitution &amp; protocols
             </Link>
           </Button>
           <Button asChild variant="outline">

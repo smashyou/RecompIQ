@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Dumbbell,
   FlaskConical,
+  FlaskRound,
   Home,
   MessageCircle,
   Settings,
@@ -33,6 +34,7 @@ const ITEMS: NavItem[] = [
   { href: "/log", label: "Quick log", icon: ClipboardList },
   { href: "/food", label: "Food", icon: Utensils },
   { href: "/peptides", label: "Peptides", icon: Syringe },
+  { href: "/peptides/protocols", label: "Protocols", icon: FlaskRound },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
   { href: "/body-shots", label: "Body shots", icon: Camera },
   { href: "/projections", label: "Projections", icon: BarChart3 },
@@ -50,6 +52,15 @@ const BRAND = {
 export function Sidebar() {
   const pathname = usePathname();
   const BrandIcon = BRAND.icon;
+
+  // Active = the nav item whose href is the LONGEST prefix of the current path.
+  // This keeps a single item highlighted even when one href nests under another
+  // (e.g. /peptides vs /peptides/protocols).
+  const activeHref = ITEMS.reduce<string>((best, item) => {
+    const matches = pathname === item.href || pathname.startsWith(`${item.href}/`);
+    if (matches && item.href.length > best.length) return item.href;
+    return best;
+  }, "");
   return (
     <aside className="hidden w-60 shrink-0 border-r border-[var(--color-border)] md:block">
       <div className="flex h-14 items-center gap-2 border-b border-[var(--color-border)] px-4">
@@ -61,7 +72,7 @@ export function Sidebar() {
       <nav className="space-y-1 p-3 text-sm">
         {ITEMS.map((item) => {
           const Icon = item.icon;
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = item.href === activeHref;
           return (
             <Link
               key={item.href}
