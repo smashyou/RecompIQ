@@ -121,6 +121,22 @@ export const compoundDoseReferenceRow = z.object({
 });
 export type CompoundDoseReferenceRow = z.infer<typeof compoundDoseReferenceRow>;
 
+// Educational "commonly combined with…" synergy reference (read-only from client).
+export const compoundSynergyRow = z.object({
+  id: z.string().uuid(),
+  compound_id: z.string().uuid(),
+  paired_name: z.string(),
+  paired_compound_id: z.string().uuid().nullable(),
+  rationale: z.string(),
+  evidence_level: z.enum(EVIDENCE_LEVEL),
+  is_human_data: z.boolean(),
+  caution_notes: z.string().nullable(),
+  citation: z.array(doseReferenceCitation).default([]),
+  is_demo: z.boolean(),
+  created_at: z.coerce.date(),
+});
+export type CompoundSynergyRow = z.infer<typeof compoundSynergyRow>;
+
 export const protocolScheduleInput = z.object({
   name: z.string().trim().min(1).max(120),
   stack_id: z.string().uuid().nullable().optional(),
