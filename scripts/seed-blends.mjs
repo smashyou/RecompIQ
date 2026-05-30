@@ -223,6 +223,83 @@ const BLENDS = [
       },
     ],
   },
+  {
+    slug: "cagrisema",
+    name: "CagriSema",
+    aliases: ["Cagrilintide / Semaglutide Blend", "CagriSema Blend"],
+    category: "incretin",
+    evidence_level: "HUMAN_RCT",
+    component_slugs: ["cagrilintide", "semaglutide"],
+    short_description:
+      "CagriSema is an investigational fixed-dose combination of the amylin analog cagrilintide and the GLP-1 agonist semaglutide, developed by Novo Nordisk for obesity and studied in the Phase 3 REDEFINE program. It is NOT FDA-approved as a combination; the components are listed below.",
+    mechanism:
+      "Pairs two complementary appetite/metabolic pathways: cagrilintide (long-acting amylin receptor agonist) slows gastric emptying and enhances satiety, while semaglutide (GLP-1 receptor agonist) augments glucose-dependent insulin secretion and reduces appetite centrally. The combination produced greater weight loss than either component alone in trials, though combination-specific GI tolerability is a key consideration.",
+    relative_contraindications: [
+      "Class effect: personal/family history of medullary thyroid carcinoma or MEN2 (GLP-1 component).",
+      "Pancreatitis history; severe GI dysmotility.",
+      "Investigational combination — not FDA-approved; combination-specific long-term safety still maturing.",
+      ...COMMON_CAUTIONS,
+    ],
+    citations: [
+      {
+        source: "ClinicalTrials.gov (REDEFINE program)",
+        title: "CagriSema (cagrilintide + semaglutide) Phase 3 obesity program",
+        url: "https://clinicaltrials.gov/search?term=CagriSema",
+        year: 2025,
+      },
+    ],
+  },
+  {
+    slug: "gh-blend",
+    name: "GH Blend (4X)",
+    aliases: ["Growth Hormone Secretagogue Blend"],
+    category: "growth_factor",
+    component_slugs: ["ghrp-2", "tesamorelin", "ipamorelin"],
+    short_description:
+      "A community/vendor growth-hormone-secretagogue blend typically combining GHRP-2, Tesamorelin, MGF, and Ipamorelin. Not FDA-approved; no human trial of the combination. MGF is not separately catalogued here.",
+    mechanism:
+      "Stacks multiple GH-axis stimuli: GHRH analogs (Tesamorelin) raise GH synthesis/pulse amplitude while ghrelin-receptor secretagogues (GHRP-2, Ipamorelin) trigger GH release; MGF (a mechano-growth-factor IGF-1 splice variant) is included for proposed local muscle-repair signalling. The combined endocrine load of several simultaneous secretagogues is uncharacterised in humans.",
+    relative_contraindications: [
+      GH_CAUTION,
+      "GHRP-2 raises cortisol/prolactin in addition to GH; combined load of multiple secretagogues is not characterised in humans.",
+      ...COMMON_CAUTIONS,
+    ],
+    citations: [],
+  },
+  {
+    slug: "lipo-blend",
+    name: "Lipo Blend (8X)",
+    aliases: ["Lipotropic Injection", "Lipo-C"],
+    category: "metabolic",
+    component_slugs: [],
+    short_description:
+      "Lipo Blend is a lipotropic IM injection of amino acids and B-vitamins (commonly L-carnitine, L-arginine, methionine, inositol, choline, B6, B5, and B12) marketed for fat metabolism support. These are not peptides, and lipotropic injections lack controlled-trial evidence for weight loss.",
+    mechanism:
+      "Components are marketed for roles in fat metabolism: methionine/inositol/choline ('MIC') as lipotropic agents that help mobilise fat, carnitine in fatty-acid transport, and B-vitamins as metabolic cofactors. Despite the mechanistic narrative, randomised evidence that lipotropic injections produce meaningful fat loss is lacking.",
+    relative_contraindications: [
+      "Not an evidence-based weight-loss therapy; benefits are largely anecdotal.",
+      "Caution with hypersensitivity to any component; B-vitamin/amino-acid load.",
+      ...COMMON_CAUTIONS,
+    ],
+    citations: [],
+  },
+  {
+    slug: "mic-blend",
+    name: "MIC Blend (4X)",
+    aliases: ["MIC Injection", "Methionine-Inositol-Choline"],
+    category: "metabolic",
+    component_slugs: [],
+    short_description:
+      "MIC Blend is a lipotropic IM injection of methionine, inositol, choline, and (commonly) carnitine/dexpanthenol, marketed for fat metabolism. Not peptides; no controlled-trial evidence for weight loss.",
+    mechanism:
+      "Methionine, inositol, and choline are 'lipotropic' compounds marketed to help the liver process and mobilise fat, with carnitine for fatty-acid transport. As with other lipotropic injections, controlled evidence for clinically meaningful fat loss is lacking.",
+    relative_contraindications: [
+      "Not an evidence-based weight-loss therapy; benefits are largely anecdotal.",
+      "Caution with hypersensitivity to any component.",
+      ...COMMON_CAUTIONS,
+    ],
+    citations: [],
+  },
 ];
 
 async function main() {
@@ -239,7 +316,7 @@ async function main() {
     name: b.name,
     aliases: b.aliases ?? [],
     category: b.category,
-    evidence_level: "ANECDOTAL",
+    evidence_level: b.evidence_level ?? "ANECDOTAL",
     fda_approved: false,
     is_blend: true,
     component_slugs: b.component_slugs,
