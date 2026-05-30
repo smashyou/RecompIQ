@@ -52,6 +52,25 @@ export default async function CompoundDetailPage({
       .order("paired_name"),
   ]);
 
+  // For blends, load the component compounds so we can show them + the UNION of
+  // their cautions. Components are existing catalog compounds by slug.
+  const componentSlugs: string[] = compound.component_slugs ?? [];
+  let components: CompoundDetail["components"] = [];
+  if (compound.is_blend && componentSlugs.length > 0) {
+    const { data: comps } = await supabase
+      .from("compounds")
+      .select("slug,name,evidence_level,fda_approved,absolute_contraindications,relative_contraindications")
+      .in("slug", componentSlugs);
+    components = (comps ?? []).map((c) => ({
+      slug: c.slug,
+      name: c.name,
+      evidence_level: c.evidence_level,
+      fda_approved: c.fda_approved,
+      absolute_contraindications: c.absolute_contraindications ?? [],
+      relative_contraindications: c.relative_contraindications ?? [],
+    }));
+  }
+
   const refRows = (refsRes.data ?? []) as (DoseRefLike & {
     id: string;
     citation: Citation[] | null;
@@ -105,6 +124,8 @@ export default async function CompoundDetailPage({
     short_description: compound.short_description,
     mechanism: compound.mechanism,
     typical_route: compound.typical_route,
+    is_blend: compound.is_blend ?? false,
+    components,
     monitoring_notes: compound.monitoring_notes ?? [],
     absolute_contraindications: compound.absolute_contraindications ?? [],
     relative_contraindications: compound.relative_contraindications ?? [],

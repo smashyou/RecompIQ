@@ -31,6 +31,14 @@ interface Synergy {
   is_human_data: boolean;
   caution_notes: string | null;
 }
+export interface BlendComponent {
+  slug: string;
+  name: string;
+  evidence_level: string;
+  fda_approved: boolean;
+  absolute_contraindications: string[];
+  relative_contraindications: string[];
+}
 export interface CompoundDetail {
   slug: string;
   name: string;
@@ -41,6 +49,8 @@ export interface CompoundDetail {
   short_description: string;
   mechanism: string | null;
   typical_route: string | null;
+  is_blend: boolean;
+  components: BlendComponent[];
   monitoring_notes: string[];
   absolute_contraindications: string[];
   relative_contraindications: string[];
@@ -109,9 +119,23 @@ function Card({ title, children }: { title?: string; children: React.ReactNode }
 function OverviewTab({ detail }: { detail: CompoundDetail }) {
   return (
     <div className="space-y-4">
+      {detail.is_blend && (
+        <div className="rounded-xl border border-[var(--color-accent)] bg-[var(--color-accent)]/5 p-4 text-sm">
+          <p className="font-medium text-[var(--color-foreground)]">This is a multi-peptide blend</p>
+          <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+            Blends are community/vendor combinations, not single compounds, and are not FDA-approved.
+            There is no established human dose for the combined product — each component has its own
+            evidence and cautions below. Compositions vary by source; sourcing and purity of
+            unregulated blends are unverified.
+          </p>
+        </div>
+      )}
+
       <Card>
         <p className="text-sm leading-relaxed text-[var(--color-foreground)]">{detail.short_description}</p>
       </Card>
+
+      {detail.is_blend && detail.components.length > 0 && <ComponentsCard detail={detail} />}
 
       {detail.mechanism && (
         <Card title="Mechanism of action">
@@ -324,6 +348,42 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         </p>
       )}
     </div>
+  );
+}
+
+function ComponentsCard({ detail }: { detail: CompoundDetail }) {
+  // Union of component absolute contraindications, de-duplicated.
+  const combinedAbsolute = Array.from(
+    new Set(detail.components.flatMap((c) => c.absolute_contraindications)),
+  );
+  return (
+    <Card title={`Components (${detail.components.length})`}>
+      <ul className="space-y-2">
+        {detail.components.map((c) => (
+          <li key={c.slug}>
+            <Link
+              href={`/peptides/library/${c.slug}`}
+              className="flex items-center justify-between gap-2 rounded-lg border border-[var(--color-border)] p-3 transition-colors hover:border-[var(--color-primary)]"
+            >
+              <span className="text-sm font-medium">{c.name}</span>
+              <EvidenceBadge level={c.evidence_level as EvidenceLevel} fdaApproved={c.fda_approved} />
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {combinedAbsolute.length > 0 && (
+        <div className="mt-3 rounded-lg border border-[var(--color-destructive)]/40 bg-[var(--color-destructive)]/5 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-destructive)]">
+            Combined — do not use if (union of all components)
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-[var(--color-muted-foreground)]">
+            {combinedAbsolute.map((x, i) => (
+              <li key={i}>{x}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </Card>
   );
 }
 

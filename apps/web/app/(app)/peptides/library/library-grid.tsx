@@ -18,9 +18,11 @@ export interface LibraryCard {
   blurb: string;
   dose: string;
   frequency: string;
+  is_blend: boolean;
+  component_count: number;
 }
 
-const CATEGORIES = ["all", "incretin", "growth_factor", "tissue_repair", "metabolic", "longevity", "other"] as const;
+const CATEGORIES = ["all", "blends", "incretin", "growth_factor", "tissue_repair", "metabolic", "longevity", "other"] as const;
 
 export function LibraryGrid({ cards }: { cards: LibraryCard[] }) {
   const [q, setQ] = useState("");
@@ -29,7 +31,8 @@ export function LibraryGrid({ cards }: { cards: LibraryCard[] }) {
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return cards.filter((c) => {
-      if (cat !== "all" && c.category !== cat) return false;
+      if (cat === "blends" && !c.is_blend) return false;
+      if (cat !== "all" && cat !== "blends" && c.category !== cat) return false;
       if (!needle) return true;
       return c.name.toLowerCase().includes(needle) || c.blurb.toLowerCase().includes(needle);
     });
@@ -60,7 +63,7 @@ export function LibraryGrid({ cards }: { cards: LibraryCard[] }) {
                   : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
               )}
             >
-              {c === "all" ? "All" : categoryLabel(c)}
+              {c === "all" ? "All" : c === "blends" ? "Blends" : categoryLabel(c)}
             </button>
           ))}
         </div>
@@ -76,16 +79,29 @@ export function LibraryGrid({ cards }: { cards: LibraryCard[] }) {
             className="group flex flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 transition-colors hover:border-[var(--color-primary)]"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
-                {categoryLabel(c.category)}
+              <span className="flex items-center gap-1">
+                {c.is_blend && (
+                  <span className="rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-primary-foreground)]">
+                    Blend
+                  </span>
+                )}
+                <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                  {categoryLabel(c.category)}
+                </span>
               </span>
               <EvidenceBadge level={c.evidence_level as EvidenceLevel} fdaApproved={c.fda_approved} />
             </div>
             <h3 className="mt-2 text-sm font-semibold group-hover:text-[var(--color-primary)]">{c.name}</h3>
             <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-[var(--color-muted-foreground)]">
-              {c.typical_route && <span className="uppercase">{c.typical_route}</span>}
-              {c.dose !== "—" && <span className="tabular-nums">{c.dose}</span>}
-              {c.frequency !== "—" && <span>{c.frequency}</span>}
+              {c.is_blend ? (
+                <span>{c.component_count} peptides</span>
+              ) : (
+                <>
+                  {c.typical_route && <span className="uppercase">{c.typical_route}</span>}
+                  {c.dose !== "—" && <span className="tabular-nums">{c.dose}</span>}
+                  {c.frequency !== "—" && <span>{c.frequency}</span>}
+                </>
+              )}
             </div>
             <p className="mt-2 line-clamp-2 text-xs text-[var(--color-muted-foreground)]">{c.blurb}</p>
           </Link>

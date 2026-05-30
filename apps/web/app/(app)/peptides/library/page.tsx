@@ -13,7 +13,9 @@ export default async function LibraryPage() {
   const [compoundsRes, refsRes] = await Promise.all([
     supabase
       .from("compounds")
-      .select("id,slug,name,category,evidence_level,fda_approved,typical_route,short_description")
+      .select(
+        "id,slug,name,category,evidence_level,fda_approved,typical_route,short_description,is_blend,component_slugs",
+      )
       .order("name"),
     supabase
       .from("compound_dose_reference")
@@ -42,6 +44,8 @@ export default async function LibraryPage() {
       blurb: (c.short_description ?? "").slice(0, 120),
       dose: representativeRange(cRefs),
       frequency: commonFrequency(cRefs),
+      is_blend: c.is_blend ?? false,
+      component_count: (c.component_slugs ?? []).length,
     };
   });
 
