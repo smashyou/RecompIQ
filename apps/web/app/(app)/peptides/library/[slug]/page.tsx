@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { wrapDoseLike } from "@peptide/peptides";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import {
-  doseRangeText,
+  doseRangeWrapped,
   representativeRange,
   commonFrequency,
   routeLabel,
@@ -98,7 +97,7 @@ export default async function CompoundDetailPage({
     evidence_level: r.evidence_level,
     is_human_data: r.is_human_data,
     notes: r.notes,
-    range_display: wrapDoseLike(doseRangeText(r)).wrappedText,
+    range_display: doseRangeWrapped(r),
   }));
 
   // Aggregate + dedupe citations for the Research tab.

@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { wrapDoseLike } from "@peptide/peptides";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
+import { doseRangeWrapped } from "@/lib/dose-display";
 import { ProtocolsHub } from "./hub";
 import type { ReferenceCompound, DoseReference, CompoundSynergy } from "./compound-reference-tab";
 import type { ProtocolSchedule } from "./titration-tab";
@@ -35,21 +35,7 @@ interface DoseRefRow {
 }
 
 function rangeText(row: DoseRefRow): string {
-  const u = row.unit;
-  let core: string;
-  if (row.low_value !== null && row.high_value !== null) {
-    core =
-      row.low_value === row.high_value
-        ? `${row.low_value} ${u}`
-        : `${row.low_value}–${row.high_value} ${u}`;
-  } else if (row.low_value !== null) {
-    core = `from ${row.low_value} ${u}`;
-  } else if (row.high_value !== null) {
-    core = `up to ${row.high_value} ${u}`;
-  } else {
-    core = "range not established";
-  }
-  return row.frequency ? `${core}, ${row.frequency}` : core;
+  return doseRangeWrapped(row);
 }
 
 export default async function ProtocolsPage({
@@ -85,7 +71,6 @@ export default async function ProtocolsPage({
   // Group dose references under their compound, pre-wrapping the range string.
   const refsByCompound = new Map<string, DoseReference[]>();
   for (const row of refRows) {
-    const { wrappedText } = wrapDoseLike(rangeText(row));
     const ref: DoseReference = {
       id: row.id,
       context: row.context,
@@ -96,7 +81,7 @@ export default async function ProtocolsPage({
       is_human_data: row.is_human_data,
       citation: row.citation ?? [],
       notes: row.notes,
-      range_display: wrappedText,
+      range_display: rangeText(row),
       low_value: row.low_value,
       high_value: row.high_value,
     };

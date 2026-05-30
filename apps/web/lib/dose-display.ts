@@ -13,6 +13,29 @@ export interface DoseRefLike {
   is_human_data: boolean;
 }
 
+// Returns the range with the FULL dose core wrapped in [edu]…[/edu] as a single
+// unit, so <DoseAnnotatedText> renders one clean badge (e.g. "5–10 mg/kg")
+// instead of token-matching only part of it (wrapDoseLike would badge just
+// "10 mg" and strand "5–" and "/kg"). Frequency stays outside the badge.
+export function doseRangeWrapped(row: DoseRefLike): string {
+  const u = row.unit;
+  let core: string | null;
+  if (row.low_value !== null && row.high_value !== null) {
+    core =
+      row.low_value === row.high_value
+        ? `${row.low_value} ${u}`
+        : `${row.low_value}–${row.high_value} ${u}`;
+  } else if (row.low_value !== null) {
+    core = `from ${row.low_value} ${u}`;
+  } else if (row.high_value !== null) {
+    core = `up to ${row.high_value} ${u}`;
+  } else {
+    core = null;
+  }
+  const wrapped = core ? `[edu]${core}[/edu]` : "no established range";
+  return row.frequency ? `${wrapped}, ${row.frequency}` : wrapped;
+}
+
 export function doseRangeText(row: DoseRefLike): string {
   const u = row.unit;
   let core: string;

@@ -62,14 +62,14 @@ export function ProtocolsHub({
               type="button"
               onClick={() => go(t.id)}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-2 py-2 text-[13px] font-medium transition-colors",
                 active
                   ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
                   : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
               )}
             >
-              <Icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.label}</span>
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="hidden md:inline">{t.label}</span>
             </button>
           );
         })}
