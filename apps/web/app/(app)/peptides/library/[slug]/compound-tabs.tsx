@@ -51,6 +51,14 @@ export interface CompoundDetail {
   typical_route: string | null;
   is_blend: boolean;
   components: BlendComponent[];
+  componentDosing: {
+    slug: string;
+    name: string;
+    range_display: string;
+    route: string | null;
+    evidence_level: string;
+    is_human_data: boolean;
+  }[];
   monitoring_notes: string[];
   absolute_contraindications: string[];
   relative_contraindications: string[];
@@ -173,6 +181,69 @@ function OverviewTab({ detail }: { detail: CompoundDetail }) {
 
 function DosingTab({ detail }: { detail: CompoundDetail }) {
   const calcHref = `/peptides/protocols?tab=reconstitution&compound=${encodeURIComponent(detail.slug)}`;
+
+  // Blends have no validated combined dose; show per-component reference ranges.
+  if (detail.is_blend) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-xl border border-[var(--color-accent)] bg-[var(--color-accent)]/5 p-4 text-sm">
+          <p className="font-medium text-[var(--color-foreground)]">How a blend is dosed</p>
+          <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+            A blend is drawn as a single volume from the reconstituted mixed vial, so the
+            &ldquo;dose&rdquo; depends on how it was mixed. There is no validated combined-product
+            dose. The per-component reference ranges below are what each ingredient contributes —
+            educational only, not a recommended protocol.
+          </p>
+        </div>
+
+        {detail.componentDosing.length > 0 ? (
+          <Card title="Per-component reference ranges">
+            <ul className="space-y-3">
+              {detail.componentDosing.map((c) => (
+                <li key={c.slug} className="rounded-lg border border-[var(--color-border)] p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <Link href={`/peptides/library/${c.slug}`} className="text-sm font-medium hover:text-[var(--color-primary)]">
+                      {c.name}
+                    </Link>
+                    <div className="flex items-center gap-2">
+                      <EvidenceBadge level={c.evidence_level as EvidenceLevel} />
+                      {!c.is_human_data && (
+                        <span className="rounded bg-[var(--color-muted)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted-foreground)]">
+                          non-human data
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-2 text-sm">
+                    <DoseAnnotatedText text={c.range_display} />
+                  </div>
+                  {c.route && (
+                    <p className="mt-1 text-xs uppercase text-[var(--color-muted-foreground)]">route: {c.route}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ) : (
+          <Card>
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              Component reference ranges aren&apos;t catalogued yet. See each component on the
+              Overview tab.
+            </p>
+            <DoseDisclaimerFooter />
+          </Card>
+        )}
+
+        <Link
+          href={calcHref}
+          className="flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90"
+        >
+          <Calculator className="h-4 w-4" /> Open reconstitution calculator
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-3 text-xs text-[var(--color-muted-foreground)]">

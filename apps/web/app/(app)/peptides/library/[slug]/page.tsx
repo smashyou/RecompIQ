@@ -52,15 +52,17 @@ export default async function CompoundDetailPage({
   ]);
 
   // For blends, load the component compounds so we can show them + the UNION of
-  // their cautions. Components are existing catalog compounds by slug.
+  // their cautions, plus each component's dose ranges for the Dosing tab.
   const componentSlugs: string[] = compound.component_slugs ?? [];
   let components: CompoundDetail["components"] = [];
+  let componentDosing: CompoundDetail["componentDosing"] = [];
   if (compound.is_blend && componentSlugs.length > 0) {
     const { data: comps } = await supabase
       .from("compounds")
-      .select("slug,name,evidence_level,fda_approved,absolute_contraindications,relative_contraindications")
+      .select("id,slug,name,evidence_level,fda_approved,typical_route,absolute_contraindications,relative_contraindications")
       .in("slug", componentSlugs);
-    components = (comps ?? []).map((c) => ({
+    const compList = comps ?? [];
+    components = compList.map((c) => ({
       slug: c.slug,
       name: c.name,
       evidence_level: c.evidence_level,
@@ -68,6 +70,37 @@ export default async function CompoundDetailPage({
       absolute_contraindications: c.absolute_contraindications ?? [],
       relative_contraindications: c.relative_contraindications ?? [],
     }));
+
+    const compIds = compList.map((c) => c.id);
+    const { data: compRefs } = compIds.length
+      ? await supabase
+          .from("compound_dose_reference")
+          .select("compound_id, context, route, low_value, high_value, unit, frequency, evidence_level, is_human_data")
+          .in("compound_id", compIds)
+      : { data: [] };
+    const refsByComp = new Map<string, DoseRefLike[]>();
+    for (const r of (compRefs ?? []) as (DoseRefLike & { compound_id: string })[]) {
+      const list = refsByComp.get(r.compound_id) ?? [];
+      list.push(r);
+      refsByComp.set(r.compound_id, list);
+    }
+    // Order components by the blend's declared order; one representative line each.
+    componentDosing = compList
+      .map((c) => {
+        const rows = (refsByComp.get(c.id) ?? []).filter((r) => r.low_value !== null);
+        // Prefer a human row, else the community/anecdotal one.
+        const pick = rows.find((r) => r.is_human_data) ?? rows[0];
+        if (!pick) return null;
+        return {
+          slug: c.slug,
+          name: c.name,
+          range_display: doseRangeWrapped(pick),
+          route: pick.route,
+          evidence_level: pick.evidence_level,
+          is_human_data: pick.is_human_data,
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
   }
 
   const refRows = (refsRes.data ?? []) as (DoseRefLike & {
@@ -125,6 +158,7 @@ export default async function CompoundDetailPage({
     typical_route: compound.typical_route,
     is_blend: compound.is_blend ?? false,
     components,
+    componentDosing,
     monitoring_notes: compound.monitoring_notes ?? [],
     absolute_contraindications: compound.absolute_contraindications ?? [],
     relative_contraindications: compound.relative_contraindications ?? [],
