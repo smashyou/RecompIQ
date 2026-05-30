@@ -27,6 +27,7 @@
     "kb:embed": "node scripts/embed-kb.mjs",
     "seed:dose-refs": "node scripts/seed-dose-references.mjs",
     "seed:catalog": "node scripts/seed-catalog.mjs",
+    "seed:blends": "node scripts/seed-blends.mjs",
     "test:projections": "tsx scripts/test-projections.mjs",
     "test:reconstitution": "tsx scripts/test-reconstitution.mjs"
   },
