@@ -17,6 +17,9 @@ interface CompoundRow {
   fda_approved: boolean;
   mechanism: string | null;
   monitoring_notes: string[];
+  is_blend: boolean;
+  typical_vial_mg: number | null;
+  component_mg: { label: string; mg: number | null }[];
 }
 
 interface DoseRefRow {
@@ -50,7 +53,7 @@ export default async function ProtocolsPage({
   const [compoundsRes, refsRes, synRes, schedulesRes] = await Promise.all([
     supabase
       .from("compounds")
-      .select("id,slug,name,evidence_level,fda_approved,mechanism,monitoring_notes")
+      .select("id,slug,name,evidence_level,fda_approved,mechanism,monitoring_notes,is_blend,typical_vial_mg,component_mg")
       .order("name"),
     supabase.from("compound_dose_reference").select("*").order("context"),
     supabase
@@ -117,7 +120,30 @@ export default async function ProtocolsPage({
     synergies: synByCompound.get(c.id) ?? [],
   }));
 
-  const compoundOptions = compounds.map((c) => ({ id: c.id, name: c.name }));
+  // Per-compound reference dose for the calculator picker (prefer a human row,
+  // else any numeric row). Lets the calculator be peptide-specific.
+  const refDoseByCompound = new Map<string, { low: number; unit: string }>();
+  for (const r of refRows) {
+    if (r.low_value === null) continue;
+    const existing = refDoseByCompound.get(r.compound_id);
+    // First numeric row wins, but a human row upgrades a prior anecdotal one.
+    if (!existing || r.is_human_data) {
+      refDoseByCompound.set(r.compound_id, { low: r.low_value, unit: r.unit });
+    }
+  }
+
+  const compoundOptions = compounds.map((c) => {
+    const ref = refDoseByCompound.get(c.id) ?? null;
+    return {
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      is_blend: c.is_blend ?? false,
+      typical_vial_mg: c.typical_vial_mg,
+      component_mg: c.component_mg ?? [],
+      ref_dose: ref, // { low, unit } in the unit the reference uses
+    };
+  });
 
   const validTabs = ["reconstitution", "builder", "reference", "titration"] as const;
   const initialTab = (validTabs as readonly string[]).includes(tab ?? "")

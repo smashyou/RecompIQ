@@ -51,6 +51,8 @@ export interface CompoundDetail {
   typical_route: string | null;
   is_blend: boolean;
   components: BlendComponent[];
+  component_mg: { label: string; mg: number | null }[];
+  typical_vial_mg: number | null;
   componentDosing: {
     slug: string;
     name: string;
@@ -427,8 +429,27 @@ function ComponentsCard({ detail }: { detail: CompoundDetail }) {
   const combinedAbsolute = Array.from(
     new Set(detail.components.flatMap((c) => c.absolute_contraindications)),
   );
+  const total = detail.component_mg.reduce((n, c) => n + (c.mg ?? 0), 0);
   return (
     <Card title={`Components (${detail.components.length})`}>
+      {detail.component_mg.length > 0 && (
+        <div className="mb-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
+            Composition
+          </p>
+          <p className="mt-1 text-sm">
+            {detail.component_mg
+              .map((c) => `${c.label}${c.mg !== null ? ` ${c.mg} mg` : ""}`)
+              .join(" / ")}
+            {total > 0 && (
+              <span className="text-[var(--color-muted-foreground)]">
+                {" "}
+                · {detail.typical_vial_mg ?? total} mg total
+              </span>
+            )}
+          </p>
+        </div>
+      )}
       <ul className="space-y-2">
         {detail.components.map((c) => (
           <li key={c.slug}>

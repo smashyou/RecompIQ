@@ -11,7 +11,12 @@ import { TitrationTab, type ProtocolSchedule } from "./titration-tab";
 
 interface CompoundOption {
   id: string;
+  slug: string;
   name: string;
+  is_blend: boolean;
+  typical_vial_mg: number | null;
+  component_mg: { label: string; mg: number | null }[];
+  ref_dose: { low: number; unit: string } | null;
 }
 
 const TABS = [

@@ -159,6 +159,8 @@ export default async function CompoundDetailPage({
     is_blend: compound.is_blend ?? false,
     components,
     componentDosing,
+    component_mg: (compound.component_mg ?? []) as { label: string; mg: number | null }[],
+    typical_vial_mg: compound.typical_vial_mg ?? null,
     monitoring_notes: compound.monitoring_notes ?? [],
     absolute_contraindications: compound.absolute_contraindications ?? [],
     relative_contraindications: compound.relative_contraindications ?? [],

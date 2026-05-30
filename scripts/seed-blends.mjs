@@ -63,6 +63,23 @@ const BPC_REVIEW = {
   year: 2021,
 };
 
+// Factual blend composition (mg of each ingredient) + typical combined vial size.
+// Keyed by slug. mg may be null where a component's amount varies by vendor.
+const COMPOSITION = {
+  klow: { vial: 80, components: [{ label: "GHK-Cu", mg: 50 }, { label: "BPC-157", mg: 10 }, { label: "TB-500", mg: 10 }, { label: "KPV", mg: 10 }] },
+  glow: { vial: 70, components: [{ label: "GHK-Cu", mg: 50 }, { label: "BPC-157", mg: 10 }, { label: "TB-500", mg: 10 }] },
+  wolverine: { vial: 20, components: [{ label: "BPC-157", mg: 10 }, { label: "TB-500", mg: 10 }] },
+  "cjc-ipa-blend": { vial: 10, components: [{ label: "CJC-1295", mg: 5 }, { label: "Ipamorelin", mg: 5 }] },
+  "cjc-ipa-ghrp2-blend": { vial: 15, components: [{ label: "CJC-1295", mg: 5 }, { label: "Ipamorelin", mg: 5 }, { label: "GHRP-2", mg: 5 }] },
+  sentinel: { vial: 40, components: [{ label: "Thymosin α-1", mg: 10 }, { label: "BPC-157", mg: 10 }, { label: "KPV", mg: 10 }, { label: "LL-37", mg: 10 }] },
+  kalm: { vial: 20, components: [{ label: "Semax", mg: 10 }, { label: "Selank", mg: 10 }] },
+  "longevity-antiaging-stack": { vial: null, components: [{ label: "Epitalon", mg: 10 }, { label: "SS-31", mg: 10 }, { label: "MOTS-c", mg: 10 }, { label: "GHK-Cu", mg: 50 }, { label: "NAD+", mg: 100 }, { label: "Humanin", mg: 10 }] },
+  cagrisema: { vial: 10, components: [{ label: "Cagrilintide", mg: 5 }, { label: "Semaglutide", mg: 5 }] },
+  "gh-blend": { vial: 13, components: [{ label: "GHRP-2", mg: 5 }, { label: "Tesamorelin", mg: 5 }, { label: "MGF", mg: 0.5 }, { label: "Ipamorelin", mg: 2.5 }] },
+  "mic-blend": { vial: 120, components: [{ label: "Methionine", mg: 15 }, { label: "Choline Chloride", mg: 50 }, { label: "Carnitine", mg: 50 }, { label: "Dexpanthenol", mg: 5 }] },
+  "lipo-blend": { vial: null, components: [{ label: "L-Carnitine", mg: null }, { label: "L-Arginine", mg: null }, { label: "Methionine", mg: null }, { label: "Inositol", mg: null }, { label: "Choline", mg: null }, { label: "B6", mg: null }, { label: "B5", mg: null }, { label: "B12", mg: null }] },
+};
+
 const BLENDS = [
   {
     slug: "klow",
@@ -329,6 +346,8 @@ async function main() {
     common_side_effects: [],
     serious_adverse_events: [],
     citations: b.citations ?? [],
+    component_mg: COMPOSITION[b.slug]?.components ?? [],
+    typical_vial_mg: COMPOSITION[b.slug]?.vial ?? null,
   }));
 
   await api(`/rest/v1/compounds?on_conflict=slug`, {

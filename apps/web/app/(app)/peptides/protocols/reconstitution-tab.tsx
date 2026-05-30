@@ -11,7 +11,12 @@ import { SyringeVisual } from "./syringe-visual";
 
 interface CompoundOption {
   id: string;
+  slug: string;
   name: string;
+  is_blend: boolean;
+  typical_vial_mg: number | null;
+  component_mg: { label: string; mg: number | null }[];
+  ref_dose: { low: number; unit: string } | null;
 }
 
 type Prefill = { vialMg?: number; doseMg?: number; doseUnit?: string } | null;
@@ -40,6 +45,27 @@ export function ReconstitutionTab({
 
   const doseMg = doseUnit === "mcg" ? doseValue / 1000 : doseValue;
 
+  const selected = compounds.find((c) => c.id === compoundId) ?? null;
+
+  // Pick a peptide → pre-fill its typical vial size + reference dose so the
+  // calculator is peptide-specific instead of generic.
+  function applyCompound(id: string) {
+    setCompoundId(id);
+    const c = compounds.find((x) => x.id === id);
+    if (!c) return;
+    if (c.typical_vial_mg && c.typical_vial_mg > 0) setVialMg(c.typical_vial_mg);
+    if (c.ref_dose) {
+      if (c.ref_dose.unit === "mcg") {
+        setDoseUnit("mcg");
+        setDoseValue(c.ref_dose.low);
+      } else if (c.ref_dose.unit === "mg") {
+        setDoseUnit("mg");
+        setDoseValue(c.ref_dose.low);
+      }
+      // mg/kg, iu, units left for the user to set (can't map to mg/mcg cleanly).
+    }
+  }
+
   const plan = useMemo(() => {
     try {
       return reconstitutePlan({
@@ -59,6 +85,18 @@ export function ReconstitutionTab({
     if (!plan || plan.insulinUnits === null) return null;
     return syringeModel({ syringeUnitsPerMl: unitsPerMl, barrelCapacityUnits: barrel, fillUnits: plan.insulinUnits });
   }, [plan, unitsPerMl, barrel]);
+
+  // For a blend: how much of each component the computed draw delivers.
+  const blendDelivery = useMemo(() => {
+    if (!selected?.is_blend || !plan || bacWaterMl <= 0) return null;
+    return (selected.component_mg ?? [])
+      .filter((c) => typeof c.mg === "number" && c.mg !== null)
+      .map((c) => ({
+        label: c.label,
+        mg: c.mg as number,
+        deliveredMg: plan.drawMl * ((c.mg as number) / bacWaterMl),
+      }));
+  }, [selected, plan, bacWaterMl]);
 
   async function saveMix() {
     if (!plan) return;
@@ -94,12 +132,48 @@ export function ReconstitutionTab({
 
   return (
     <div className="space-y-5">
+      <section className="rounded-xl border border-[var(--color-primary)] bg-[var(--color-card)] p-6">
+        <Label htmlFor="picker">Peptide / blend (pre-fills vial + reference dose)</Label>
+        <select
+          id="picker"
+          value={compoundId}
+          onChange={(e) => applyCompound(e.target.value)}
+          className="mt-2 flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
+        >
+          <option value="">— choose a peptide to load its values —</option>
+          {compounds.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.is_blend ? "★ " : ""}
+              {c.name}
+            </option>
+          ))}
+        </select>
+        {selected?.ref_dose && (
+          <p className="mt-2 text-xs text-[var(--color-muted-foreground)]">
+            Reference dose:{" "}
+            <span className="font-medium text-[var(--color-foreground)]">
+              {selected.ref_dose.low} {selected.ref_dose.unit}
+            </span>{" "}
+            — educational starting point; override freely.
+          </p>
+        )}
+        {selected?.is_blend && selected.component_mg.length > 0 && (
+          <p className="mt-2 text-xs text-[var(--color-muted-foreground)]">
+            Composition:{" "}
+            <span className="text-[var(--color-foreground)]">
+              {selected.component_mg.map((c) => `${c.label}${c.mg !== null ? ` ${c.mg} mg` : ""}`).join(" / ")}
+            </span>
+            {selected.typical_vial_mg ? ` · ${selected.typical_vial_mg} mg total` : ""}
+          </p>
+        )}
+      </section>
+
       <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
         <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
           Inputs
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <NumField label="Vial (mg)" value={vialMg} step={0.1} onChange={setVialMg} />
+          <NumField label={selected?.is_blend ? "Vial total (mg)" : "Vial (mg)"} value={vialMg} step={0.1} onChange={setVialMg} />
           <NumField label="Bacteriostatic water (mL)" value={bacWaterMl} step={0.1} onChange={setBacWaterMl} />
 
           <div className="space-y-2">
@@ -214,6 +288,32 @@ export function ReconstitutionTab({
             {syringe && (
               <div className="mt-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
                 <SyringeVisual model={syringe} unitsLabel="units" />
+              </div>
+            )}
+
+            {blendDelivery && blendDelivery.length > 0 && (
+              <div className="mt-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                  Per-component delivered at {plan!.drawMl.toFixed(3)} mL draw
+                </p>
+                <table className="w-full text-sm">
+                  <tbody>
+                    {blendDelivery.map((c) => (
+                      <tr key={c.label} className="border-b border-[var(--color-border)] last:border-0">
+                        <td className="py-1.5">{c.label}</td>
+                        <td className="py-1.5 text-right text-xs text-[var(--color-muted-foreground)]">
+                          {c.mg} mg in vial
+                        </td>
+                        <td className="py-1.5 text-right font-medium tabular-nums">
+                          {c.deliveredMg >= 1 ? `${c.deliveredMg.toFixed(2)} mg` : `${(c.deliveredMg * 1000).toFixed(0)} mcg`}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="mt-2 text-[10px] text-[var(--color-muted-foreground)]">
+                  A blend is drawn as one volume; each component is delivered in its fixed ratio. Educational only.
+                </p>
               </div>
             )}
 
