@@ -51,7 +51,7 @@ const slugify = (s) =>
     .replace(/^-+|-+$/g, "");
 
 async function main() {
-  const dataPath = resolve(root, "db/seeds/catalog-data.json");
+  const dataPath = resolve(root, process.argv[2] ?? "db/seeds/catalog-data.json");
   const entries = JSON.parse(readFileSync(dataPath, "utf8"));
   console.log(`Loaded ${entries.length} compound entries`);
 
