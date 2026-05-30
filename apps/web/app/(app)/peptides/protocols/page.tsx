@@ -55,10 +55,10 @@ function rangeText(row: DoseRefRow): string {
 export default async function ProtocolsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; compound?: string }>;
 }) {
   await requireUser();
-  const { tab } = await searchParams;
+  const { tab, compound: compoundSlug } = await searchParams;
   const supabase = await createSupabaseServerClient();
 
   const [compoundsRes, refsRes, synRes, schedulesRes] = await Promise.all([
@@ -139,6 +139,25 @@ export default async function ProtocolsPage({
     ? (tab as (typeof validTabs)[number])
     : "reconstitution";
 
+  // Open-in-calculator deep link: ?compound=slug prefills the lowest human-data
+  // reference dose (educational starting point; user overrides freely).
+  let initialPrefill: { doseMg?: number; doseUnit?: string } | null = null;
+  if (compoundSlug) {
+    const target = compounds.find((c) => c.slug === compoundSlug);
+    if (target) {
+      const rows = refRows
+        .filter((r) => r.compound_id === target.id && r.low_value !== null && r.is_human_data)
+        .filter((r) => r.unit === "mg" || r.unit === "mcg");
+      if (rows.length > 0) {
+        const r = rows[0]!;
+        initialPrefill = {
+          doseMg: r.unit === "mcg" ? (r.low_value as number) / 1000 : (r.low_value as number),
+          doseUnit: r.unit === "mcg" ? "mcg" : "mg",
+        };
+      }
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="space-y-1">
@@ -155,6 +174,7 @@ export default async function ProtocolsPage({
           referenceCompounds={referenceCompounds}
           schedules={schedules}
           initialTab={initialTab}
+          initialPrefill={initialPrefill}
         />
       </Suspense>
 

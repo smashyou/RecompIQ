@@ -28,16 +28,20 @@ export function ProtocolsHub({
   referenceCompounds,
   schedules,
   initialTab,
+  initialPrefill = null,
 }: {
   compounds: CompoundOption[];
   referenceCompounds: ReferenceCompound[];
   schedules: ProtocolSchedule[];
   initialTab: TabId;
+  initialPrefill?: { vialMg?: number; doseMg?: number; doseUnit?: string } | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<TabId>(initialTab);
-  const [prefill, setPrefill] = useState<{ vialMg?: number; doseMg?: number; doseUnit?: string } | null>(null);
+  const [prefill, setPrefill] = useState<{ vialMg?: number; doseMg?: number; doseUnit?: string } | null>(
+    initialPrefill,
+  );
 
   function go(id: TabId) {
     setTab(id);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Beaker, Calculator, FlaskRound, Plus, Syringe } from "lucide-react";
+import { Beaker, Calculator, FlaskRound, Library, Plus, Syringe } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,11 @@ export default async function PeptidesPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/peptides/library">
+              <Library className="h-4 w-4" /> Protocol Library
+            </Link>
+          </Button>
           <Button asChild variant="outline">
             <Link href="/peptides/compounds">
               <Beaker className="h-4 w-4" /> Catalog
