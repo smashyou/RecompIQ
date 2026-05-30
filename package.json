@@ -25,7 +25,8 @@
     "db:seed:demo": "node scripts/seed-demo.mjs",
     "kb:seed": "node scripts/seed-kb.mjs",
     "kb:embed": "node scripts/embed-kb.mjs",
-    "test:projections": "tsx scripts/test-projections.mjs"
+    "test:projections": "tsx scripts/test-projections.mjs",
+    "test:reconstitution": "tsx scripts/test-reconstitution.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

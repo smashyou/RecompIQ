@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ADHERENCE, GOAL_PHASE, ROUTE } from "../../enums/index";
+import { ADHERENCE, EVIDENCE_LEVEL, GOAL_PHASE, ROUTE } from "../../enums/index";
 
 export const DOSE_UNIT = ["mg", "mcg", "iu", "ml", "units"] as const;
 export type DoseUnit = (typeof DOSE_UNIT)[number];
@@ -46,5 +46,88 @@ export const reconstitutionInput = z.object({
   bac_water_ml: z.number().positive().max(100),
   desired_dose_mg: z.number().positive().max(1000),
   syringe_units_per_ml: z.number().int().positive().max(1000).optional(),
+  // Phase 12 planning extras (all optional — calc works without them)
+  doses_per_week: z.number().positive().max(21).optional(),
+  vial_cost_usd: z.number().min(0).max(100000).optional(),
+  barrel_capacity_units: z.number().int().positive().max(100).optional(),
 });
 export type ReconstitutionInput = z.infer<typeof reconstitutionInput>;
+
+// Reverse mode — drew N units, what dose is that?
+export const reverseDoseInput = z.object({
+  vial_mg: z.number().positive().max(1000),
+  bac_water_ml: z.number().positive().max(100),
+  insulin_units: z.number().positive().max(1000),
+  syringe_units_per_ml: z.number().int().positive().max(1000),
+});
+export type ReverseDoseInput = z.infer<typeof reverseDoseInput>;
+
+// Save a reconstitution mix to history
+export const reconstitutionRecordInput = z.object({
+  compound_id: z.string().uuid().nullable().optional(),
+  label: z.string().trim().max(120).nullable().optional(),
+  vial_mg: z.number().positive().max(1000),
+  bac_water_ml: z.number().positive().max(100),
+  concentration_mg_per_ml: z.number().positive().max(100000),
+  desired_dose_mg: z.number().positive().max(1000).nullable().optional(),
+  syringe_units_per_ml: z.number().int().positive().max(1000).nullable().optional(),
+  draw_ml: z.number().positive().max(100).nullable().optional(),
+  insulin_units: z.number().min(0).max(100000).nullable().optional(),
+  vial_cost_usd: z.number().min(0).max(100000).nullable().optional(),
+  reconstituted_on: z.coerce.date().default(() => new Date()),
+  notes: z.string().max(500).nullable().optional(),
+});
+export type ReconstitutionRecordInput = z.infer<typeof reconstitutionRecordInput>;
+
+// Protocol titration schedule — week-by-week. DOSES ARE USER/CLINICIAN-SUPPLIED.
+export const scheduleWeekInput = z.object({
+  compound_id: z.string().uuid(),
+  week_number: z.number().int().min(1).max(104),
+  dose_value: z.number().positive().max(100000),
+  dose_unit: z.enum(DOSE_UNIT),
+  route: z.enum(ROUTE),
+  frequency: z.string().trim().min(1).max(80),
+  notes: z.string().max(500).nullable().optional(),
+});
+export type ScheduleWeekInput = z.infer<typeof scheduleWeekInput>;
+
+// Educational literature dose-range reference row (read-only from client).
+// Lives in its own table, separate from the dose-free `compounds` catalog.
+export const DOSE_REFERENCE_UNIT = ["mg", "mcg", "iu", "units", "mg/kg", "mcg/kg"] as const;
+export type DoseReferenceUnit = (typeof DOSE_REFERENCE_UNIT)[number];
+
+export const doseReferenceCitation = z.object({
+  source: z.string().max(200).optional(),
+  title: z.string().max(400).optional(),
+  url: z.string().url().optional(),
+  year: z.number().int().min(1900).max(2100).optional(),
+});
+
+export const compoundDoseReferenceRow = z.object({
+  id: z.string().uuid(),
+  compound_id: z.string().uuid(),
+  context: z.string(),
+  route: z.enum(ROUTE).nullable(),
+  low_value: z.number().min(0).nullable(),
+  high_value: z.number().min(0).nullable(),
+  unit: z.enum(DOSE_REFERENCE_UNIT),
+  frequency: z.string().nullable(),
+  evidence_level: z.enum(EVIDENCE_LEVEL),
+  is_human_data: z.boolean(),
+  citation: z.array(doseReferenceCitation).default([]),
+  notes: z.string().nullable(),
+  is_demo: z.boolean(),
+  created_at: z.coerce.date(),
+});
+export type CompoundDoseReferenceRow = z.infer<typeof compoundDoseReferenceRow>;
+
+export const protocolScheduleInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  stack_id: z.string().uuid().nullable().optional(),
+  phase: z.enum(GOAL_PHASE).nullable().optional(),
+  start_on: z.coerce.date().nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  is_active: z.boolean().default(true),
+  weeks: z.array(scheduleWeekInput).min(1).max(208),
+});
+export type ProtocolScheduleInput = z.infer<typeof protocolScheduleInput>;
