@@ -25,6 +25,7 @@
     "db:seed:demo": "node scripts/seed-demo.mjs",
     "kb:seed": "node scripts/seed-kb.mjs",
     "kb:embed": "node scripts/embed-kb.mjs",
+    "seed:dose-refs": "node scripts/seed-dose-references.mjs",
     "test:projections": "tsx scripts/test-projections.mjs",
     "test:reconstitution": "tsx scripts/test-reconstitution.mjs"
   },
