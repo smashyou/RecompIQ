@@ -16,7 +16,7 @@ interface CompoundOption {
   is_blend: boolean;
   typical_vial_mg: number | null;
   component_mg: { label: string; mg: number | null }[];
-  ref_dose: { low: number; unit: string } | null;
+  ref_dose: { low: number; high: number; unit: string } | null;
 }
 
 const TABS = [
@@ -33,20 +33,20 @@ export function ProtocolsHub({
   referenceCompounds,
   schedules,
   initialTab,
-  initialPrefill = null,
+  initialCompoundId = null,
 }: {
   compounds: CompoundOption[];
   referenceCompounds: ReferenceCompound[];
   schedules: ProtocolSchedule[];
   initialTab: TabId;
-  initialPrefill?: { vialMg?: number; doseMg?: number; doseUnit?: string } | null;
+  initialCompoundId?: string | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<TabId>(initialTab);
-  const [prefill, setPrefill] = useState<{ vialMg?: number; doseMg?: number; doseUnit?: string } | null>(
-    initialPrefill,
-  );
+  // The calculator's selected peptide is owned here so the Compound Reference
+  // tab and the deep link can drive it.
+  const [calcCompoundId, setCalcCompoundId] = useState<string>(initialCompoundId ?? "");
 
   function go(id: TabId) {
     setTab(id);
@@ -81,14 +81,19 @@ export function ProtocolsHub({
       </nav>
 
       {tab === "reconstitution" && (
-        <ReconstitutionTab compounds={compounds} prefill={prefill} />
+        <ReconstitutionTab
+          compounds={compounds}
+          compoundId={calcCompoundId}
+          onCompoundChange={setCalcCompoundId}
+        />
       )}
       {tab === "builder" && <ProtocolBuilderTab compounds={compounds} />}
       {tab === "reference" && (
         <CompoundReferenceTab
           compounds={referenceCompounds}
-          onUseAsStart={(ref) => {
-            setPrefill(ref);
+          onUseInCalculator={(slug) => {
+            const match = compounds.find((c) => c.slug === slug);
+            if (match) setCalcCompoundId(match.id);
             go("reconstitution");
           }}
         />

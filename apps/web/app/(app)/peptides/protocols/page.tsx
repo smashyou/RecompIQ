@@ -122,13 +122,17 @@ export default async function ProtocolsPage({
 
   // Per-compound reference dose for the calculator picker (prefer a human row,
   // else any numeric row). Lets the calculator be peptide-specific.
-  const refDoseByCompound = new Map<string, { low: number; unit: string }>();
+  const refDoseByCompound = new Map<string, { low: number; high: number; unit: string }>();
   for (const r of refRows) {
     if (r.low_value === null) continue;
     const existing = refDoseByCompound.get(r.compound_id);
     // First numeric row wins, but a human row upgrades a prior anecdotal one.
     if (!existing || r.is_human_data) {
-      refDoseByCompound.set(r.compound_id, { low: r.low_value, unit: r.unit });
+      refDoseByCompound.set(r.compound_id, {
+        low: r.low_value,
+        high: r.high_value ?? r.low_value,
+        unit: r.unit,
+      });
     }
   }
 
@@ -150,24 +154,11 @@ export default async function ProtocolsPage({
     ? (tab as (typeof validTabs)[number])
     : "reconstitution";
 
-  // Open-in-calculator deep link: ?compound=slug prefills the lowest human-data
-  // reference dose (educational starting point; user overrides freely).
-  let initialPrefill: { doseMg?: number; doseUnit?: string } | null = null;
-  if (compoundSlug) {
-    const target = compounds.find((c) => c.slug === compoundSlug);
-    if (target) {
-      const rows = refRows
-        .filter((r) => r.compound_id === target.id && r.low_value !== null && r.is_human_data)
-        .filter((r) => r.unit === "mg" || r.unit === "mcg");
-      if (rows.length > 0) {
-        const r = rows[0]!;
-        initialPrefill = {
-          doseMg: r.unit === "mcg" ? (r.low_value as number) / 1000 : (r.low_value as number),
-          doseUnit: r.unit === "mcg" ? "mcg" : "mg",
-        };
-      }
-    }
-  }
+  // Open-in-calculator deep link: ?compound=slug auto-selects that peptide so
+  // the calculator loads its vial size + reference dose (+ blend composition).
+  const initialCompoundId = compoundSlug
+    ? (compounds.find((c) => c.slug === compoundSlug)?.id ?? null)
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -185,7 +176,7 @@ export default async function ProtocolsPage({
           referenceCompounds={referenceCompounds}
           schedules={schedules}
           initialTab={initialTab}
-          initialPrefill={initialPrefill}
+          initialCompoundId={initialCompoundId}
         />
       </Suspense>
 

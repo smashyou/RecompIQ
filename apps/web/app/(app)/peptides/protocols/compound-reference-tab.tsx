@@ -43,10 +43,10 @@ export interface ReferenceCompound {
 
 export function CompoundReferenceTab({
   compounds,
-  onUseAsStart,
+  onUseInCalculator,
 }: {
   compounds: ReferenceCompound[];
-  onUseAsStart: (ref: { vialMg?: number; doseMg?: number; doseUnit?: string }) => void;
+  onUseInCalculator: (slug: string) => void;
 }) {
   const [open, setOpen] = useState<string | null>(compounds[0]?.id ?? null);
 
@@ -145,15 +145,10 @@ export function CompoundReferenceTab({
                         {ref.low_value !== null && (
                           <button
                             type="button"
-                            onClick={() =>
-                              onUseAsStart({
-                                doseMg: ref.unit === "mcg" ? ref.low_value! / 1000 : ref.low_value!,
-                                doseUnit: ref.unit === "mcg" ? "mcg" : "mg",
-                              })
-                            }
+                            onClick={() => onUseInCalculator(c.slug)}
                             className="mt-3 rounded-md border border-[var(--color-primary)] px-3 py-1.5 text-xs font-medium text-[var(--color-primary)] transition-colors hover:bg-[var(--color-muted)]"
                           >
-                            Use low end as calculator starting point
+                            Open in calculator
                           </button>
                         )}
                       </li>

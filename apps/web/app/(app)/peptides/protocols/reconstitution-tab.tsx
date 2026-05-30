@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { reconstitutePlan, syringeModel, doseFromUnits, SYRINGE_BARRELS } from "@peptide/peptides";
+import { syringeModel, SYRINGE_BARRELS } from "@peptide/peptides";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useFireToast } from "@/components/ui/toast";
+import { cn } from "@/lib/cn";
 import { SyringeVisual } from "./syringe-visual";
 
 interface CompoundOption {
@@ -16,90 +17,98 @@ interface CompoundOption {
   is_blend: boolean;
   typical_vial_mg: number | null;
   component_mg: { label: string; mg: number | null }[];
-  ref_dose: { low: number; unit: string } | null;
+  ref_dose: { low: number; high: number; unit: string } | null;
 }
-
-type Prefill = { vialMg?: number; doseMg?: number; doseUnit?: string } | null;
 
 export function ReconstitutionTab({
   compounds,
-  prefill,
+  compoundId,
+  onCompoundChange,
 }: {
   compounds: CompoundOption[];
-  prefill?: Prefill;
+  compoundId: string;
+  onCompoundChange: (id: string) => void;
 }) {
   const router = useRouter();
   const toast = useFireToast();
 
-  const [vialMg, setVialMg] = useState(prefill?.vialMg ?? 10);
+  const [vialMg, setVialMg] = useState(10);
   const [bacWaterMl, setBacWaterMl] = useState(2);
-  // Dose entered in mcg or mg; we convert to mg for the math.
-  const [doseValue, setDoseValue] = useState(prefill?.doseMg ? prefill.doseMg : 0.5);
-  const [doseUnit, setDoseUnit] = useState<"mg" | "mcg">((prefill?.doseUnit as "mcg") ?? "mg");
   const [unitsPerMl, setUnitsPerMl] = useState(100);
   const [barrel, setBarrel] = useState(100);
+  const [mode, setMode] = useState<"dose" | "units">("dose");
+  const [doseValue, setDoseValue] = useState(0.5);
+  const [doseUnit, setDoseUnit] = useState<"mg" | "mcg">("mg");
+  const [drawUnits, setDrawUnits] = useState(10);
   const [dosesPerWeek, setDosesPerWeek] = useState<number | "">("");
   const [vialCost, setVialCost] = useState<number | "">("");
-  const [compoundId, setCompoundId] = useState<string>("");
   const [saving, setSaving] = useState(false);
-
-  const doseMg = doseUnit === "mcg" ? doseValue / 1000 : doseValue;
 
   const selected = compounds.find((c) => c.id === compoundId) ?? null;
 
-  // Pick a peptide → pre-fill its typical vial size + reference dose so the
-  // calculator is peptide-specific instead of generic.
-  function applyCompound(id: string) {
-    setCompoundId(id);
-    const c = compounds.find((x) => x.id === id);
-    if (!c) return;
-    if (c.typical_vial_mg && c.typical_vial_mg > 0) setVialMg(c.typical_vial_mg);
-    if (c.ref_dose) {
-      if (c.ref_dose.unit === "mcg") {
-        setDoseUnit("mcg");
-        setDoseValue(c.ref_dose.low);
-      } else if (c.ref_dose.unit === "mg") {
-        setDoseUnit("mg");
-        setDoseValue(c.ref_dose.low);
-      }
-      // mg/kg, iu, units left for the user to set (can't map to mg/mcg cleanly).
+  // When the selected peptide changes (picker, deep link, or Compound Reference
+  // tab), load its typical vial size + reference dose.
+  useEffect(() => {
+    if (!selected) return;
+    if (selected.typical_vial_mg && selected.typical_vial_mg > 0) setVialMg(selected.typical_vial_mg);
+    if (selected.ref_dose && (selected.ref_dose.unit === "mg" || selected.ref_dose.unit === "mcg")) {
+      setDoseUnit(selected.ref_dose.unit);
+      setDoseValue(selected.ref_dose.low);
+      setMode("dose");
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compoundId]);
 
-  const plan = useMemo(() => {
-    try {
-      return reconstitutePlan({
-        vialMg,
-        bacWaterMl,
-        desiredDoseMg: doseMg,
-        syringeUnitsPerMl: unitsPerMl,
-        dosesPerWeek: dosesPerWeek === "" ? undefined : dosesPerWeek,
-        vialCostUsd: vialCost === "" ? undefined : vialCost,
-      });
-    } catch {
-      return null;
+  const concentration = vialMg > 0 && bacWaterMl > 0 ? vialMg / bacWaterMl : 0; // mg/mL
+  const doseMg = doseUnit === "mcg" ? doseValue / 1000 : doseValue;
+
+  // Unified forward (dose→volume) / reverse (units→dose) computation.
+  const calc = useMemo(() => {
+    if (concentration <= 0) return null;
+    let drawMl: number;
+    let effDoseMg: number;
+    let units: number;
+    if (mode === "dose") {
+      if (!(doseMg > 0)) return null;
+      effDoseMg = doseMg;
+      drawMl = effDoseMg / concentration;
+      units = drawMl * unitsPerMl;
+    } else {
+      if (!(drawUnits > 0)) return null;
+      units = drawUnits;
+      drawMl = drawUnits / unitsPerMl;
+      effDoseMg = drawMl * concentration;
     }
-  }, [vialMg, bacWaterMl, doseMg, unitsPerMl, dosesPerWeek, vialCost]);
+    if (!(drawMl > 0)) return null;
+    const dosesPerVial = vialMg / effDoseMg;
+    const daysOfSupply = dosesPerWeek && dosesPerWeek > 0 ? (dosesPerVial * 7) / dosesPerWeek : null;
+    const costPerDose = vialCost && vialCost > 0 ? vialCost / dosesPerVial : null;
+    return { drawMl, effDoseMg, units, dosesPerVial, daysOfSupply, costPerDose };
+  }, [concentration, mode, doseMg, drawUnits, unitsPerMl, vialMg, dosesPerWeek, vialCost]);
 
   const syringe = useMemo(() => {
-    if (!plan || plan.insulinUnits === null) return null;
-    return syringeModel({ syringeUnitsPerMl: unitsPerMl, barrelCapacityUnits: barrel, fillUnits: plan.insulinUnits });
-  }, [plan, unitsPerMl, barrel]);
+    if (!calc) return null;
+    return syringeModel({ syringeUnitsPerMl: unitsPerMl, barrelCapacityUnits: barrel, fillUnits: calc.units });
+  }, [calc, unitsPerMl, barrel]);
 
-  // For a blend: how much of each component the computed draw delivers.
   const blendDelivery = useMemo(() => {
-    if (!selected?.is_blend || !plan || bacWaterMl <= 0) return null;
+    if (!selected?.is_blend || !calc || bacWaterMl <= 0) return null;
     return (selected.component_mg ?? [])
       .filter((c) => typeof c.mg === "number" && c.mg !== null)
-      .map((c) => ({
-        label: c.label,
-        mg: c.mg as number,
-        deliveredMg: plan.drawMl * ((c.mg as number) / bacWaterMl),
-      }));
-  }, [selected, plan, bacWaterMl]);
+      .map((c) => ({ label: c.label, mg: c.mg as number, deliveredMg: calc.drawMl * ((c.mg as number) / bacWaterMl) }));
+  }, [selected, calc, bacWaterMl]);
+
+  // Per-unit conversion (one syringe tick = this much drug).
+  const mgPerUnit = concentration > 0 ? concentration / unitsPerMl : 0;
+
+  // Quick-fill values from the reference range (dose mode only).
+  const quickFills =
+    selected?.ref_dose && (selected.ref_dose.unit === "mg" || selected.ref_dose.unit === "mcg")
+      ? Array.from(new Set([selected.ref_dose.low, (selected.ref_dose.low + selected.ref_dose.high) / 2, selected.ref_dose.high]))
+      : null;
 
   async function saveMix() {
-    if (!plan) return;
+    if (!calc) return;
     setSaving(true);
     const res = await fetch("/api/reconstitution/records", {
       method: "POST",
@@ -108,11 +117,11 @@ export function ReconstitutionTab({
         compound_id: compoundId || null,
         vial_mg: vialMg,
         bac_water_ml: bacWaterMl,
-        concentration_mg_per_ml: plan.concentrationMgPerMl,
-        desired_dose_mg: doseMg,
+        concentration_mg_per_ml: concentration,
+        desired_dose_mg: calc.effDoseMg,
         syringe_units_per_ml: unitsPerMl,
-        draw_ml: plan.drawMl,
-        insulin_units: plan.insulinUnits,
+        draw_ml: calc.drawMl,
+        insulin_units: calc.units,
         vial_cost_usd: vialCost === "" ? null : vialCost,
       }),
     });
@@ -132,157 +141,184 @@ export function ReconstitutionTab({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-xl border border-[var(--color-primary)] bg-[var(--color-card)] p-6">
-        <Label htmlFor="picker">Peptide / blend (pre-fills vial + reference dose)</Label>
-        <select
-          id="picker"
-          value={compoundId}
-          onChange={(e) => applyCompound(e.target.value)}
-          className="mt-2 flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
-        >
-          <option value="">— choose a peptide to load its values —</option>
-          {compounds.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.is_blend ? "★ " : ""}
-              {c.name}
-            </option>
-          ))}
-        </select>
-        {selected?.ref_dose && (
-          <p className="mt-2 text-xs text-[var(--color-muted-foreground)]">
-            Reference dose:{" "}
-            <span className="font-medium text-[var(--color-foreground)]">
-              {selected.ref_dose.low} {selected.ref_dose.unit}
-            </span>{" "}
-            — educational starting point; override freely.
-          </p>
-        )}
-        {selected?.is_blend && selected.component_mg.length > 0 && (
-          <p className="mt-2 text-xs text-[var(--color-muted-foreground)]">
-            Composition:{" "}
-            <span className="text-[var(--color-foreground)]">
-              {selected.component_mg.map((c) => `${c.label}${c.mg !== null ? ` ${c.mg} mg` : ""}`).join(" / ")}
-            </span>
-            {selected.typical_vial_mg ? ` · ${selected.typical_vial_mg} mg total` : ""}
-          </p>
-        )}
-      </section>
-
+      {/* STEP 1 — product + reconstitution */}
       <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-          Inputs
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <Step n={1} title="Product & reconstitution" />
+
+        <div className="mt-4 space-y-2">
+          <Label htmlFor="picker">Peptide / blend</Label>
+          <select
+            id="picker"
+            value={compoundId}
+            onChange={(e) => onCompoundChange(e.target.value)}
+            className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
+          >
+            <option value="">— choose a peptide (loads its vial + reference dose) —</option>
+            {compounds.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.is_blend ? "★ " : ""}
+                {c.name}
+              </option>
+            ))}
+          </select>
+          {selected?.ref_dose && (
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              Reference:{" "}
+              <span className="font-medium text-[var(--color-foreground)]">
+                {selected.ref_dose.low}
+                {selected.ref_dose.high !== selected.ref_dose.low ? `–${selected.ref_dose.high}` : ""} {selected.ref_dose.unit}
+              </span>{" "}
+              — educational starting point, override freely.
+            </p>
+          )}
+          {selected?.is_blend && selected.component_mg.length > 0 && (
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              Composition:{" "}
+              <span className="text-[var(--color-foreground)]">
+                {selected.component_mg.map((c) => `${c.label}${c.mg !== null ? ` ${c.mg} mg` : ""}`).join(" / ")}
+              </span>
+              {selected.typical_vial_mg ? ` · ${selected.typical_vial_mg} mg total` : ""}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <NumField label={selected?.is_blend ? "Vial total (mg)" : "Vial (mg)"} value={vialMg} step={0.1} onChange={setVialMg} />
           <NumField label="Bacteriostatic water (mL)" value={bacWaterMl} step={0.1} onChange={setBacWaterMl} />
+          <SelectField
+            label="Syringe calibration"
+            value={unitsPerMl}
+            onChange={setUnitsPerMl}
+            options={[
+              { value: 100, label: "U-100 (100 units / mL)" },
+              { value: 50, label: "U-50 (50 units / mL)" },
+              { value: 40, label: "U-40 (40 units / mL)" },
+            ]}
+          />
+          <SelectField
+            label="Barrel size"
+            value={barrel}
+            onChange={setBarrel}
+            options={SYRINGE_BARRELS.map((b) => ({ value: b.capacityUnits, label: b.label }))}
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label>Desired dose</Label>
-            <div className="flex gap-2">
-              <Input
-                type="number"
-                step={doseUnit === "mcg" ? 25 : 0.05}
-                min={0}
-                value={doseValue}
-                onChange={(e) => setDoseValue(e.target.valueAsNumber || 0)}
-              />
-              <select
-                value={doseUnit}
-                onChange={(e) => setDoseUnit(e.target.value as "mg" | "mcg")}
-                className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-2 text-sm"
-              >
-                <option value="mg">mg</option>
-                <option value="mcg">mcg</option>
-              </select>
-            </div>
+        {/* concentration callout */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] px-4 py-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]">Concentration</p>
+            <p className="text-xl font-semibold tabular-nums text-[var(--color-primary)]">
+              {concentration > 0 ? concentration.toFixed(3) : "—"}
+              <span className="ml-1 text-xs font-normal text-[var(--color-muted-foreground)]">mg/mL</span>
+            </p>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="cal">Syringe calibration</Label>
-            <select
-              id="cal"
-              value={unitsPerMl}
-              onChange={(e) => setUnitsPerMl(Number(e.target.value))}
-              className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
-            >
-              <option value={100}>U-100 (100 units / mL)</option>
-              <option value={50}>U-50 (50 units / mL)</option>
-              <option value={40}>U-40 (40 units / mL)</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="barrel">Barrel size</Label>
-            <select
-              id="barrel"
-              value={barrel}
-              onChange={(e) => setBarrel(Number(e.target.value))}
-              className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
-            >
-              {SYRINGE_BARRELS.map((b) => (
-                <option key={b.capacityUnits} value={b.capacityUnits}>
-                  {b.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="freq">Doses per week (optional)</Label>
-            <Input
-              id="freq"
-              type="number"
-              step={0.5}
-              min={0}
-              placeholder="e.g. 7 daily, 3.5 EOD"
-              value={dosesPerWeek}
-              onChange={(e) => setDosesPerWeek(e.target.value === "" ? "" : e.target.valueAsNumber || 0)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="cost">Vial cost USD (optional)</Label>
-            <Input
-              id="cost"
-              type="number"
-              step={1}
-              min={0}
-              placeholder="for cost-per-dose"
-              value={vialCost}
-              onChange={(e) => setVialCost(e.target.value === "" ? "" : e.target.valueAsNumber || 0)}
-            />
+          <div className="text-right">
+            <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]">Per syringe unit</p>
+            <p className="text-sm font-medium tabular-nums">
+              {mgPerUnit > 0 ? (mgPerUnit >= 1 ? `${mgPerUnit.toFixed(3)} mg` : `${(mgPerUnit * 1000).toFixed(1)} mcg`) : "—"}
+            </p>
           </div>
         </div>
       </section>
 
+      {/* STEP 2 — dose, with either/or toggle */}
+      <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
+        <Step n={2} title="Dose" />
+
+        <div className="mt-4 inline-flex rounded-lg border border-[var(--color-border)] p-1">
+          <ToggleBtn active={mode === "dose"} onClick={() => setMode("dose")}>
+            By dose
+          </ToggleBtn>
+          <ToggleBtn active={mode === "units"} onClick={() => setMode("units")}>
+            By units drawn
+          </ToggleBtn>
+        </div>
+
+        {mode === "dose" ? (
+          <div className="mt-4 space-y-3">
+            <div className="space-y-2">
+              <Label>Desired dose</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  step={doseUnit === "mcg" ? 25 : 0.05}
+                  min={0}
+                  value={doseValue}
+                  onChange={(e) => setDoseValue(e.target.valueAsNumber || 0)}
+                />
+                <select
+                  value={doseUnit}
+                  onChange={(e) => setDoseUnit(e.target.value as "mg" | "mcg")}
+                  className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-2 text-sm"
+                >
+                  <option value="mg">mg</option>
+                  <option value="mcg">mcg</option>
+                </select>
+              </div>
+            </div>
+            {quickFills && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-[var(--color-muted-foreground)]">Quick fill:</span>
+                {quickFills.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => {
+                      setDoseUnit(selected!.ref_dose!.unit as "mg" | "mcg");
+                      setDoseValue(Number(v.toFixed(selected!.ref_dose!.unit === "mcg" ? 0 : 3)));
+                    }}
+                    className="rounded-md border border-[var(--color-border)] px-2 py-1 text-xs tabular-nums hover:bg-[var(--color-muted)]"
+                  >
+                    {Number(v.toFixed(selected!.ref_dose!.unit === "mcg" ? 0 : 3))} {selected!.ref_dose!.unit}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mt-4 space-y-2">
+            <Label>Units to draw (U-{unitsPerMl})</Label>
+            <Input
+              type="number"
+              step={0.5}
+              min={0}
+              value={drawUnits}
+              onChange={(e) => setDrawUnits(e.target.valueAsNumber || 0)}
+              className="w-40"
+            />
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              Enter what you drew on the syringe — we compute the dose it delivers.
+            </p>
+          </div>
+        )}
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <NumOptField label="Doses per week (optional)" value={dosesPerWeek} onChange={setDosesPerWeek} placeholder="7 daily, 3.5 EOD" />
+          <NumOptField label="Vial cost USD (optional)" value={vialCost} onChange={setVialCost} placeholder="for cost-per-dose" />
+        </div>
+      </section>
+
+      {/* RESULT */}
       <section className="rounded-xl border border-[var(--color-primary)] bg-[var(--color-card)] p-6">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--color-primary)]">
-          Result
-        </h2>
-        {!plan ? (
-          <p className="text-sm text-[var(--color-destructive)]">All inputs must be greater than 0.</p>
+        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--color-primary)]">Result</h2>
+        {!calc ? (
+          <p className="text-sm text-[var(--color-destructive)]">Enter a vial, water, and dose (all &gt; 0).</p>
         ) : (
           <>
-            <dl className="grid gap-4 sm:grid-cols-3">
-              <Stat label="Concentration" value={plan.concentrationMgPerMl.toFixed(3)} unit="mg/mL" />
-              <Stat label="Volume to draw" value={plan.drawMl.toFixed(3)} unit="mL" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <BigStat label="Injection volume" value={calc.drawMl.toFixed(3)} unit="mL" />
+              <BigStat label={`Draw to (U-${unitsPerMl})`} value={calc.units.toFixed(1)} unit="units" emphasis />
+            </div>
+
+            <dl className="mt-4 grid gap-4 sm:grid-cols-3">
               <Stat
-                label={`Insulin units (U-${unitsPerMl})`}
-                value={plan.insulinUnits !== null ? plan.insulinUnits.toFixed(1) : "—"}
-                unit="units"
-                emphasis
+                label={mode === "units" ? "Delivers" : "Dose"}
+                value={calc.effDoseMg >= 1 ? calc.effDoseMg.toFixed(3) : (calc.effDoseMg * 1000).toFixed(0)}
+                unit={calc.effDoseMg >= 1 ? "mg" : "mcg"}
               />
-              <Stat label="Doses per vial" value={plan.dosesPerVial.toFixed(1)} unit="doses" />
-              <Stat
-                label="Days of supply"
-                value={plan.daysOfSupply !== null ? plan.daysOfSupply.toFixed(0) : "—"}
-                unit="days"
-              />
-              <Stat
-                label="Cost per dose"
-                value={plan.costPerDoseUsd !== null ? `$${plan.costPerDoseUsd.toFixed(2)}` : "—"}
-                unit=""
-              />
+              <Stat label="Doses per vial" value={calc.dosesPerVial.toFixed(1)} unit="doses" />
+              <Stat label="Days of supply" value={calc.daysOfSupply !== null ? calc.daysOfSupply.toFixed(0) : "—"} unit="days" />
+              <Stat label="Cost per dose" value={calc.costPerDose !== null ? `$${calc.costPerDose.toFixed(2)}` : "—"} unit="" />
             </dl>
 
             {syringe && (
@@ -294,16 +330,14 @@ export function ReconstitutionTab({
             {blendDelivery && blendDelivery.length > 0 && (
               <div className="mt-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
-                  Per-component delivered at {plan!.drawMl.toFixed(3)} mL draw
+                  Per-component delivered at {calc.drawMl.toFixed(3)} mL
                 </p>
                 <table className="w-full text-sm">
                   <tbody>
                     {blendDelivery.map((c) => (
                       <tr key={c.label} className="border-b border-[var(--color-border)] last:border-0">
                         <td className="py-1.5">{c.label}</td>
-                        <td className="py-1.5 text-right text-xs text-[var(--color-muted-foreground)]">
-                          {c.mg} mg in vial
-                        </td>
+                        <td className="py-1.5 text-right text-xs text-[var(--color-muted-foreground)]">{c.mg} mg in vial</td>
                         <td className="py-1.5 text-right font-medium tabular-nums">
                           {c.deliveredMg >= 1 ? `${c.deliveredMg.toFixed(2)} mg` : `${(c.deliveredMg * 1000).toFixed(0)} mcg`}
                         </td>
@@ -317,24 +351,8 @@ export function ReconstitutionTab({
               </div>
             )}
 
-            <div className="mt-6 flex flex-col gap-3 border-t border-[var(--color-border)] pt-4 sm:flex-row sm:items-end">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="savecmp">Tag to compound (optional)</Label>
-                <select
-                  id="savecmp"
-                  value={compoundId}
-                  onChange={(e) => setCompoundId(e.target.value)}
-                  className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
-                >
-                  <option value="">— none —</option>
-                  {compounds.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <Button onClick={saveMix} disabled={saving}>
+            <div className="mt-6 flex justify-end border-t border-[var(--color-border)] pt-4">
+              <Button onClick={saveMix} disabled={saving} variant="outline">
                 {saving ? "Saving…" : "Save this mix"}
               </Button>
             </div>
@@ -342,84 +360,47 @@ export function ReconstitutionTab({
         )}
       </section>
 
-      <ReverseMode unitsPerMl={unitsPerMl} vialMg={vialMg} bacWaterMl={bacWaterMl} />
-
       <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-xs leading-relaxed text-[var(--color-muted-foreground)]">
         <p className="font-medium text-[var(--color-foreground)]">Sterile-technique reminders</p>
         <ul className="mt-2 list-disc space-y-1 pl-4">
           <li>Wipe the vial stopper with an alcohol prep before each draw.</li>
-          <li>Inject bacteriostatic water down the side of the vial, slowly.</li>
-          <li>Swirl gently; do not shake.</li>
-          <li>Use a new needle for every injection. Do not reuse.</li>
-          <li>Refrigerate reconstituted peptides per manufacturer / clinician guidance.</li>
+          <li>Inject bacteriostatic water down the side of the vial, slowly; swirl, don&apos;t shake.</li>
+          <li>Use a new needle for every injection. Refrigerate per guidance.</li>
           <li>If anything looks cloudy, particulate, or off-color — do not use.</li>
         </ul>
+        <p className="mt-2">This tool does math on the numbers you enter. It does not recommend doses.</p>
       </section>
     </div>
   );
 }
 
-function ReverseMode({
-  unitsPerMl,
-  vialMg,
-  bacWaterMl,
-}: {
-  unitsPerMl: number;
-  vialMg: number;
-  bacWaterMl: number;
-}) {
-  const [units, setUnits] = useState(10);
-  const result = useMemo(() => {
-    try {
-      return doseFromUnits({ vialMg, bacWaterMl, insulinUnits: units, syringeUnitsPerMl: unitsPerMl });
-    } catch {
-      return null;
-    }
-  }, [vialMg, bacWaterMl, units, unitsPerMl]);
-
+function Step({ n, title }: { n: number; title: string }) {
   return (
-    <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
-      <h2 className="mb-1 text-sm font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-        Reverse: units → dose
-      </h2>
-      <p className="mb-4 text-xs text-[var(--color-muted-foreground)]">
-        Uses the same vial + water above. Enter what you drew on the syringe to confirm the dose.
-      </p>
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="rev">Units drawn (U-{unitsPerMl})</Label>
-          <Input
-            id="rev"
-            type="number"
-            step={0.5}
-            min={0}
-            value={units}
-            onChange={(e) => setUnits(e.target.valueAsNumber || 0)}
-            className="w-40"
-          />
-        </div>
-        {result && (
-          <div className="flex gap-6">
-            <Stat label="That's" value={result.doseMg.toFixed(3)} unit="mg" />
-            <Stat label="=" value={result.doseMcg.toFixed(0)} unit="mcg" emphasis />
-          </div>
-        )}
-      </div>
-    </section>
+    <div className="flex items-center gap-2">
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-[var(--color-primary-foreground)]">
+        {n}
+      </span>
+      <h2 className="text-sm font-semibold">{title}</h2>
+    </div>
   );
 }
 
-function NumField({
-  label,
-  value,
-  step,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  step: number;
-  onChange: (n: number) => void;
-}) {
+function ToggleBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+        active ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function NumField({ label, value, step, onChange }: { label: string; value: number; step: number; onChange: (n: number) => void }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
@@ -428,25 +409,78 @@ function NumField({
   );
 }
 
-function Stat({
+function NumOptField({
   label,
   value,
-  unit,
-  emphasis,
+  onChange,
+  placeholder,
 }: {
   label: string;
-  value: string;
-  unit: string;
-  emphasis?: boolean;
+  value: number | "";
+  onChange: (v: number | "") => void;
+  placeholder?: string;
 }) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Input
+        type="number"
+        step={0.5}
+        min={0}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value === "" ? "" : e.target.valueAsNumber || 0)}
+      />
+    </div>
+  );
+}
+
+function SelectField<T extends number>({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <select
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value) as T)}
+        className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function BigStat({ label, value, unit, emphasis }: { label: string; value: string; unit: string; emphasis?: boolean }) {
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+      <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]">{label}</p>
+      <p className={cn("mt-1 tabular-nums", emphasis ? "text-3xl font-semibold text-[var(--color-primary)]" : "text-2xl font-semibold")}>
+        {value}
+        <span className="ml-1 text-xs font-normal text-[var(--color-muted-foreground)]">{unit}</span>
+      </p>
+    </div>
+  );
+}
+
+function Stat({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
     <div>
       <dt className="text-xs text-[var(--color-muted-foreground)]">{label}</dt>
-      <dd
-        className={`mt-1 tabular-nums ${
-          emphasis ? "text-3xl font-semibold text-[var(--color-primary)]" : "text-xl font-medium"
-        }`}
-      >
+      <dd className="mt-1 text-xl font-medium tabular-nums">
         {value}
         {unit && <span className="ml-1 text-xs font-normal text-[var(--color-muted-foreground)]">{unit}</span>}
       </dd>
