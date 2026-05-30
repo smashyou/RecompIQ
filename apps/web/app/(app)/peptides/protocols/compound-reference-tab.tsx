@@ -20,6 +20,15 @@ export interface DoseReference {
   high_value: number | null;
 }
 
+export interface CompoundSynergy {
+  id: string;
+  paired_name: string;
+  rationale: string;
+  evidence_level: string;
+  is_human_data: boolean;
+  caution_notes: string | null;
+}
+
 export interface ReferenceCompound {
   id: string;
   slug: string;
@@ -29,6 +38,7 @@ export interface ReferenceCompound {
   mechanism: string | null;
   monitoring_notes: string[];
   references: DoseReference[];
+  synergies: CompoundSynergy[];
 }
 
 export function CompoundReferenceTab({
@@ -157,6 +167,40 @@ export function CompoundReferenceTab({
                     <ul className="mt-1 list-disc space-y-0.5 pl-4">
                       {c.monitoring_notes.map((n, i) => (
                         <li key={i}>{n}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {c.synergies.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Commonly combined with</p>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">
+                      Educational pharmacologic rationale only — not a recommended protocol. Any
+                      combination should be reviewed with a clinician and checked against your
+                      contraindications.
+                    </p>
+                    <ul className="space-y-2">
+                      {c.synergies.map((s) => (
+                        <li key={s.id} className="rounded-lg border border-[var(--color-border)] p-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-sm font-medium">{s.paired_name}</span>
+                            <div className="flex items-center gap-2">
+                              <EvidenceBadge level={s.evidence_level as EvidenceLevel} />
+                              {!s.is_human_data && (
+                                <span className="rounded bg-[var(--color-muted)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted-foreground)]">
+                                  non-human data
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">{s.rationale}</p>
+                          {s.caution_notes && (
+                            <p className="mt-1 text-xs text-[var(--color-destructive)]">
+                              Caution: {s.caution_notes}
+                            </p>
+                          )}
+                        </li>
                       ))}
                     </ul>
                   </div>

@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 import { ProtocolsHub } from "./hub";
-import type { ReferenceCompound, DoseReference } from "./compound-reference-tab";
+import type { ReferenceCompound, DoseReference, CompoundSynergy } from "./compound-reference-tab";
 import type { ProtocolSchedule } from "./titration-tab";
 
 export const dynamic = "force-dynamic";
@@ -61,12 +61,16 @@ export default async function ProtocolsPage({
   const { tab } = await searchParams;
   const supabase = await createSupabaseServerClient();
 
-  const [compoundsRes, refsRes, schedulesRes] = await Promise.all([
+  const [compoundsRes, refsRes, synRes, schedulesRes] = await Promise.all([
     supabase
       .from("compounds")
       .select("id,slug,name,evidence_level,fda_approved,mechanism,monitoring_notes")
       .order("name"),
     supabase.from("compound_dose_reference").select("*").order("context"),
+    supabase
+      .from("compound_synergies")
+      .select("id,compound_id,paired_name,rationale,evidence_level,is_human_data,caution_notes")
+      .order("paired_name"),
     supabase
       .from("protocol_schedules")
       .select("*, protocol_schedule_weeks(*, compounds(slug,name))")
@@ -75,6 +79,7 @@ export default async function ProtocolsPage({
 
   const compounds = (compoundsRes.data ?? []) as CompoundRow[];
   const refRows = (refsRes.data ?? []) as DoseRefRow[];
+  const synRows = (synRes.data ?? []) as (CompoundSynergy & { compound_id: string })[];
   const schedules = (schedulesRes.data ?? []) as ProtocolSchedule[];
 
   // Group dose references under their compound, pre-wrapping the range string.
@@ -100,6 +105,21 @@ export default async function ProtocolsPage({
     refsByCompound.set(row.compound_id, list);
   }
 
+  // Group synergies under their compound.
+  const synByCompound = new Map<string, CompoundSynergy[]>();
+  for (const row of synRows) {
+    const list = synByCompound.get(row.compound_id) ?? [];
+    list.push({
+      id: row.id,
+      paired_name: row.paired_name,
+      rationale: row.rationale,
+      evidence_level: row.evidence_level,
+      is_human_data: row.is_human_data,
+      caution_notes: row.caution_notes,
+    });
+    synByCompound.set(row.compound_id, list);
+  }
+
   const referenceCompounds: ReferenceCompound[] = compounds.map((c) => ({
     id: c.id,
     slug: c.slug,
@@ -109,6 +129,7 @@ export default async function ProtocolsPage({
     mechanism: c.mechanism,
     monitoring_notes: c.monitoring_notes ?? [],
     references: refsByCompound.get(c.id) ?? [],
+    synergies: synByCompound.get(c.id) ?? [],
   }));
 
   const compoundOptions = compounds.map((c) => ({ id: c.id, name: c.name }));
