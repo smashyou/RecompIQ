@@ -3,30 +3,41 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import Svg, { Polyline } from "react-native-svg";
+import Svg, { Circle, Path } from "react-native-svg";
+import type { EvidenceLevel } from "@peptide/shared";
 import { buildProjection } from "@peptide/projections";
 import { Card } from "@/components/ui/Card";
-import { Pill } from "@/components/ui/Pill";
+import { EvidenceBadge } from "@/components/ui/EvidenceBadge";
+import { SafetyDisclaimer } from "@/components/ui/SafetyDisclaimer";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Loading } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
-import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
+import { radius } from "@/lib/theme";
 
+interface ProtocolItem {
+  slug: string;
+  name: string;
+  category: string;
+  evidence_level: EvidenceLevel;
+}
 interface Snap {
   name: string;
   isDemo: boolean;
   goal: any;
   weights: { logged_at: string; value_lb: number }[];
   latestWeight: number | null;
+  latestWeightAt: string | null;
+  weekDelta: number | null;
   vital: any;
   symptom: any;
   steps: number | null;
   sleepMin: number | null;
   macros: { calories_kcal: number; protein_g: number; carbs_g: number; fat_g: number };
-  hasActiveStack: boolean;
   recentDoses: { taken_at: string; adherence: string }[];
-  todayWorkout: { name: string | null; session_type: string; duration_min: number | null } | null;
-  suggestion: { slug: string; name: string; phase: string } | null;
+  activePhase: string | null;
+  protocol: ProtocolItem[];
   bodyShot: { lastCapturedAt: string | null; frequencyDays: number; overdue: boolean } | null;
 }
 
@@ -37,7 +48,7 @@ function todayStr() {
 async function loadDashboard(uid: string, email: string): Promise<Snap> {
   const today = todayStr();
   const since = new Date(Date.now() - 14 * 86400000).toISOString();
-  const [profile, goalRes, weightsRes, vitalRes, sympRes, stepsRes, sleepRes, foodRes, stacksRes, dosesRes, workoutRes, settingsRes, bodyRes] =
+  const [profile, goalRes, weightsRes, vitalRes, sympRes, stepsRes, sleepRes, foodRes, stacksRes, dosesRes, settingsRes, bodyRes] =
     await Promise.all([
       supabase.from("profiles").select("display_name, is_demo").eq("user_id", uid).maybeSingle(),
       supabase.from("goals").select("start_weight_lb,goal_weight_lb_min,goal_weight_lb_max,timeline_weeks,phase,protein_target_g_min,protein_target_g_max").eq("user_id", uid).order("created_at", { ascending: false }).limit(1).maybeSingle(),
@@ -47,9 +58,15 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
       supabase.from("steps_logs").select("count").eq("user_id", uid).eq("day", today).maybeSingle(),
       supabase.from("sleep_logs").select("duration_min").eq("user_id", uid).eq("night_of", today).maybeSingle(),
       supabase.from("food_logs").select("calories_kcal,protein_g,carbs_g,fat_g").eq("user_id", uid).gte("logged_at", today),
-      supabase.from("peptide_stacks").select("id").eq("user_id", uid).eq("is_active", true).limit(1),
+      supabase
+        .from("peptide_stacks")
+        .select("phase, peptide_stack_items ( compounds ( slug, name, category, evidence_level ) )")
+        .eq("user_id", uid)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
       supabase.from("peptide_doses").select("taken_at,adherence").eq("user_id", uid).gte("taken_at", since).order("taken_at", { ascending: false }),
-      supabase.from("workouts").select("name,session_type,duration_min").eq("user_id", uid).eq("date", today).maybeSingle(),
       supabase.from("user_settings").select("body_photo_frequency_days").eq("user_id", uid).maybeSingle(),
       supabase.from("body_photos").select("captured_at").eq("user_id", uid).order("captured_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
@@ -67,11 +84,23 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
   );
 
   const goal = goalRes.data as any;
-  let suggestion: Snap["suggestion"] = null;
-  if (!workoutRes.data && goal?.phase) {
-    const { data: tmpl } = await supabase.from("workout_templates").select("slug,name,phase").eq("phase", goal.phase).limit(1).maybeSingle();
-    if (tmpl) suggestion = tmpl as any;
+  const latestWeight = weights.length ? weights[weights.length - 1].value_lb : null;
+  const latestWeightAt = weights.length ? weights[weights.length - 1].logged_at : null;
+
+  // 7-day delta: latest vs the earliest weight within the trailing 7 days.
+  let weekDelta: number | null = null;
+  if (weights.length >= 2 && latestWeight != null) {
+    const cutoff = Date.now() - 7 * 86400000;
+    const prior = weights.filter((w) => new Date(w.logged_at).getTime() <= cutoff);
+    const ref = prior.length ? prior[prior.length - 1] : weights[0];
+    weekDelta = latestWeight - ref.value_lb;
   }
+
+  const stack = stacksRes.data as any;
+  const protocol: ProtocolItem[] = ((stack?.peptide_stack_items ?? []) as any[])
+    .map((it) => it.compounds)
+    .filter(Boolean)
+    .map((c: any) => ({ slug: c.slug, name: c.name, category: c.category, evidence_level: c.evidence_level }));
 
   const freqDays = (settingsRes.data as any)?.body_photo_frequency_days ?? 7;
   const lastCap = (bodyRes.data as any)?.captured_at ?? null;
@@ -82,16 +111,17 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
     isDemo: Boolean((profile.data as any)?.is_demo),
     goal,
     weights,
-    latestWeight: weights.length ? weights[weights.length - 1].value_lb : null,
+    latestWeight,
+    latestWeightAt,
+    weekDelta,
     vital: vitalRes.data,
     symptom: sympRes.data,
     steps: (stepsRes.data as any)?.count ?? null,
     sleepMin: (sleepRes.data as any)?.duration_min ?? null,
     macros,
-    hasActiveStack: ((stacksRes.data ?? []) as any[]).length > 0,
     recentDoses: (dosesRes.data ?? []) as any[],
-    todayWorkout: (workoutRes.data as any) ?? null,
-    suggestion,
+    activePhase: stack?.phase ?? null,
+    protocol,
     bodyShot: { lastCapturedAt: lastCap, frequencyDays: freqDays, overdue },
   };
 }
@@ -99,6 +129,7 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
 export default function Dashboard() {
   const router = useRouter();
   const { session } = useSession();
+  const { colors } = useTheme();
   const [snap, setSnap] = useState<Snap | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -131,152 +162,279 @@ export default function Dashboard() {
       })
     : null;
 
-  const lost = snap.goal && snap.latestWeight != null ? Number(snap.goal.start_weight_lb) - snap.latestWeight : null;
-  const proteinPct = snap.goal?.protein_target_g_max ? Math.min(100, Math.round((snap.macros.protein_g / snap.goal.protein_target_g_max) * 100)) : 0;
+  const start = snap.goal ? Number(snap.goal.start_weight_lb) : null;
+  const targetMid = snap.goal ? (Number(snap.goal.goal_weight_lb_min) + Number(snap.goal.goal_weight_lb_max)) / 2 : null;
+  const lost = start != null && snap.latestWeight != null ? start - snap.latestWeight : null;
+  const toTarget = targetMid != null && snap.latestWeight != null ? snap.latestWeight - targetMid : null;
+  const proteinMax = snap.goal?.protein_target_g_max ?? null;
+  const proteinPct = proteinMax ? Math.min(100, Math.round((snap.macros.protein_g / proteinMax) * 100)) : 0;
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-background">
+    <SafeAreaView edges={["top"]} className="flex-1" style={{ backgroundColor: colors.background }}>
       <ScrollView
-        contentContainerClassName="px-4 pb-12 pt-2 gap-3"
+        contentContainerStyle={{ paddingBottom: 24 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await refresh(); setRefreshing(false); }} tintColor={colors.mutedForeground} />}
       >
-        <View className="mb-1">
-          <Text className="text-2xl font-bold text-foreground">Welcome back, {snap.name}</Text>
-          <Text className="text-sm text-muted-foreground">
-            {snap.isDemo ? "Viewing the demo profile — values are illustrative." : "Educational tracking. Not medical advice."}
-          </Text>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <Overline color={colors.primary}>{snap.isDemo ? "Demo profile" : "Dashboard"}</Overline>
+            <Text style={{ fontSize: 24, fontWeight: "600", letterSpacing: -0.5, color: colors.foreground, marginTop: 3 }} numberOfLines={1}>
+              Welcome back
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <ThemeToggle compact />
+            <Avatar name={snap.name} colors={colors} />
+          </View>
         </View>
 
-        {snap.bodyShot?.overdue ? (
-          <Pressable onPress={() => router.push("/(tabs)/more/body-shots/capture")} className="flex-row items-center justify-between rounded-xl border border-primary bg-card p-4 active:opacity-80">
-            <View className="flex-1 flex-row items-center gap-3">
-              <Ionicons name="camera-outline" size={20} color={colors.primary} />
-              <View className="flex-1">
-                <Text className="text-sm font-medium text-foreground">Time for new body shots</Text>
-                <Text className="text-xs text-muted-foreground">
-                  {snap.bodyShot.lastCapturedAt
-                    ? `Last set ~${Math.floor((Date.now() - new Date(snap.bodyShot.lastCapturedAt).getTime()) / 86400000)} days ago · every ${snap.bodyShot.frequencyDays} days.`
-                    : "You haven't taken your first set yet. 4 angles, even lighting."}
+        <View style={{ paddingHorizontal: 16, gap: 12 }}>
+          {/* Body-shot reminder (real alert) */}
+          {snap.bodyShot?.overdue ? (
+            <Pressable
+              onPress={() => router.push("/(tabs)/more/body-shots/capture")}
+              style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 11, paddingHorizontal: 13, borderRadius: radius.md, borderWidth: 1, borderColor: colors.warnLine, backgroundColor: colors.warnWash }}
+            >
+              <Ionicons name="camera-outline" size={16} color={colors.warn} />
+              <Text style={{ flex: 1, fontSize: 12, color: colors.foreground }}>
+                <Text style={{ color: colors.warn, fontWeight: "600" }}>Body shots due</Text>
+                {snap.bodyShot.lastCapturedAt
+                  ? ` · last ~${Math.floor((Date.now() - new Date(snap.bodyShot.lastCapturedAt).getTime()) / 86400000)}d ago`
+                  : " · first set"}
+              </Text>
+              <Ionicons name="chevron-forward" size={15} color={colors.fgSubtle} />
+            </Pressable>
+          ) : null}
+
+          {/* Weight */}
+          <Pressable onPress={() => router.push("/(tabs)/log")}>
+            <MCard title="Weight" hint={snap.latestWeightAt ? fmtDate(snap.latestWeightAt) : undefined} colors={colors}>
+              <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+                <Text style={{ fontVariant: ["tabular-nums"], fontWeight: "500", fontSize: 32, letterSpacing: -0.6, color: colors.foreground }}>
+                  {snap.latestWeight ?? "—"}
+                  <Text style={{ fontSize: 14, color: colors.fgSubtle }}> lb</Text>
                 </Text>
+                {snap.weekDelta != null ? (
+                  <Text style={{ fontVariant: ["tabular-nums"], fontSize: 12, color: snap.weekDelta <= 0 ? colors.positive : colors.warn }}>
+                    7d {snap.weekDelta <= 0 ? "−" : "+"}{Math.abs(snap.weekDelta).toFixed(1)}
+                  </Text>
+                ) : null}
               </View>
-            </View>
-            <Text className="text-xs text-primary">Capture →</Text>
+              <View style={{ flexDirection: "row", gap: 8, marginVertical: 12 }}>
+                <StatCell label="Start" value={start != null ? start.toFixed(1) : "—"} colors={colors} />
+                <StatCell label="Lost" value={lost != null ? Math.abs(lost).toFixed(1) : "—"} colors={colors} />
+                <StatCell label="To target" value={toTarget != null ? Math.abs(toTarget).toFixed(1) : "—"} colors={colors} />
+              </View>
+              <Spark points={snap.weights.map((w) => w.value_lb)} color={colors.primary} />
+            </MCard>
           </Pressable>
-        ) : null}
 
-        {/* Weight */}
-        <DashCard title="Weight" onPress={() => router.push("/(tabs)/log")}>
-          <View className="flex-row items-end justify-between">
-            <View>
-              <Text className="text-4xl font-bold text-foreground">{snap.latestWeight ?? "—"}<Text className="text-lg text-muted-foreground"> lb</Text></Text>
-              <View className="mt-1 flex-row flex-wrap gap-x-3">
-                {snap.goal ? <Text className="text-xs text-muted-foreground">Goal {snap.goal.goal_weight_lb_min}–{snap.goal.goal_weight_lb_max} lb</Text> : null}
-                {lost != null ? <Text className="text-xs text-accent">{lost >= 0 ? "−" : "+"}{Math.abs(lost).toFixed(1)} lb from start</Text> : null}
-              </View>
-            </View>
-            <Sparkline data={snap.weights.map((w) => w.value_lb)} />
+          {/* Projection */}
+          {proj ? (
+            <Pressable onPress={() => router.push("/(tabs)/more/projections")}>
+              <MCard title="Projection" hint={proj.series.target.etaWeeks != null ? `ETA ${proj.series.target.etaWeeks} wk` : undefined} colors={colors}>
+                <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+                  <Text style={{ fontVariant: ["tabular-nums"], fontWeight: "500", fontSize: 26, color: colors.foreground }}>
+                    {proj.series.target.lbsPerWeek.toFixed(2)}
+                    <Text style={{ fontSize: 13, color: colors.fgSubtle }}> lb/wk</Text>
+                  </Text>
+                  <AdherencePill adherence={proj.adherence} colors={colors} />
+                </View>
+              </MCard>
+            </Pressable>
+          ) : null}
+
+          {/* Vitals + Macros row */}
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <Pressable style={{ flex: 1 }} onPress={() => router.push("/(tabs)/log")}>
+              <MCard title="Vitals" hint="Latest" colors={colors}>
+                <Text style={{ fontVariant: ["tabular-nums"], fontWeight: "500", fontSize: 24, color: colors.foreground }}>
+                  {snap.vital?.bp_systolic != null && snap.vital?.bp_diastolic != null ? `${snap.vital.bp_systolic}/${snap.vital.bp_diastolic}` : "—"}
+                </Text>
+                <Text style={{ fontSize: 11, color: colors.fgSubtle, marginTop: 4 }}>
+                  {snap.vital?.glucose_mgdl != null ? `Glu ${snap.vital.glucose_mgdl}` : "BP"}
+                  {snap.vital?.hr != null ? ` · ${snap.vital.hr} bpm` : ""}
+                </Text>
+              </MCard>
+            </Pressable>
+            <Pressable style={{ flex: 1 }} onPress={() => router.push("/(tabs)/more/food")}>
+              <MCard title="Protein" hint="Today" colors={colors}>
+                <Ring pct={proteinPct} colors={colors} />
+                <Text style={{ textAlign: "center", fontVariant: ["tabular-nums"], fontSize: 12, color: colors.mutedForeground, marginTop: 10 }}>
+                  {Math.round(snap.macros.protein_g)}{proteinMax ? ` / ${proteinMax}g` : "g"}
+                </Text>
+              </MCard>
+            </Pressable>
           </View>
-        </DashCard>
 
-        {/* Projection */}
-        {proj ? (
-          <DashCard title="Projection" onPress={() => router.push("/(tabs)/more/projections")}>
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-sm text-muted-foreground">Target rate</Text>
-                <Text className="text-2xl font-bold text-foreground">{proj.series.target.lbsPerWeek.toFixed(2)}<Text className="text-sm text-muted-foreground"> lb/wk</Text></Text>
-                {proj.series.target.etaWeeks != null ? <Text className="text-xs text-muted-foreground">ETA {proj.series.target.etaWeeks} wk</Text> : null}
+          {/* Activity + Adherence row */}
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <Pressable style={{ flex: 1 }} onPress={() => router.push("/(tabs)/log")}>
+              <MCard title="Activity" hint="Today" colors={colors}>
+                <Text style={{ fontVariant: ["tabular-nums"], fontWeight: "500", fontSize: 24, color: colors.foreground }}>
+                  {snap.steps ?? "—"}
+                  <Text style={{ fontSize: 12, color: colors.fgSubtle }}> steps</Text>
+                </Text>
+                <Text style={{ fontSize: 11, color: colors.fgSubtle, marginTop: 4 }}>
+                  {snap.sleepMin != null ? `Sleep ${(snap.sleepMin / 60).toFixed(1)} h` : "No sleep logged"}
+                </Text>
+              </MCard>
+            </Pressable>
+            <Pressable style={{ flex: 1 }} onPress={() => router.push("/(tabs)/peptides/dose-log")}>
+              <MCard title="Adherence" hint="14d" colors={colors}>
+                <AdherenceGrid doses={snap.recentDoses} colors={colors} />
+              </MCard>
+            </Pressable>
+          </View>
+
+          {/* Coach insight */}
+          <Pressable onPress={() => router.push("/(tabs)/coach")}>
+            <MCard colors={colors}>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <GradientGlyph colors={colors} icon="pulse" />
+                <View style={{ flex: 1 }}>
+                  <Overline color={colors.primary} size={9.5}>Coach insight</Overline>
+                  <Text style={{ fontSize: 12.5, lineHeight: 19, color: colors.mutedForeground, marginTop: 4 }}>
+                    {coachInsight(snap)}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={15} color={colors.fgSubtle} />
               </View>
-              <Pill label={adherenceLabel(proj.adherence)} tone={adherenceTone(proj.adherence)} />
-            </View>
-          </DashCard>
-        ) : null}
+            </MCard>
+          </Pressable>
 
-        {/* Vitals + Activity row */}
-        <View className="flex-row gap-3">
-          <DashCard title="Vitals" className="flex-1" onPress={() => router.push("/(tabs)/log")}>
-            <Text className="text-2xl font-bold text-foreground">{snap.vital?.bp_systolic != null && snap.vital?.bp_diastolic != null ? `${snap.vital.bp_systolic}/${snap.vital.bp_diastolic}` : "—"}</Text>
-            <Text className="text-xs text-muted-foreground">{snap.vital?.glucose_mgdl != null ? `Glucose ${snap.vital.glucose_mgdl} mg/dL` : "BP"}{snap.vital?.hr != null ? ` · ${snap.vital.hr} bpm` : ""}</Text>
-          </DashCard>
-          <DashCard title="Activity" className="flex-1" onPress={() => router.push("/(tabs)/log")}>
-            <Text className="text-2xl font-bold text-foreground">{snap.steps ?? "—"}<Text className="text-sm text-muted-foreground"> steps</Text></Text>
-            <Text className="text-xs text-muted-foreground">{snap.sleepMin != null ? `Sleep ${(snap.sleepMin / 60).toFixed(1)} h` : "No sleep logged"}</Text>
-          </DashCard>
+          {/* Active protocol */}
+          {snap.protocol.length > 0 ? (
+            <MCard title="Active protocol" hint={snap.activePhase ? `Phase ${snap.activePhase}` : undefined} colors={colors}>
+              {snap.protocol.map((c, i) => (
+                <Pressable
+                  key={c.slug}
+                  onPress={() => router.push({ pathname: "/(tabs)/peptides/library/[slug]", params: { slug: c.slug } })}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 11, paddingVertical: 11, borderTopWidth: i ? 1 : 0, borderTopColor: colors.border }}
+                >
+                  <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.surface2, alignItems: "center", justifyContent: "center" }}>
+                    <Ionicons name="medical-outline" size={15} color={colors.primary} />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ fontWeight: "600", fontSize: 13.5, color: colors.foreground }} numberOfLines={1}>{c.name}</Text>
+                    <Text style={{ fontSize: 11, color: colors.fgSubtle }} numberOfLines={1}>{c.category.replace(/_/g, " ")}</Text>
+                  </View>
+                  <EvidenceBadge level={c.evidence_level} />
+                </Pressable>
+              ))}
+              <View style={{ marginTop: 12 }}>
+                <SafetyDisclaimer variant="compact" />
+              </View>
+            </MCard>
+          ) : null}
         </View>
-
-        {/* Macros */}
-        <DashCard title="Macros today" onPress={() => router.push("/(tabs)/more/food")}>
-          <View className="flex-row items-baseline justify-between">
-            <Text className="text-3xl font-bold text-foreground">{Math.round(snap.macros.protein_g)}<Text className="text-base text-muted-foreground"> g protein</Text></Text>
-            {snap.goal ? <Text className="text-xs text-muted-foreground">target {snap.goal.protein_target_g_min}–{snap.goal.protein_target_g_max} g</Text> : null}
-          </View>
-          <View className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><View className="h-full rounded-full bg-primary" style={{ width: `${proteinPct}%` }} /></View>
-          <Text className="mt-2 text-xs text-muted-foreground">{Math.round(snap.macros.calories_kcal)} kcal · {Math.round(snap.macros.carbs_g)}c · {Math.round(snap.macros.fat_g)}f</Text>
-        </DashCard>
-
-        {/* Symptoms */}
-        {snap.symptom ? (
-          <DashCard title="Symptoms" onPress={() => router.push("/(tabs)/log")}>
-            <Text className="text-sm text-muted-foreground">Mood {snap.symptom.mood ?? "—"}/5 · Energy {snap.symptom.energy ?? "—"}/5 · Pain {snap.symptom.pain ?? "—"}/10{snap.symptom.nausea ? " · nausea" : ""}</Text>
-          </DashCard>
-        ) : null}
-
-        {/* Adherence */}
-        {snap.hasActiveStack ? (
-          <DashCard title="Peptide adherence" onPress={() => router.push("/(tabs)/peptides/dose-log")}>
-            <AdherenceGrid doses={snap.recentDoses} />
-          </DashCard>
-        ) : null}
-
-        {/* Workout */}
-        <DashCard title="Workout" onPress={() => router.push("/(tabs)/more/workouts")}>
-          {snap.todayWorkout ? (
-            <Text className="text-sm text-foreground">{snap.todayWorkout.name ?? snap.todayWorkout.session_type}{snap.todayWorkout.duration_min ? ` · ${snap.todayWorkout.duration_min} min` : ""}</Text>
-          ) : snap.suggestion ? (
-            <Text className="text-sm text-muted-foreground">Suggested: {snap.suggestion.name} ({snap.suggestion.phase})</Text>
-          ) : (
-            <Text className="text-sm text-muted-foreground">No session logged today.</Text>
-          )}
-        </DashCard>
-
-        <Card className="gap-1">
-          <Text className="text-sm font-semibold text-foreground">Safety alerts</Text>
-          <Text className="text-xs text-muted-foreground">Coming soon.</Text>
-        </Card>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function DashCard({ title, children, onPress, className }: { title: string; children: React.ReactNode; onPress?: () => void; className?: string }) {
+/* ---- mobile primitives (match the handoff MCard/MHeader/Spark) ---- */
+
+type Tokens = ReturnType<typeof useTheme>["colors"];
+
+function MCard({ title, hint, children, colors }: { title?: string; hint?: string; children: React.ReactNode; colors: Tokens }) {
   return (
-    <Pressable onPress={onPress} className={className}>
-      <Card className="gap-1">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-xs uppercase tracking-wider text-muted-foreground">{title}</Text>
-          {onPress ? <Ionicons name="chevron-forward" size={14} color={colors.mutedForeground} /> : null}
+    <Card>
+      {title || hint ? (
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+          {title ? <Text style={{ fontWeight: "600", fontSize: 13.5, color: colors.foreground }}>{title}</Text> : <View />}
+          {hint ? <Text style={{ fontWeight: "600", fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: colors.fgSubtle }}>{hint}</Text> : null}
         </View>
-        {children}
-      </Card>
-    </Pressable>
+      ) : null}
+      {children}
+    </Card>
   );
 }
 
-function Sparkline({ data }: { data: number[] }) {
-  if (data.length < 2) return null;
-  const w = 100, h = 36;
-  const min = Math.min(...data), max = Math.max(...data);
-  const span = max - min || 1;
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / span) * h}`).join(" ");
+function Overline({ children, color, size = 10 }: { children: React.ReactNode; color: string; size?: number }) {
   return (
-    <Svg width={w} height={h}>
-      <Polyline points={pts} fill="none" stroke={colors.primary} strokeWidth={1.5} />
+    <Text style={{ fontSize: size, fontWeight: "600", letterSpacing: 1.2, textTransform: "uppercase", color }}>
+      {children}
+    </Text>
+  );
+}
+
+function Avatar({ name, colors }: { name: string; colors: Tokens }) {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("") || "U";
+  return (
+    <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" }}>
+      <Text style={{ fontWeight: "600", fontSize: 14, color: colors.primaryForeground }}>{initials}</Text>
+    </View>
+  );
+}
+
+function GradientGlyph({ colors, icon }: { colors: Tokens; icon: keyof typeof Ionicons.glyphMap }) {
+  return (
+    <View style={{ width: 30, height: 30, borderRadius: 9, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" }}>
+      <Ionicons name={icon} size={16} color={colors.primaryForeground} />
+    </View>
+  );
+}
+
+function StatCell({ label, value, colors }: { label: string; value: string; colors: Tokens }) {
+  return (
+    <View style={{ flex: 1 }}>
+      <Text style={{ fontSize: 9, letterSpacing: 0.7, textTransform: "uppercase", color: colors.fgSubtle }}>{label}</Text>
+      <Text style={{ fontVariant: ["tabular-nums"], fontSize: 13, color: colors.foreground, marginTop: 2 }}>{value}</Text>
+    </View>
+  );
+}
+
+function Ring({ pct, colors }: { pct: number; colors: Tokens }) {
+  // SVG donut — RN can't do conic-gradient. Stroke-dashoffset arc.
+  const size = 70, stroke = 9, r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return (
+    <View style={{ alignItems: "center" }}>
+      <Svg width={size} height={size}>
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.surface3} strokeWidth={stroke} fill="none" />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke={colors.positive}
+          strokeWidth={stroke}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - Math.min(1, pct / 100))}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <Text style={{ position: "absolute", top: 0, bottom: 0, textAlignVertical: "center", fontVariant: ["tabular-nums"], fontSize: 14, color: colors.foreground }}>
+        {pct}%
+      </Text>
+    </View>
+  );
+}
+
+function Spark({ points, color }: { points: number[]; color: string }) {
+  if (points.length < 2) return null;
+  const w = 320, h = 46;
+  const min = Math.min(...points), max = Math.max(...points);
+  const span = max - min || 1;
+  const xs = points.map((_, i) => (i / (points.length - 1)) * w);
+  const ys = points.map((v) => h - ((v - min) / span) * (h - 6) - 3);
+  const d = xs.map((x, i) => `${i ? "L" : "M"}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
+  return (
+    <Svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+      <Path d={`${d} L${w},${h} L0,${h} Z`} fill={color} fillOpacity={0.08} />
+      <Path d={d} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
 
-function AdherenceGrid({ doses }: { doses: { taken_at: string; adherence: string }[] }) {
-  // 14-day grid: taken=accent, partial=primary, else muted.
+function AdherenceGrid({ doses, colors }: { doses: { taken_at: string; adherence: string }[]; colors: Tokens }) {
   const days: Record<string, string> = {};
   for (const d of doses) {
     const day = d.taken_at.slice(0, 10);
@@ -287,23 +445,48 @@ function AdherenceGrid({ doses }: { doses: { taken_at: string; adherence: string
     return days[dt] ?? null;
   });
   const taken = cells.filter((c) => c === "taken").length;
+  const pct = Math.round((taken / 14) * 100);
   return (
     <>
-      <View className="flex-row gap-1">
+      <Text style={{ fontVariant: ["tabular-nums"], fontWeight: "500", fontSize: 24, color: colors.foreground }}>{pct}%</Text>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 3, marginTop: 10 }}>
         {cells.map((c, i) => (
-          <View key={i} className="h-5 flex-1 rounded" style={{ backgroundColor: c === "taken" ? colors.accent : c === "partial" ? colors.primary : colors.muted }} />
+          <View
+            key={i}
+            style={{ width: "12.2%", height: 13, borderRadius: 3, backgroundColor: c === "taken" ? colors.positive : c === "partial" ? colors.positiveDim : colors.surface3 }}
+          />
         ))}
       </View>
-      <Text className="mt-2 text-xs text-muted-foreground">{taken}/14 days logged</Text>
     </>
   );
 }
 
-function adherenceLabel(a: string): string {
-  return { ahead: "Ahead", "on-target": "On target", behind: "Behind", stalled: "Stalled", "insufficient-data": "Need data" }[a] ?? a;
+function AdherencePill({ adherence, colors }: { adherence: string; colors: Tokens }) {
+  const label = { ahead: "Ahead", "on-target": "On target", behind: "Behind", stalled: "Stalled", "insufficient-data": "Need data" }[adherence] ?? adherence;
+  const good = adherence === "ahead" || adherence === "on-target";
+  const bad = adherence === "behind" || adherence === "stalled";
+  const c = good ? colors.positive : bad ? colors.danger : colors.fgSubtle;
+  return (
+    <View style={{ paddingHorizontal: 9, paddingVertical: 3, borderRadius: radius.pill, borderWidth: 1, borderColor: c }}>
+      <Text style={{ fontSize: 10, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.7, color: c }}>{label}</Text>
+    </View>
+  );
 }
-function adherenceTone(a: string): "default" | "accent" | "destructive" {
-  if (a === "ahead" || a === "on-target") return "accent";
-  if (a === "behind" || a === "stalled") return "destructive";
-  return "default";
+
+function coachInsight(snap: Snap): string {
+  const parts: string[] = [];
+  if (snap.weekDelta != null) {
+    const dir = snap.weekDelta <= 0 ? "Down" : "Up";
+    parts.push(`${dir} ${Math.abs(snap.weekDelta).toFixed(1)} lb over 7 days.`);
+  }
+  if (snap.goal?.protein_target_g_min != null && snap.macros.protein_g < Number(snap.goal.protein_target_g_min)) {
+    parts.push("Protein running under target today.");
+  }
+  if (parts.length === 0) parts.push("Log weight, vitals, and meals to unlock trend insights.");
+  return parts.join(" ");
+}
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }

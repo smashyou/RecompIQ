@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { Alert, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -50,10 +51,14 @@ function Field({
   );
 }
 
+const TAB_VALUES: ReadonlySet<string> = new Set(TABS.map((t) => t.value));
+
 export default function QuickLog() {
   const { session } = useSession();
   const userId = session?.user.id;
-  const [tab, setTab] = useState<Tab>("weight");
+  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
+  const initialTab: Tab = tabParam && TAB_VALUES.has(tabParam) ? (tabParam as Tab) : "weight";
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [saving, setSaving] = useState(false);
 
   // Field state (kept flat; each tab reads what it needs).

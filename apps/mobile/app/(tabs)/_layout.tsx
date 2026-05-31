@@ -1,23 +1,21 @@
-import { Tabs, useRouter } from "expo-router";
+import { useState } from "react";
+import { Tabs } from "expo-router";
 import { Pressable, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { QuickLogSheet } from "@/components/QuickLogSheet";
 import { useTheme } from "@/lib/theme-context";
 
 // Bottom tab bar matching the handoff MTabBar: Home · Coach · center FAB(+) ·
 // Peptides · More(Profile). The center FAB is an elevated circular button that
-// opens the Log screen (the quick-log surface).
-// TODO(quick-log sheet): the handoff opens a camera-first bottom sheet from the
-// FAB (weight/glucose/dose/vitals tiles + "Snap a meal photo"). For now the FAB
-// routes to the full Log screen, which covers the same actions.
-function CenterFab() {
+// opens the camera-first quick-log bottom sheet (handoff MQuickLog).
+function CenterFab({ onPress }: { onPress: () => void }) {
   const { colors } = useTheme();
-  const router = useRouter();
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Quick log"
-        onPress={() => router.navigate("/(tabs)/log")}
+        onPress={onPress}
         style={{
           width: 50,
           height: 50,
@@ -43,7 +41,9 @@ function CenterFab() {
 
 export default function TabsLayout() {
   const { colors } = useTheme();
+  const [logOpen, setLogOpen] = useState(false);
   return (
+    <>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -77,7 +77,7 @@ export default function TabsLayout() {
         name="log"
         options={{
           title: "",
-          tabBarButton: () => <CenterFab />,
+          tabBarButton: () => <CenterFab onPress={() => setLogOpen(true)} />,
         }}
       />
       <Tabs.Screen
@@ -95,5 +95,7 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+    <QuickLogSheet visible={logOpen} onClose={() => setLogOpen(false)} />
+    </>
   );
 }

@@ -11,7 +11,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import { Loading, ErrorState } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
 import { usePeptideSelection } from "@/lib/peptide-selection";
-import { colors } from "@/lib/theme";
+import { colors, radius } from "@/lib/theme";
 
 interface Citation { source?: string; title?: string; url?: string; year?: number }
 interface Compound {
@@ -85,19 +85,36 @@ export default function CompoundDetail() {
     <>
       <Stack.Screen options={{ title: compound.name }} />
       <ScrollView className="flex-1 bg-background" contentContainerClassName="p-4 gap-4 pb-12">
-        {/* Header */}
-        <View className="gap-2">
-          <View className="flex-row flex-wrap items-center gap-2">
-            <EvidenceBadge level={compound.evidence_level} />
-            {compound.fda_approved ? <Pill label="FDA" tone="accent" /> : null}
-            <Text className="text-xs uppercase tracking-wider text-muted-foreground">
-              {compound.category.replace("_", " ")}{compound.typical_route ? ` · ${compound.typical_route}` : ""}
-            </Text>
+        {/* Header — matches handoff MCompound: flask glyph + display name + evidence badge */}
+        <View className="flex-row items-center gap-3">
+          <View
+            className="items-center justify-center"
+            style={{ width: 48, height: 48, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface2 }}
+          >
+            <Ionicons name="flask-outline" size={24} color={colors.primary} />
           </View>
-          <Text className="text-2xl font-bold text-foreground">{compound.name}</Text>
-          <Text className="text-base leading-relaxed text-muted-foreground">{compound.short_description}</Text>
-          <SafetyDisclaimer variant="compact" />
+          <View className="flex-1">
+            <Text className="text-2xl font-bold text-foreground" style={{ letterSpacing: -0.4 }}>{compound.name}</Text>
+            <View className="mt-1.5 flex-row flex-wrap items-center gap-2">
+              <EvidenceBadge level={compound.evidence_level} />
+              {compound.fda_approved ? <Pill label="FDA" tone="accent" /> : null}
+            </View>
+          </View>
         </View>
+
+        {/* Clinician-discuss banner (handoff MCompound primary-wash callout) */}
+        <View
+          className="flex-row items-center"
+          style={{ gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.md, borderWidth: 1, borderColor: colors.primaryLine, backgroundColor: colors.primaryWash }}
+        >
+          <Ionicons name="shield-checkmark-outline" size={17} color={colors.primary} />
+          <Text className="flex-1 text-sm text-foreground">Discuss with your clinician before starting or changing.</Text>
+        </View>
+
+        <Text className="text-xs uppercase tracking-wider text-muted-foreground">
+          {compound.category.replace("_", " ")}{compound.typical_route ? ` · ${compound.typical_route}` : ""}
+        </Text>
+        <Text className="text-base leading-relaxed text-muted-foreground">{compound.short_description}</Text>
 
         <Segmented options={TABS} value={tab} onChange={setTab} fill />
 

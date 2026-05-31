@@ -11,10 +11,25 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import type { EvidenceLevel } from "@peptide/shared";
 import { DoseText } from "@/components/peptides/DoseText";
+import { EvidenceBadge } from "@/components/ui/EvidenceBadge";
 import { apiFetch } from "@/lib/api";
-import { colors } from "@/lib/theme";
+import { colors, radius } from "@/lib/theme";
 import { cn } from "@/lib/cn";
+
+const EVIDENCE_LEVELS: ReadonlySet<string> = new Set([
+  "FDA_APPROVED",
+  "HUMAN_RCT",
+  "HUMAN_OBS",
+  "ANIMAL",
+  "MECHANISTIC",
+  "ANECDOTAL",
+]);
+function asEvidenceLevel(raw: string): EvidenceLevel | null {
+  const up = raw?.toUpperCase();
+  return EVIDENCE_LEVELS.has(up) ? (up as EvidenceLevel) : null;
+}
 
 interface Citation {
   n: number;
@@ -166,23 +181,26 @@ export default function Coach() {
         ) : null}
       </ScrollView>
 
-      {/* Input */}
-      <View className="flex-row items-end gap-2 border-t border-border p-3">
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          placeholder="Ask about a compound, your trend, labs…"
-          placeholderTextColor={colors.mutedForeground}
-          multiline
-          className="max-h-28 flex-1 rounded-lg border border-border bg-input px-3 py-2 text-base text-foreground"
-        />
-        <Pressable
-          onPress={send}
-          disabled={sending || !input.trim()}
-          className={cn("h-11 w-11 items-center justify-center rounded-lg", sending || !input.trim() ? "bg-muted" : "bg-primary")}
-        >
-          <Ionicons name="send" size={18} color={sending || !input.trim() ? colors.mutedForeground : colors.primaryForeground} />
-        </Pressable>
+      {/* Input — handoff MCoach: pill field + circular send + safety footer */}
+      <View className="px-4 pb-2 pt-3">
+        <View className="flex-row items-center gap-2 rounded-full border border-border bg-muted py-1.5 pl-4 pr-1.5">
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            placeholder="Ask the coach…"
+            placeholderTextColor={colors.mutedForeground}
+            multiline
+            className="max-h-24 flex-1 text-base text-foreground"
+          />
+          <Pressable
+            onPress={send}
+            disabled={sending || !input.trim()}
+            className={cn("h-9 w-9 items-center justify-center rounded-full", sending || !input.trim() ? "bg-muted" : "bg-primary")}
+          >
+            <Ionicons name="send" size={15} color={sending || !input.trim() ? colors.mutedForeground : colors.primaryForeground} />
+          </Pressable>
+        </View>
+        <Text className="mt-2 text-center text-[10px] text-muted-foreground">Educates, tracks, warns — never prescribes.</Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -190,31 +208,62 @@ export default function Coach() {
 
 function Bubble({ message }: { message: Message }) {
   const isUser = message.role === "user";
+  if (isUser) {
+    // handoff MCoach: user bubble pinned right, primary wash, tapered corner.
+    return (
+      <View
+        className="max-w-[82%] self-end"
+        style={{ borderWidth: 1, borderColor: colors.primaryLine, backgroundColor: colors.primaryWash, borderRadius: 14, borderBottomRightRadius: 4, paddingVertical: 10, paddingHorizontal: 13 }}
+      >
+        <Text className="text-sm leading-relaxed text-foreground">{message.content}</Text>
+      </View>
+    );
+  }
+
+  // handoff MCoach: assistant row = gradient avatar glyph + content column.
+  const hasDose = /\bdose|\bmcg|\bmg\b|\bIU\b|\bunits?\b/i.test(message.content);
   return (
-    <View className={cn("max-w-[88%]", isUser ? "self-end" : "self-start")}>
-      <View className={cn("rounded-2xl px-3 py-2", isUser ? "bg-primary" : "bg-muted")}>
-        {isUser ? (
-          <Text className="text-sm leading-relaxed text-primary-foreground">{message.content}</Text>
+    <View className="max-w-[92%] flex-row gap-2.5 self-start">
+      <View
+        style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" }}
+      >
+        <Ionicons name="pulse" size={15} color={colors.primaryForeground} />
+      </View>
+      <View className="flex-1">
+        <DoseText text={message.content} />
+        {message.citations?.length ? (
+          <View className="mt-2 flex-row flex-wrap gap-1.5">
+            {message.citations.map((c) => {
+              const lvl = asEvidenceLevel(c.evidence_level);
+              return (
+                <Pressable
+                  key={c.n}
+                  onPress={() => c.source_url && Linking.openURL(c.source_url)}
+                  disabled={!c.source_url}
+                  className="flex-row items-center gap-1.5"
+                  style={{ paddingVertical: 4, paddingHorizontal: 8, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface2 }}
+                >
+                  <Text className="text-[10px] text-primary">[{c.n}]</Text>
+                  {lvl ? <EvidenceBadge level={lvl} /> : <Text className="text-[10px] text-muted-foreground">{c.evidence_level.toUpperCase()}</Text>}
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+        {hasDose ? (
+          <View
+            className="mt-2 flex-row gap-2"
+            style={{ paddingVertical: 9, paddingHorizontal: 11, borderRadius: radius.sm, borderWidth: 1, borderStyle: "dashed", borderColor: colors.primaryLine, backgroundColor: colors.primaryWash }}
+          >
+            <Ionicons name="shield-outline" size={13} color={colors.primary} style={{ marginTop: 1 }} />
+            <Text className="flex-1 text-[11px] leading-snug text-muted-foreground">
+              <Text className="font-semibold text-foreground">Educational summary only.</Text> Not a prescription.
+            </Text>
+          </View>
         ) : (
-          <>
-            <DoseText text={message.content} />
-            {message.citations?.length ? (
-              <View className="mt-3 gap-1 border-t border-border pt-2">
-                <Text className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Sources</Text>
-                {message.citations.map((c) => (
-                  <Pressable key={c.n} onPress={() => c.source_url && Linking.openURL(c.source_url)} disabled={!c.source_url}>
-                    <Text className="text-[10px] text-muted-foreground">
-                      [{c.n}] <Text className="font-medium text-foreground">{c.title}</Text> · {c.evidence_level.toUpperCase()}
-                      {c.source_url ? <Text className="text-primary"> · source</Text> : null}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            ) : null}
-            <Text className="mt-2 text-[9px] text-muted-foreground">Educational summary only — not medical advice.</Text>
-            {message.model_string ? <Text className="text-[9px] text-muted-foreground">{message.model_string}</Text> : null}
-          </>
+          <Text className="mt-2 text-[9px] text-muted-foreground">Educational summary only — not medical advice.</Text>
         )}
+        {message.model_string ? <Text className="text-[9px] text-muted-foreground">{message.model_string}</Text> : null}
       </View>
     </View>
   );
