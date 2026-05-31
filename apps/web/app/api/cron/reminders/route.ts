@@ -19,6 +19,7 @@ import {
   type DueItem,
 } from "@peptide/email";
 import { sendEmailBatch, type BatchEmailMessage } from "@peptide/email/send";
+import { list, del } from "@vercel/blob";
 import { serverEnv } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { jsonOk, jsonError } from "@/lib/api";
@@ -26,10 +27,34 @@ import { jsonOk, jsonError } from "@/lib/api";
 export const runtime = "nodejs";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const EXPORT_TTL_DAYS = 7;
 
 /** UTC YYYY-MM-DD for a date. */
 function ymd(d: Date): string {
   return d.toISOString().slice(0, 10);
+}
+
+/**
+ * The given instant rendered in an IANA timezone: local YYYY-MM-DD + whether
+ * it's Monday there. Lets the once-daily cron evaluate eligibility (a user's
+ * Monday, their day-counts) in local time instead of UTC. Falls back to UTC for
+ * an unknown/invalid zone.
+ */
+function localParts(now: Date, tz: string): { ymd: string; isMonday: boolean } {
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      weekday: "short",
+    }).formatToParts(now);
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+    const localYmd = `${get("year")}-${get("month")}-${get("day")}`;
+    return { ymd: localYmd, isMonday: get("weekday") === "Mon" };
+  } catch {
+    return { ymd: ymd(now), isMonday: now.getUTCDay() === 1 };
+  }
 }
 
 /** "May 19" style (UTC). */
@@ -44,6 +69,8 @@ function shortDate(d: Date): string {
 type EligibleEmail = {
   userId: string;
   kind: "weekly_summary" | "body_shot" | "dose_weigh_in";
+  /** User's local date (their timezone) — the idempotency key for this send. */
+  sentOn: string;
   message: BatchEmailMessage;
 };
 
@@ -60,9 +87,6 @@ export async function GET(req: Request) {
     const supabase = createSupabaseAdminClient();
 
     const now = new Date();
-    const today = ymd(now);
-    // getUTCDay(): 0 = Sun, 1 = Mon.
-    const isMonday = now.getUTCDay() === 1;
     const sevenDaysAgo = new Date(now.getTime() - 7 * DAY_MS).toISOString();
     const fourteenDaysAgo = new Date(now.getTime() - 14 * DAY_MS).toISOString();
 
@@ -92,7 +116,7 @@ export async function GET(req: Request) {
         const { data: settingsRow } = await supabase
           .from("user_settings")
           .select(
-            "notification_channel, notify_weekly_summary, notify_body_shot, notify_dose_reminders, notify_weighin_reminder, notify_safety_alerts, body_photo_frequency_days",
+            "notification_channel, notify_weekly_summary, notify_body_shot, notify_dose_reminders, notify_weighin_reminder, notify_safety_alerts, body_photo_frequency_days, timezone",
           )
           .eq("user_id", user.id)
           .maybeSingle();
@@ -103,7 +127,14 @@ export async function GET(req: Request) {
 
         const settings = settingsRow as NotificationSettings & {
           body_photo_frequency_days: number | null;
+          timezone: string | null;
         };
+
+        // Evaluate "today"/Monday in the user's own timezone.
+        const { ymd: localToday, isMonday } = localParts(
+          now,
+          settings.timezone || "UTC",
+        );
 
         const { data: profile } = await supabase
           .from("profiles")
@@ -133,6 +164,7 @@ export async function GET(req: Request) {
             eligible.push({
               userId: user.id,
               kind: "weekly_summary",
+              sentOn: localToday,
               message: { to: user.email, subject, html, text, unsubscribeUrl },
             });
           }
@@ -172,6 +204,7 @@ export async function GET(req: Request) {
               eligible.push({
                 userId: user.id,
                 kind: "body_shot",
+                sentOn: localToday,
                 message: { to: user.email, subject, html, text, unsubscribeUrl },
               });
             }
@@ -232,6 +265,7 @@ export async function GET(req: Request) {
             eligible.push({
               userId: user.id,
               kind: "dose_weigh_in",
+              sentOn: localToday,
               message: { to: user.email, subject, html, text, unsubscribeUrl },
             });
           }
@@ -251,7 +285,7 @@ export async function GET(req: Request) {
           .select("id")
           .eq("user_id", e.userId)
           .eq("kind", e.kind)
-          .eq("sent_on", today)
+          .eq("sent_on", e.sentOn)
           .maybeSingle();
         if (!existing) toSend.push(e);
       } catch (dedupeErr) {
@@ -268,7 +302,7 @@ export async function GET(req: Request) {
       const rows = toSend.map((e) => ({
         user_id: e.userId,
         kind: e.kind,
-        sent_on: today,
+        sent_on: e.sentOn,
       }));
       const { error: insertErr } = await supabase
         .from("notification_sends")
@@ -286,7 +320,36 @@ export async function GET(req: Request) {
       else counts.doseWeighIn++;
     }
 
-    return jsonOk({ ...counts, scannedUsers: users.length });
+    // ---- 5. Clean up expired data-export blobs (TTL 7d) -------------------
+    // Data exports are uploaded to exports/ with unguessable URLs; reap old
+    // ones so they don't linger. Best-effort — never fail the run.
+    let exportsDeleted = 0;
+    try {
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        const cutoff = now.getTime() - EXPORT_TTL_DAYS * DAY_MS;
+        const stale: string[] = [];
+        let cursor: string | undefined;
+        do {
+          const res = await list({
+            prefix: "exports/",
+            cursor,
+            token: process.env.BLOB_READ_WRITE_TOKEN,
+          });
+          for (const b of res.blobs) {
+            if (new Date(b.uploadedAt).getTime() < cutoff) stale.push(b.url);
+          }
+          cursor = res.cursor;
+        } while (cursor);
+        if (stale.length > 0) {
+          await del(stale, { token: process.env.BLOB_READ_WRITE_TOKEN });
+          exportsDeleted = stale.length;
+        }
+      }
+    } catch (cleanupErr) {
+      console.error("[cron/reminders] export cleanup failed", cleanupErr);
+    }
+
+    return jsonOk({ ...counts, exportsDeleted, scannedUsers: users.length });
   } catch (err) {
     return jsonError(err);
   }

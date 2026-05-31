@@ -63,9 +63,18 @@ export default function Notifications() {
   async function save() {
     if (!session?.user.id || !settings) return;
     setSaving(true);
+    let timezone: string | undefined;
+    try {
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      timezone = undefined;
+    }
     const { error } = await supabase
       .from("user_settings")
-      .upsert({ user_id: session.user.id, ...settings }, { onConflict: "user_id" });
+      .upsert(
+        { user_id: session.user.id, ...settings, ...(timezone ? { timezone } : {}) },
+        { onConflict: "user_id" },
+      );
     setSaving(false);
     if (error) Alert.alert("Couldn't save", error.message);
     else Alert.alert("Saved", "Notification preferences updated.");

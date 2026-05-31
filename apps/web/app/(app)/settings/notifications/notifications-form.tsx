@@ -77,7 +77,19 @@ export function NotificationsForm({ initial }: { initial: NotificationSettings }
 
   async function save() {
     setSaving(true);
-    const res = await postJson("/api/settings/notifications", settings, router);
+    // Auto-capture the browser's timezone so reminders fire on the user's
+    // local schedule (Monday-in-their-tz, etc.).
+    let timezone: string | undefined;
+    try {
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      timezone = undefined;
+    }
+    const res = await postJson(
+      "/api/settings/notifications",
+      timezone ? { ...settings, timezone } : settings,
+      router,
+    );
     setSaving(false);
     if (res.ok) {
       toast.success("Notification preferences saved.");

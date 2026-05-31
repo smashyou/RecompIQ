@@ -15,6 +15,8 @@ export const notificationSettingsSchema = z.object({
   notify_dose_reminders: z.boolean(),
   notify_weighin_reminder: z.boolean(),
   notify_safety_alerts: z.boolean(),
+  /** IANA timezone, auto-detected client-side; drives tz-aware reminder eligibility. */
+  timezone: z.string().min(1).max(64).optional(),
 });
 export type NotificationSettings = z.infer<typeof notificationSettingsSchema>;
 
