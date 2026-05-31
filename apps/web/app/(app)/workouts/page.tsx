@@ -3,6 +3,7 @@ import { Dumbbell, Plus, ScanLine } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { Card, Chip, Overline, SectionHeader } from "@/components/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -30,70 +31,92 @@ export default async function WorkoutsPage() {
   const workouts = (data ?? []) as unknown as WorkoutRow[];
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Workouts</h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Phase-aware templates + ad-hoc sessions. Walking and mobility count.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href="/workouts/templates">
-              <ScanLine className="h-4 w-4" /> Templates
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/workouts/new">
-              <Plus className="h-4 w-4" /> New session
-            </Link>
-          </Button>
-        </div>
-      </header>
+    <div className="flex max-w-[1080px] flex-col gap-[18px]">
+      <SectionHeader
+        num="09"
+        title="Workouts"
+        note="Phase-aware templates + ad-hoc sessions. Walking and mobility count."
+      />
+
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="outline">
+          <Link href="/workouts/templates">
+            <ScanLine className="h-4 w-4" /> Templates
+          </Link>
+        </Button>
+        <Button asChild>
+          <Link href="/workouts/new">
+            <Plus className="h-4 w-4" /> New session
+          </Link>
+        </Button>
+      </div>
 
       {workouts.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-10 text-center">
-          <Dumbbell className="mx-auto mb-3 h-8 w-8 text-[var(--color-muted-foreground)]" />
-          <p className="text-sm text-[var(--color-muted-foreground)]">
+        <Card
+          style={{
+            borderStyle: "dashed",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            padding: 40,
+            gap: 12,
+          }}
+        >
+          <Dumbbell size={28} style={{ color: "var(--fg-subtle)" }} />
+          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
             No sessions yet. Start from a template or log freeform.
           </p>
-        </div>
+        </Card>
       ) : (
-        <ul className="divide-y divide-[var(--color-border)] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
+        <div className="flex flex-col gap-[10px]">
           {workouts.map((w) => (
-            <li key={w.id} className="flex items-center justify-between gap-3 p-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">
-                    {w.name ?? w.template_slug ?? `${w.session_type} session`}
-                  </p>
-                  <span className="rounded-full border border-[var(--color-border)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                    {w.session_type}
-                  </span>
-                  {w.phase && (
-                    <span className="rounded-full border border-[var(--color-border)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                      {w.phase}
+            <Card key={w.id} pad={16}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-[family-name:var(--font-sans)] text-[13.5px] font-semibold text-[var(--fg)]">
+                      {w.name ?? w.template_slug ?? `${w.session_type} session`}
                     </span>
-                  )}
+                    <Chip>{w.session_type}</Chip>
+                    {w.phase && <Chip>{w.phase}</Chip>}
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                      {new Date(w.date).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                    {w.duration_min ? (
+                      <Metric value={w.duration_min} unit="min" />
+                    ) : null}
+                    {w.perceived_exertion ? (
+                      <Metric label="RPE" value={w.perceived_exertion} />
+                    ) : null}
+                    {w.workout_exercises.length > 0 ? (
+                      <Metric value={w.workout_exercises.length} unit="ex" />
+                    ) : null}
+                  </div>
                 </div>
-                <p className="text-xs text-[var(--color-muted-foreground)]">
-                  {new Date(w.date).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                  {w.duration_min ? ` · ${w.duration_min} min` : ""}
-                  {w.perceived_exertion ? ` · RPE ${w.perceived_exertion}` : ""}
-                  {w.workout_exercises.length > 0
-                    ? ` · ${w.workout_exercises.length} exercises`
-                    : ""}
-                </p>
               </div>
-            </li>
+            </Card>
           ))}
-        </ul>
+        </div>
       )}
     </div>
+  );
+}
+
+function Metric({ value, unit, label }: { value: number | string; unit?: string; label?: string }) {
+  return (
+    <span className="inline-flex items-baseline gap-1">
+      {label && <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>{label}</Overline>}
+      <span className="font-[family-name:var(--font-mono)] text-[12px] tabular-nums text-[var(--fg)]">
+        {value}
+      </span>
+      {unit && <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--fg-subtle)]">{unit}</span>}
+    </span>
   );
 }

@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SectionHeader } from "@/components/kit";
 import { TemplatesList } from "./templates-list";
 
 export const dynamic = "force-dynamic";
@@ -34,14 +35,12 @@ export default async function TemplatesPage() {
   const userPhase = (goalRes.data?.phase as string | null) ?? "P1";
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Workout templates</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Phase-aware suggestions. Start a session from any template — exercises copy in and
-          you can edit before saving.
-        </p>
-      </header>
+    <div className="flex max-w-[1080px] flex-col gap-[18px]">
+      <SectionHeader
+        num="09"
+        title="Workout templates"
+        note="Phase-aware suggestions. Start a session — exercises copy in, editable before saving."
+      />
       <TemplatesList templates={templates} userPhase={userPhase} />
     </div>
   );

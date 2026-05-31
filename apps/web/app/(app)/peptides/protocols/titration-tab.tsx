@@ -47,9 +47,10 @@ export function TitrationTab({ schedules }: { schedules: ProtocolSchedule[] }) {
 
   if (schedules.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-8 text-center">
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          No titration schedules yet. Build one in the <strong>Protocol Builder</strong> tab.
+      <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-8 text-center">
+        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+          No titration schedules yet. Build one in the{" "}
+          <strong className="text-[var(--fg)]">Protocol Builder</strong> tab.
         </p>
       </div>
     );
@@ -60,11 +61,13 @@ export function TitrationTab({ schedules }: { schedules: ProtocolSchedule[] }) {
       {schedules.map((s) => {
         const byWeek = [...s.protocol_schedule_weeks].sort((a, b) => a.week_number - b.week_number);
         return (
-          <div key={s.id} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+          <div key={s.id} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface-1)] p-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <h3 className="font-semibold">{s.name}</h3>
-                <p className="text-xs text-[var(--color-muted-foreground)]">
+                <h3 className="font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+                  {s.name}
+                </h3>
+                <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
                   {s.phase ? `${s.phase} · ` : ""}
                   {byWeek.length} week{byWeek.length === 1 ? "" : "s"}
                   {s.start_on ? ` · starts ${s.start_on}` : ""}
@@ -74,7 +77,7 @@ export function TitrationTab({ schedules }: { schedules: ProtocolSchedule[] }) {
                 type="button"
                 onClick={() => remove(s.id)}
                 disabled={deleting === s.id}
-                className="rounded-md border border-[var(--color-border)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+                className="rounded-[var(--r-sm)] border border-[var(--border)] p-2 text-[var(--fg-subtle)] hover:bg-[var(--surface-2)]"
                 aria-label="Delete protocol"
               >
                 <Trash2 className="h-4 w-4" />
@@ -82,26 +85,31 @@ export function TitrationTab({ schedules }: { schedules: ProtocolSchedule[] }) {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full font-[family-name:var(--font-sans)] text-[13px]">
                 <thead>
-                  <tr className="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-muted-foreground)]">
-                    <th className="py-2 pr-3 font-medium">Week</th>
-                    <th className="py-2 pr-3 font-medium">Compound</th>
-                    <th className="py-2 pr-3 font-medium">Dose</th>
-                    <th className="py-2 pr-3 font-medium">Frequency</th>
-                    <th className="py-2 font-medium">Route</th>
+                  <tr className="border-b border-[var(--border)] text-left">
+                    {["Week", "Compound", "Dose", "Frequency", "Route"].map((h) => (
+                      <th
+                        key={h}
+                        className="py-2 pr-3 font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)] last:pr-0"
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {byWeek.map((w) => (
-                    <tr key={w.id} className="border-b border-[var(--color-border)] last:border-0">
-                      <td className="py-2 pr-3 tabular-nums">{w.week_number}</td>
-                      <td className="py-2 pr-3">{w.compounds?.name ?? "—"}</td>
-                      <td className="py-2 pr-3 tabular-nums">
+                    <tr key={w.id} className="border-b border-[var(--border)] last:border-0">
+                      <td className="py-2 pr-3 font-[family-name:var(--font-mono)] tabular-nums text-[var(--fg)]">
+                        {w.week_number}
+                      </td>
+                      <td className="py-2 pr-3 text-[var(--fg)]">{w.compounds?.name ?? "—"}</td>
+                      <td className="py-2 pr-3 font-[family-name:var(--font-mono)] tabular-nums text-[var(--fg)]">
                         {w.dose_value} {w.dose_unit}
                       </td>
-                      <td className="py-2 pr-3">{w.frequency}</td>
-                      <td className="py-2 uppercase text-[var(--color-muted-foreground)]">{w.route}</td>
+                      <td className="py-2 pr-3 text-[var(--fg-muted)]">{w.frequency}</td>
+                      <td className="py-2 uppercase text-[var(--fg-subtle)]">{w.route}</td>
                     </tr>
                   ))}
                 </tbody>

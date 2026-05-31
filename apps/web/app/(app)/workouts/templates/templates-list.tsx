@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, Chip, Overline } from "@/components/kit";
 
 interface Exercise {
   name: string;
@@ -37,82 +38,65 @@ export function TemplatesList({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <FilterChip active={filter === "all"} onClick={() => setFilter("all")} label="All" />
+        <Chip active={filter === "all"} onClick={() => setFilter("all")}>
+          All
+        </Chip>
         {PHASES.map((p) => (
-          <FilterChip
-            key={p}
-            active={filter === p}
-            onClick={() => setFilter(p)}
-            label={`${p}${p === userPhase ? " · your phase" : ""}`}
-          />
+          <Chip key={p} active={filter === p} onClick={() => setFilter(p)}>
+            {p}
+            {p === userPhase ? " · your phase" : ""}
+          </Chip>
         ))}
       </div>
 
-      <ul className="grid gap-4 md:grid-cols-2">
+      <ul className="grid gap-3 md:grid-cols-2">
         {filtered.map((t) => (
-          <li
-            key={t.slug}
-            className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5"
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold">{t.name}</h3>
-                <span className="rounded-full border border-[var(--color-border)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                  {t.phase}
-                </span>
-                <span className="rounded-full border border-[var(--color-border)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                  {t.session_type}
-                </span>
+          <li key={t.slug}>
+            <Card style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-[family-name:var(--font-sans)] text-[13.5px] font-semibold text-[var(--fg)]">
+                    {t.name}
+                  </h3>
+                  <Chip active={t.phase === userPhase}>{t.phase}</Chip>
+                  <Chip>{t.session_type}</Chip>
+                </div>
+                <p className="mt-1.5 font-[family-name:var(--font-sans)] text-[12px] leading-relaxed text-[var(--fg-muted)]">
+                  {t.description}
+                </p>
               </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">{t.description}</p>
-            </div>
-            <ol className="space-y-1 text-xs">
-              {t.exercises.slice(0, 6).map((ex, i) => (
-                <li key={i} className="text-[var(--color-muted-foreground)]">
-                  <span className="font-medium text-[var(--color-foreground)]">{ex.name}</span>
-                  {ex.sets && ex.reps ? ` · ${ex.sets}×${ex.reps}` : ""}
-                  {ex.duration_min ? ` · ${ex.duration_min} min` : ""}
-                  {ex.notes ? ` · ${ex.notes}` : ""}
-                </li>
-              ))}
-              {t.exercises.length > 6 && (
-                <li className="text-[10px] text-[var(--color-muted-foreground)]">
-                  + {t.exercises.length - 6} more…
-                </li>
-              )}
-            </ol>
-            <Button asChild className="w-full">
-              <Link href={`/workouts/new?template=${t.slug}`}>
-                <Play className="h-4 w-4" /> Start from this template
-              </Link>
-            </Button>
+              <ol className="flex-1 space-y-1.5">
+                {t.exercises.slice(0, 6).map((ex, i) => (
+                  <li key={i} className="flex items-baseline gap-2">
+                    <span className="font-[family-name:var(--font-mono)] text-[10px] tabular-nums text-[var(--fg-subtle)]">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg)]">
+                      {ex.name}
+                    </span>
+                    {(ex.sets && ex.reps) || ex.duration_min ? (
+                      <span className="font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-subtle)]">
+                        {ex.sets && ex.reps ? `${ex.sets}×${ex.reps}` : ""}
+                        {ex.duration_min ? ` ${ex.duration_min} min` : ""}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+                {t.exercises.length > 6 && (
+                  <li>
+                    <Overline style={{ fontSize: 9.5 }}>+ {t.exercises.length - 6} more</Overline>
+                  </li>
+                )}
+              </ol>
+              <Button asChild className="w-full">
+                <Link href={`/workouts/new?template=${t.slug}`}>
+                  <Play className="h-4 w-4" /> Start from this template
+                </Link>
+              </Button>
+            </Card>
           </li>
         ))}
       </ul>
     </div>
-  );
-}
-
-function FilterChip({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
-        active
-          ? "border-[var(--color-primary)] bg-[var(--color-muted)]"
-          : "border-[var(--color-border)] hover:bg-[var(--color-muted)]"
-      }`}
-    >
-      {label}
-    </button>
   );
 }

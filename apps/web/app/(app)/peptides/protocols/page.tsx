@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
+import { SectionHeader } from "@/components/kit";
 import { doseRangeWrapped } from "@/lib/dose-display";
 import { ProtocolsHub } from "./hub";
 import type { ReferenceCompound, DoseReference, CompoundSynergy } from "./compound-reference-tab";
@@ -161,16 +162,20 @@ export default async function ProtocolsPage({
     : null;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Reconstitution &amp; Protocols</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Step-by-step reconstitution math, a protocol builder, evidence-graded compound reference,
-          and titration schedules — all in one place.
-        </p>
-      </header>
+    <div className="mx-auto max-w-3xl">
+      <SectionHeader title="Reconstitution & protocols" note="math on your inputs" />
+      <p className="mb-6 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+        Step-by-step reconstitution math, a protocol builder, evidence-graded compound reference,
+        and titration schedules — all in one place.
+      </p>
 
-      <Suspense fallback={<div className="text-sm text-[var(--color-muted-foreground)]">Loading…</div>}>
+      <Suspense
+        fallback={
+          <div className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+            Loading…
+          </div>
+        }
+      >
         <ProtocolsHub
           compounds={compoundOptions}
           referenceCompounds={referenceCompounds}
@@ -180,7 +185,9 @@ export default async function ProtocolsPage({
         />
       </Suspense>
 
-      <SafetyDisclaimer />
+      <div className="mt-6">
+        <SafetyDisclaimer />
+      </div>
     </div>
   );
 }

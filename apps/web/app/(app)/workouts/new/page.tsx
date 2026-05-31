@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SectionHeader } from "@/components/kit";
 import { NewWorkoutForm } from "./form";
 
 export const dynamic = "force-dynamic";
@@ -34,17 +35,12 @@ export default async function NewWorkoutPage({
   const userPhase = (goalRes.data?.phase as string | null) ?? "P1";
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {templateRes.data ? templateRes.data.name : "New workout session"}
-        </h1>
-        {templateRes.data?.description && (
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            {templateRes.data.description}
-          </p>
-        )}
-      </header>
+    <div className="mx-auto flex max-w-2xl flex-col gap-[18px]">
+      <SectionHeader
+        num="09"
+        title={templateRes.data ? templateRes.data.name : "New workout session"}
+        note={templateRes.data?.description ?? undefined}
+      />
       <Suspense fallback={null}>
         <NewWorkoutForm template={templateRes.data} userPhase={userPhase} />
       </Suspense>

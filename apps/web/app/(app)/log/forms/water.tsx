@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
+import { Chip } from "@/components/kit";
 import { FormCard } from "./form-card";
 
 const QUICK_OZ = [8, 12, 16, 24, 32];
@@ -53,18 +54,13 @@ export function WaterForm() {
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
         <div className="flex flex-wrap gap-2">
           {QUICK_OZ.map((oz) => (
-            <button
+            <Chip
               key={oz}
-              type="button"
+              active={volume === oz}
               onClick={() => setValue("volume_oz", oz, { shouldValidate: true })}
-              className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                volume === oz
-                  ? "border-[var(--color-primary)] bg-[var(--color-muted)]"
-                  : "border-[var(--color-border)] hover:bg-[var(--color-muted)]"
-              }`}
             >
-              {oz} oz
-            </button>
+              <span className="font-[family-name:var(--font-mono)] tabular-nums">{oz}</span> oz
+            </Chip>
           ))}
         </div>
         <div className="space-y-2">

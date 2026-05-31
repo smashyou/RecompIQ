@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useFireToast } from "@/components/ui/toast";
+import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 
 interface CompoundOption {
   id: string;
@@ -102,7 +103,9 @@ export function ProtocolBuilderTab({
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-[var(--color-muted-foreground)]">
+      <SafetyDisclaimer variant="compact" />
+
+      <p className="font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
         Build your own (or your clinician&apos;s) week-by-week titration plan. All values are
         yours — the app stores and schedules them, it doesn&apos;t prescribe.
       </p>
@@ -121,7 +124,7 @@ export function ProtocolBuilderTab({
         {rows.map((r, i) => (
           <div
             key={i}
-            className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3 sm:grid-cols-12 sm:items-end"
+            className="grid grid-cols-2 gap-2 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface-1)] p-3 sm:grid-cols-12 sm:items-end"
           >
             <div className="space-y-1 sm:col-span-1">
               <Label className="text-xs">Wk</Label>
@@ -137,7 +140,7 @@ export function ProtocolBuilderTab({
               <select
                 value={r.compound_id}
                 onChange={(e) => update(i, { compound_id: e.target.value })}
-                className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-2 text-sm"
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
               >
                 {compounds.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -161,7 +164,7 @@ export function ProtocolBuilderTab({
               <select
                 value={r.dose_unit}
                 onChange={(e) => update(i, { dose_unit: e.target.value as DoseUnit })}
-                className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-1 text-sm"
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-1 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
               >
                 {DOSE_UNIT.map((u) => (
                   <option key={u} value={u}>
@@ -183,7 +186,7 @@ export function ProtocolBuilderTab({
               <select
                 value={r.route}
                 onChange={(e) => update(i, { route: e.target.value as Route })}
-                className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-1 text-sm"
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-1 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
               >
                 {ROUTE.map((rt) => (
                   <option key={rt} value={rt}>
@@ -197,7 +200,7 @@ export function ProtocolBuilderTab({
                 type="button"
                 onClick={() => removeRow(i)}
                 disabled={rows.length === 1}
-                className="rounded-md border border-[var(--color-border)] p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] disabled:opacity-40"
+                className="rounded-[var(--r-sm)] border border-[var(--border)] p-2 text-[var(--fg-subtle)] hover:bg-[var(--surface-2)] disabled:opacity-40"
                 aria-label="Remove week"
               >
                 <Trash2 className="h-4 w-4" />

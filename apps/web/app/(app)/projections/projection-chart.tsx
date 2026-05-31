@@ -61,45 +61,46 @@ export function ProjectionChart(props: Props) {
   }, [rows, props.targetMinLb, props.targetMaxLb]);
 
   return (
-    <div className="h-[420px] w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+    <div className="h-[420px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={rows} margin={{ top: 12, right: 16, bottom: 8, left: 0 }}>
-          <CartesianGrid stroke="var(--color-border)" strokeDasharray="2 4" />
+          <CartesianGrid stroke="var(--viz-grid)" strokeDasharray="2 4" />
           <XAxis
             dataKey="date"
             tickFormatter={(v: string) =>
               new Date(v).toLocaleDateString(undefined, { month: "short", day: "numeric" })
             }
-            tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+            tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--fg-subtle)" }}
             minTickGap={32}
           />
           <YAxis
             domain={[minY, maxY]}
-            tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+            tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--fg-subtle)" }}
             width={42}
             unit=" lb"
           />
           <ReferenceArea
             y1={props.targetMinLb}
             y2={props.targetMaxLb}
-            fill="var(--color-accent)"
-            fillOpacity={0.12}
-            stroke="var(--color-accent)"
-            strokeOpacity={0.4}
+            fill="var(--viz-target)"
+            fillOpacity={0.1}
+            stroke="var(--viz-target)"
+            strokeOpacity={0.35}
             strokeDasharray="3 3"
             label={{
               value: "Target band",
               position: "insideTopLeft",
               fontSize: 10,
-              fill: "var(--color-muted-foreground)",
+              fill: "var(--fg-subtle)",
             }}
           />
           <Tooltip
             contentStyle={{
-              background: "var(--color-card)",
-              border: "1px solid var(--color-border)",
-              borderRadius: 8,
+              background: "var(--surface-1)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--r-md)",
               fontSize: 12,
+              fontFamily: "var(--font-mono)",
             }}
             labelFormatter={(v: string) =>
               new Date(v).toLocaleDateString(undefined, {
@@ -115,13 +116,13 @@ export function ProjectionChart(props: Props) {
           />
           <Legend
             iconType="line"
-            wrapperStyle={{ fontSize: 11, paddingTop: 6 }}
+            wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-sans)", paddingTop: 6 }}
             formatter={labelFor}
           />
           <Line
             type="monotone"
             dataKey="conservative"
-            stroke="var(--color-muted-foreground)"
+            stroke="var(--viz-conservative)"
             strokeWidth={1.5}
             strokeDasharray="4 4"
             dot={false}
@@ -130,7 +131,7 @@ export function ProjectionChart(props: Props) {
           <Line
             type="monotone"
             dataKey="target"
-            stroke="var(--color-primary)"
+            stroke="var(--viz-target)"
             strokeWidth={2}
             strokeDasharray="4 4"
             dot={false}
@@ -139,7 +140,7 @@ export function ProjectionChart(props: Props) {
           <Line
             type="monotone"
             dataKey="aggressive"
-            stroke="var(--color-accent)"
+            stroke="var(--viz-aggressive)"
             strokeWidth={1.5}
             strokeDasharray="4 4"
             dot={false}
@@ -148,14 +149,14 @@ export function ProjectionChart(props: Props) {
           <Line
             type="monotone"
             dataKey="ma"
-            stroke="var(--color-foreground)"
+            stroke="var(--viz-ma)"
             strokeWidth={2}
             dot={false}
             isAnimationActive={false}
           />
           <Scatter
             dataKey="actual"
-            fill="var(--color-foreground)"
+            fill="var(--viz-actual)"
             shape="circle"
             isAnimationActive={false}
           />

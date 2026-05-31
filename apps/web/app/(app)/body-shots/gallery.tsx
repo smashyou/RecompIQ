@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { useFireToast } from "@/components/ui/toast";
+import { Card, Overline } from "@/components/kit";
 
 interface Session {
   id: string;
@@ -45,74 +46,76 @@ export function Gallery({ sessions }: { sessions: Session[] }) {
 
   return (
     <>
-      <ul className="space-y-6">
+      <ul className="flex flex-col gap-[14px]">
         {sessions.map((s) => (
-          <li
-            key={s.id}
-            className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5"
-          >
-            <div className="flex items-baseline justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium">
-                  {new Date(s.captured_at).toLocaleDateString(undefined, {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
-                <p className="text-xs text-[var(--color-muted-foreground)]">
-                  {s.weight_at_capture_lb !== null
-                    ? `${Number(s.weight_at_capture_lb).toFixed(1)} lb`
-                    : ""}
-                  {s.notes ? ` · ${s.notes}` : ""}
-                </p>
+          <li key={s.id}>
+            <Card style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div className="flex items-baseline justify-between gap-3">
+                <div>
+                  <p className="font-[family-name:var(--font-sans)] text-[13.5px] font-semibold text-[var(--fg)]">
+                    {new Date(s.captured_at).toLocaleDateString(undefined, {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                  <p className="mt-1 flex flex-wrap items-baseline gap-x-2">
+                    {s.weight_at_capture_lb !== null && (
+                      <span className="font-[family-name:var(--font-mono)] text-[12px] tabular-nums text-[var(--fg-muted)]">
+                        {Number(s.weight_at_capture_lb).toFixed(1)}
+                        <span className="text-[var(--fg-subtle)]"> lb</span>
+                      </span>
+                    )}
+                    {s.notes && (
+                      <span className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                        {s.notes}
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => deleteSession(s.id)}
+                  disabled={deleting === s.id}
+                  className="text-[var(--fg-subtle)] transition-colors hover:text-[var(--danger)]"
+                  aria-label="Delete"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => deleteSession(s.id)}
-                disabled={deleting === s.id}
-                className="text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
-                aria-label="Delete"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {ANGLE_LABELS.map(({ key, label }) => {
-                const url = s[key] as string | null;
-                return (
-                  <div
-                    key={key}
-                    className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)]"
-                  >
-                    <div className="relative aspect-[3/4] w-full">
-                      {url ? (
-                        <button
-                          type="button"
-                          onClick={() => setLightbox(url)}
-                          className="absolute inset-0 h-full w-full"
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={url}
-                            alt={label}
-                            className="h-full w-full object-cover"
-                          />
-                        </button>
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                          no {label.toLowerCase()}
-                        </div>
-                      )}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {ANGLE_LABELS.map(({ key, label }) => {
+                  const url = s[key] as string | null;
+                  return (
+                    <div
+                      key={key}
+                      className="overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)]"
+                    >
+                      <div className="relative aspect-[3/4] w-full">
+                        {url ? (
+                          <button
+                            type="button"
+                            onClick={() => setLightbox(url)}
+                            className="absolute inset-0 h-full w-full"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={url} alt={label} className="h-full w-full object-cover" />
+                          </button>
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <Overline style={{ fontSize: 9 }}>no {label.toLowerCase()}</Overline>
+                          </div>
+                        )}
+                      </div>
+                      <div className="border-t border-[var(--border)] px-2 py-1.5">
+                        <Overline style={{ fontSize: 9 }}>{label}</Overline>
+                      </div>
                     </div>
-                    <p className="border-t border-[var(--color-border)] px-2 py-1 text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                      {label}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </Card>
           </li>
         ))}
       </ul>

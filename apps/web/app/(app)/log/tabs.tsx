@@ -35,10 +35,11 @@ export function LogTabs() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div
         role="tablist"
-        className="flex gap-1 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-1"
+        className="flex gap-1 overflow-x-auto rounded-[var(--r-md)] border border-border p-1"
+        style={{ background: "var(--surface-1)" }}
       >
         {TABS.map((t) => {
           const Icon = t.icon;
@@ -50,10 +51,10 @@ export function LogTabs() {
               aria-selected={selected}
               onClick={() => setTab(t.id)}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex flex-1 items-center justify-center gap-2 rounded-[var(--r-sm)] px-3 py-2 font-[family-name:var(--font-sans)] text-[12.5px] font-medium transition-colors",
                 selected
-                  ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                  : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]",
+                  ? "bg-[var(--primary-wash)] text-[var(--primary-bright)]"
+                  : "text-[var(--fg-muted)] hover:bg-[var(--surface-2)] hover:text-foreground",
               )}
             >
               <Icon className="h-4 w-4" />

@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useFireToast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
+import { Card, MetricBox, Overline } from "@/components/kit";
+import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 import { SyringeVisual } from "./syringe-visual";
 
 interface CompoundOption {
@@ -141,8 +143,10 @@ export function ReconstitutionTab({
 
   return (
     <div className="space-y-5">
+      <SafetyDisclaimer variant="compact" />
+
       {/* STEP 1 — product + reconstitution */}
-      <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
+      <Card pad={20}>
         <Step n={1} title="Product & reconstitution" />
 
         <div className="mt-4 space-y-2">
@@ -151,7 +155,7 @@ export function ReconstitutionTab({
             id="picker"
             value={compoundId}
             onChange={(e) => onCompoundChange(e.target.value)}
-            className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
+            className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
           >
             <option value="">— choose a peptide (loads its vial + reference dose) —</option>
             {compounds.map((c) => (
@@ -162,9 +166,9 @@ export function ReconstitutionTab({
             ))}
           </select>
           {selected?.ref_dose && (
-            <p className="text-xs text-[var(--color-muted-foreground)]">
+            <p className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
               Reference:{" "}
-              <span className="font-medium text-[var(--color-foreground)]">
+              <span className="font-medium text-[var(--fg)]">
                 {selected.ref_dose.low}
                 {selected.ref_dose.high !== selected.ref_dose.low ? `–${selected.ref_dose.high}` : ""} {selected.ref_dose.unit}
               </span>{" "}
@@ -172,9 +176,9 @@ export function ReconstitutionTab({
             </p>
           )}
           {selected?.is_blend && selected.component_mg.length > 0 && (
-            <p className="text-xs text-[var(--color-muted-foreground)]">
+            <p className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
               Composition:{" "}
-              <span className="text-[var(--color-foreground)]">
+              <span className="text-[var(--fg)]">
                 {selected.component_mg.map((c) => `${c.label}${c.mg !== null ? ` ${c.mg} mg` : ""}`).join(" / ")}
               </span>
               {selected.typical_vial_mg ? ` · ${selected.typical_vial_mg} mg total` : ""}
@@ -204,28 +208,28 @@ export function ReconstitutionTab({
         </div>
 
         {/* concentration callout */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] px-4 py-3">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
           <div>
-            <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]">Concentration</p>
-            <p className="text-xl font-semibold tabular-nums text-[var(--color-primary)]">
+            <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>Concentration</Overline>
+            <p className="mt-0.5 font-[family-name:var(--font-mono)] text-[20px] font-medium tabular-nums tracking-[-0.02em] text-[var(--primary-bright)]">
               {concentration > 0 ? concentration.toFixed(3) : "—"}
-              <span className="ml-1 text-xs font-normal text-[var(--color-muted-foreground)]">mg/mL</span>
+              <span className="ml-1 text-[11px] font-normal text-[var(--fg-subtle)]">mg/mL</span>
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]">Per syringe unit</p>
-            <p className="text-sm font-medium tabular-nums">
+            <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>Per syringe unit</Overline>
+            <p className="mt-0.5 font-[family-name:var(--font-mono)] text-[14px] font-medium tabular-nums text-[var(--fg)]">
               {mgPerUnit > 0 ? (mgPerUnit >= 1 ? `${mgPerUnit.toFixed(3)} mg` : `${(mgPerUnit * 1000).toFixed(1)} mcg`) : "—"}
             </p>
           </div>
         </div>
-      </section>
+      </Card>
 
       {/* STEP 2 — dose, with either/or toggle */}
-      <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
+      <Card pad={20}>
         <Step n={2} title="Dose" />
 
-        <div className="mt-4 inline-flex rounded-lg border border-[var(--color-border)] p-1">
+        <div className="mt-4 inline-flex rounded-[var(--r-md)] border border-[var(--border)] p-1">
           <ToggleBtn active={mode === "dose"} onClick={() => setMode("dose")}>
             By dose
           </ToggleBtn>
@@ -249,7 +253,7 @@ export function ReconstitutionTab({
                 <select
                   value={doseUnit}
                   onChange={(e) => setDoseUnit(e.target.value as "mg" | "mcg")}
-                  className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-2 text-sm"
+                  className="h-10 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
                 >
                   <option value="mg">mg</option>
                   <option value="mcg">mcg</option>
@@ -258,7 +262,9 @@ export function ReconstitutionTab({
             </div>
             {quickFills && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-[var(--color-muted-foreground)]">Quick fill:</span>
+                <span className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                  Quick fill:
+                </span>
                 {quickFills.map((v) => (
                   <button
                     key={v}
@@ -267,7 +273,7 @@ export function ReconstitutionTab({
                       setDoseUnit(selected!.ref_dose!.unit as "mg" | "mcg");
                       setDoseValue(Number(v.toFixed(selected!.ref_dose!.unit === "mcg" ? 0 : 3)));
                     }}
-                    className="rounded-md border border-[var(--color-border)] px-2 py-1 text-xs tabular-nums hover:bg-[var(--color-muted)]"
+                    className="rounded-[var(--r-sm)] border border-[var(--border)] px-2 py-1 font-[family-name:var(--font-mono)] text-[11.5px] tabular-nums text-[var(--fg-muted)] hover:bg-[var(--surface-2)]"
                   >
                     {Number(v.toFixed(selected!.ref_dose!.unit === "mcg" ? 0 : 3))} {selected!.ref_dose!.unit}
                   </button>
@@ -286,7 +292,7 @@ export function ReconstitutionTab({
               onChange={(e) => setDrawUnits(e.target.valueAsNumber || 0)}
               className="w-40"
             />
-            <p className="text-xs text-[var(--color-muted-foreground)]">
+            <p className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
               Enter what you drew on the syringe — we compute the dose it delivers.
             </p>
           </div>
@@ -296,13 +302,18 @@ export function ReconstitutionTab({
           <NumOptField label="Doses per week (optional)" value={dosesPerWeek} onChange={setDosesPerWeek} placeholder="7 daily, 3.5 EOD" />
           <NumOptField label="Vial cost USD (optional)" value={vialCost} onChange={setVialCost} placeholder="for cost-per-dose" />
         </div>
-      </section>
+      </Card>
 
       {/* RESULT */}
-      <section className="rounded-xl border border-[var(--color-primary)] bg-[var(--color-card)] p-6">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--color-primary)]">Result</h2>
+      <Card
+        title="Result"
+        pad={20}
+        style={{ borderColor: "var(--primary-line)", background: "var(--primary-wash)" }}
+      >
         {!calc ? (
-          <p className="text-sm text-[var(--color-destructive)]">Enter a vial, water, and dose (all &gt; 0).</p>
+          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--danger)]">
+            Enter a vial, water, and dose (all &gt; 0).
+          </p>
         ) : (
           <>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -310,77 +321,81 @@ export function ReconstitutionTab({
               <BigStat label={`Draw to (U-${unitsPerMl})`} value={calc.units.toFixed(1)} unit="units" emphasis />
             </div>
 
-            <dl className="mt-4 grid gap-4 sm:grid-cols-3">
-              <Stat
+            <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricBox
                 label={mode === "units" ? "Delivers" : "Dose"}
                 value={calc.effDoseMg >= 1 ? calc.effDoseMg.toFixed(3) : (calc.effDoseMg * 1000).toFixed(0)}
                 unit={calc.effDoseMg >= 1 ? "mg" : "mcg"}
               />
-              <Stat label="Doses per vial" value={calc.dosesPerVial.toFixed(1)} unit="doses" />
-              <Stat label="Days of supply" value={calc.daysOfSupply !== null ? calc.daysOfSupply.toFixed(0) : "—"} unit="days" />
-              <Stat label="Cost per dose" value={calc.costPerDose !== null ? `$${calc.costPerDose.toFixed(2)}` : "—"} unit="" />
+              <MetricBox label="Doses per vial" value={calc.dosesPerVial.toFixed(1)} unit="doses" />
+              <MetricBox label="Days of supply" value={calc.daysOfSupply !== null ? calc.daysOfSupply.toFixed(0) : "—"} unit="days" />
+              <MetricBox label="Cost per dose" value={calc.costPerDose !== null ? `$${calc.costPerDose.toFixed(2)}` : "—"} />
             </dl>
 
             {syringe && (
-              <div className="mt-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+              <div className="mt-6 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] p-4">
                 <SyringeVisual model={syringe} unitsLabel="units" />
               </div>
             )}
 
             {blendDelivery && blendDelivery.length > 0 && (
-              <div className="mt-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
+              <div className="mt-6 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] p-4">
+                <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em", display: "block", marginBottom: 8 }}>
                   Per-component delivered at {calc.drawMl.toFixed(3)} mL
-                </p>
-                <table className="w-full text-sm">
+                </Overline>
+                <table className="w-full font-[family-name:var(--font-sans)] text-[13px]">
                   <tbody>
                     {blendDelivery.map((c) => (
-                      <tr key={c.label} className="border-b border-[var(--color-border)] last:border-0">
-                        <td className="py-1.5">{c.label}</td>
-                        <td className="py-1.5 text-right text-xs text-[var(--color-muted-foreground)]">{c.mg} mg in vial</td>
-                        <td className="py-1.5 text-right font-medium tabular-nums">
+                      <tr key={c.label} className="border-b border-[var(--border)] last:border-0">
+                        <td className="py-1.5 text-[var(--fg)]">{c.label}</td>
+                        <td className="py-1.5 text-right text-[11.5px] text-[var(--fg-subtle)]">{c.mg} mg in vial</td>
+                        <td className="py-1.5 text-right font-[family-name:var(--font-mono)] font-medium tabular-nums text-[var(--fg)]">
                           {c.deliveredMg >= 1 ? `${c.deliveredMg.toFixed(2)} mg` : `${(c.deliveredMg * 1000).toFixed(0)} mcg`}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                <p className="mt-2 text-[10px] text-[var(--color-muted-foreground)]">
+                <p className="mt-2 font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-subtle)]">
                   A blend is drawn as one volume; each component is delivered in its fixed ratio. Educational only.
                 </p>
               </div>
             )}
 
-            <div className="mt-6 flex justify-end border-t border-[var(--color-border)] pt-4">
+            <div className="mt-6 flex justify-end border-t border-[var(--primary-line)] pt-4">
               <Button onClick={saveMix} disabled={saving} variant="outline">
                 {saving ? "Saving…" : "Save this mix"}
               </Button>
             </div>
           </>
         )}
-      </section>
+      </Card>
 
-      <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-xs leading-relaxed text-[var(--color-muted-foreground)]">
-        <p className="font-medium text-[var(--color-foreground)]">Sterile-technique reminders</p>
-        <ul className="mt-2 list-disc space-y-1 pl-4">
+      <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-4">
+        <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>
+          Sterile-technique reminders
+        </Overline>
+        <ul className="mt-2 space-y-1 font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.5] text-[var(--fg-muted)]">
           <li>Wipe the vial stopper with an alcohol prep before each draw.</li>
           <li>Inject bacteriostatic water down the side of the vial, slowly; swirl, don&apos;t shake.</li>
           <li>Use a new needle for every injection. Refrigerate per guidance.</li>
           <li>If anything looks cloudy, particulate, or off-color — do not use.</li>
         </ul>
-        <p className="mt-2">This tool does math on the numbers you enter. It does not recommend doses.</p>
-      </section>
+        <p className="mt-2 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+          This tool does math on the numbers you enter. It does not recommend doses.
+        </p>
+      </div>
     </div>
   );
 }
 
 function Step({ n, title }: { n: number; title: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-[var(--color-primary-foreground)]">
+    <div className="flex items-center gap-2.5">
+      <span className="flex h-[22px] w-[22px] items-center justify-center rounded-[var(--r-sm)] border border-[var(--primary-line)] bg-[var(--primary-wash)] font-[family-name:var(--font-mono)] text-[11px] font-semibold text-[var(--primary-bright)]">
         {n}
       </span>
-      <h2 className="text-sm font-semibold">{title}</h2>
+      <h2 className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--fg)]">{title}</h2>
     </div>
   );
 }
@@ -391,8 +406,10 @@ function ToggleBtn({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-        active ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
+        "rounded-[var(--r-sm)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] font-medium transition-colors",
+        active
+          ? "bg-[var(--primary-wash)] text-[var(--primary-bright)]"
+          : "text-[var(--fg-muted)] hover:bg-[var(--surface-2)]",
       )}
     >
       {children}
@@ -452,7 +469,7 @@ function SelectField<T extends number>({
       <select
         value={value}
         onChange={(e) => onChange(Number(e.target.value) as T)}
-        className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
+        className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -466,24 +483,20 @@ function SelectField<T extends number>({
 
 function BigStat({ label, value, unit, emphasis }: { label: string; value: string; unit: string; emphasis?: boolean }) {
   return (
-    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
-      <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]">{label}</p>
-      <p className={cn("mt-1 tabular-nums", emphasis ? "text-3xl font-semibold text-[var(--color-primary)]" : "text-2xl font-semibold")}>
+    <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] p-4">
+      <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>{label}</Overline>
+      <p
+        className="mt-1 font-[family-name:var(--font-mono)] tabular-nums"
+        style={{
+          fontSize: emphasis ? 30 : 24,
+          fontWeight: 500,
+          letterSpacing: "-0.02em",
+          color: emphasis ? "var(--primary-bright)" : "var(--fg)",
+        }}
+      >
         {value}
-        <span className="ml-1 text-xs font-normal text-[var(--color-muted-foreground)]">{unit}</span>
+        <span className="ml-1 text-[12px] font-normal text-[var(--fg-subtle)]">{unit}</span>
       </p>
-    </div>
-  );
-}
-
-function Stat({ label, value, unit }: { label: string; value: string; unit: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-[var(--color-muted-foreground)]">{label}</dt>
-      <dd className="mt-1 text-xl font-medium tabular-nums">
-        {value}
-        {unit && <span className="ml-1 text-xs font-normal text-[var(--color-muted-foreground)]">{unit}</span>}
-      </dd>
     </div>
   );
 }

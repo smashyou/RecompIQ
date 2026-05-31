@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ShieldAlert } from "lucide-react";
 import { reconstitute } from "@peptide/peptides";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, Overline } from "@/components/kit";
 
 export function ReconstitutionCalculator() {
   const [vialMg, setVialMg] = useState(10);
@@ -25,11 +27,8 @@ export function ReconstitutionCalculator() {
   }, [vialMg, bacWaterMl, doseMg, syringe]);
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-          Inputs
-        </h2>
+    <div className="space-y-4">
+      <Card title="Inputs">
         <div className="space-y-4">
           <NumField label="Vial (mg)" value={vialMg} step={0.1} onChange={setVialMg} />
           <NumField
@@ -45,21 +44,21 @@ export function ReconstitutionCalculator() {
               id="syringe"
               value={syringe}
               onChange={(e) => setSyringe(Number(e.target.value) as 100 | 30)}
-              className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+              className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
             >
               <option value={100}>U-100 (100 units / mL)</option>
               <option value={30}>U-30 / U-50 (30 or 50 units / mL)</option>
             </select>
           </div>
         </div>
-      </section>
+      </Card>
 
-      <section className="rounded-xl border border-[var(--color-primary)] bg-[var(--color-card)] p-6">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-[var(--color-primary)]">
-          Result
-        </h2>
+      <Card
+        title="Result"
+        style={{ borderColor: "var(--primary-line)", background: "var(--primary-wash)" }}
+      >
         {!result ? (
-          <p className="text-sm text-[var(--color-destructive)]">
+          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--danger)]">
             All inputs must be greater than 0.
           </p>
         ) : (
@@ -72,19 +71,22 @@ export function ReconstitutionCalculator() {
             <ResultStat label="Volume to draw" value={result.drawMl.toFixed(3)} unit="mL" />
             <ResultStat
               label={`Insulin units (U-${syringe})`}
-              value={
-                result.insulinUnits !== null ? result.insulinUnits.toFixed(1) : "—"
-              }
+              value={result.insulinUnits !== null ? result.insulinUnits.toFixed(1) : "—"}
               unit="units"
               emphasis
             />
           </dl>
         )}
-      </section>
+      </Card>
 
-      <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-xs leading-relaxed text-[var(--color-muted-foreground)]">
-        <p className="font-medium text-[var(--color-foreground)]">Sterile-technique reminders</p>
-        <ul className="mt-2 list-disc space-y-1 pl-4">
+      <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-4">
+        <div className="flex items-center gap-2">
+          <ShieldAlert size={14} className="text-[var(--fg-subtle)]" />
+          <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>
+            Sterile-technique reminders
+          </Overline>
+        </div>
+        <ul className="mt-2 space-y-1 font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.5] text-[var(--fg-muted)]">
           <li>Wipe the vial stopper with an alcohol prep before each draw.</li>
           <li>Inject bacteriostatic water down the side of the vial, slowly.</li>
           <li>Swirl gently; do not shake.</li>
@@ -92,7 +94,7 @@ export function ReconstitutionCalculator() {
           <li>Refrigerate reconstituted peptides per manufacturer / clinician guidance.</li>
           <li>If anything looks cloudy, particulate, or off-color — do not use.</li>
         </ul>
-      </section>
+      </div>
     </div>
   );
 }
@@ -135,16 +137,18 @@ function ResultStat({
 }) {
   return (
     <div>
-      <dt className="text-xs text-[var(--color-muted-foreground)]">{label}</dt>
+      <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>{label}</Overline>
       <dd
-        className={`mt-1 tabular-nums ${
-          emphasis ? "text-3xl font-semibold text-[var(--color-primary)]" : "text-xl font-medium"
-        }`}
+        className="mt-1 font-[family-name:var(--font-mono)] tabular-nums"
+        style={{
+          fontSize: emphasis ? 28 : 20,
+          fontWeight: 500,
+          letterSpacing: "-0.02em",
+          color: emphasis ? "var(--primary-bright)" : "var(--fg)",
+        }}
       >
         {value}
-        <span className="ml-1 text-xs font-normal text-[var(--color-muted-foreground)]">
-          {unit}
-        </span>
+        <span className="ml-1 text-[11px] font-normal text-[var(--fg-subtle)]">{unit}</span>
       </dd>
     </div>
   );

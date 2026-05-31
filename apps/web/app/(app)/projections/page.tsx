@@ -1,6 +1,7 @@
 import { buildProjection } from "@peptide/projections";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { Card, MetricBox, Overline, SectionHeader, Stat } from "@/components/kit";
 import { ProjectionChart } from "./projection-chart";
 
 export const dynamic = "force-dynamic";
@@ -40,11 +41,13 @@ export default async function ProjectionsPage() {
 
   if (!goal) {
     return (
-      <div className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Projections</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Set a goal in onboarding to see your projection.
-        </p>
+      <div className="flex max-w-[1080px] flex-col gap-[18px]">
+        <SectionHeader num="06" title="Projections" />
+        <Card>
+          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+            Set a goal in onboarding to see your projection.
+          </p>
+        </Card>
       </div>
     );
   }
@@ -59,41 +62,44 @@ export default async function ProjectionsPage() {
 
   if (!projection) {
     return (
-      <div className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Projections</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Log a weigh-in to start a projection.
-        </p>
+      <div className="flex max-w-[1080px] flex-col gap-[18px]">
+        <SectionHeader num="06" title="Projections" />
+        <Card>
+          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+            Log a weigh-in to start a projection.
+          </p>
+        </Card>
       </div>
     );
   }
 
   const adherence = ADHERENCE_LABEL[projection.adherence]!;
+  const toneVar =
+    adherence.tone === "good"
+      ? { fg: "var(--positive)", line: "var(--positive-line)", wash: "var(--positive-wash)" }
+      : adherence.tone === "warn"
+        ? { fg: "var(--warn)", line: "var(--warn-line)", wash: "var(--warn-wash)" }
+        : { fg: "var(--fg-muted)", line: "var(--border)", wash: "var(--surface-1)" };
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Projections</h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Three linear trajectories vs. your actual data + 7-day moving average. Projection, not
-            prediction — bodies don&apos;t do exact.
-          </p>
-        </div>
+    <div className="flex max-w-[1080px] flex-col gap-[18px]">
+      <SectionHeader
+        num="06"
+        title="Projections"
+        note="Three linear trajectories vs. actual + 7-day moving average. Projection, not prediction."
+      />
+
+      <div className="flex items-center gap-3">
+        <Overline>Adherence</Overline>
         <span
-          className={`rounded-full border px-3 py-1 text-xs font-medium ${
-            adherence.tone === "good"
-              ? "border-[var(--color-accent)] text-[var(--color-accent)]"
-              : adherence.tone === "warn"
-                ? "border-[var(--color-destructive)] text-[var(--color-destructive)]"
-                : "border-[var(--color-border)] text-[var(--color-muted-foreground)]"
-          }`}
+          className="inline-flex items-center rounded-[var(--r-pill)] border px-3 py-1 font-[family-name:var(--font-sans)] text-[12px] font-medium"
+          style={{ borderColor: toneVar.line, background: toneVar.wash, color: toneVar.fg }}
         >
           {adherence.label}
         </span>
-      </header>
+      </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-[14px] md:grid-cols-3">
         <RateCard
           label="Conservative"
           rate={projection.series.conservative.lbsPerWeek}
@@ -113,25 +119,28 @@ export default async function ProjectionsPage() {
           etaWeeks={projection.series.aggressive.etaWeeks}
           etaDate={projection.series.aggressive.etaDate}
         />
-      </section>
+      </div>
 
-      <ProjectionChart
-        actual={weights}
-        ma={projection.sevenDayMA}
-        conservative={projection.series.conservative.points}
-        target={projection.series.target.points}
-        aggressive={projection.series.aggressive.points}
-        targetMinLb={projection.targetMinLb}
-        targetMaxLb={projection.targetMaxLb}
-        currentLb={projection.currentWeightLb}
-      />
+      <Card title="Trajectory" hint="lb over time" pad={16}>
+        <ProjectionChart
+          actual={weights}
+          ma={projection.sevenDayMA}
+          conservative={projection.series.conservative.points}
+          target={projection.series.target.points}
+          aggressive={projection.series.aggressive.points}
+          targetMinLb={projection.targetMinLb}
+          targetMaxLb={projection.targetMaxLb}
+          currentLb={projection.currentWeightLb}
+        />
+      </Card>
 
-      <p className="rounded-md border border-[var(--color-border)] bg-[var(--color-muted)] p-3 text-xs leading-relaxed text-[var(--color-muted-foreground)]">
-        <strong className="text-[var(--color-foreground)]">How this is built.</strong> Target rate
-        = (start − target midpoint) ÷ timeline weeks. Conservative ≈ 60% of target. Aggressive ≈
-        115% of target. Lines are linear; real weight loss decelerates as you approach the target.
-        Use this for orientation, not absolute prediction.
-      </p>
+      <Card title="How this is built" pad={16}>
+        <p className="font-[family-name:var(--font-sans)] text-[12.5px] leading-relaxed text-[var(--fg-muted)]">
+          Target rate = (start − target midpoint) ÷ timeline weeks. Conservative ≈ 60% of target.
+          Aggressive ≈ 115% of target. Lines are linear; real weight loss decelerates as you
+          approach the target. Use this for orientation, not absolute prediction.
+        </p>
+      </Card>
     </div>
   );
 }
@@ -150,30 +159,27 @@ function RateCard({
   emphasis?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-xl border p-5 ${
+    <Card
+      pad={18}
+      style={
         emphasis
-          ? "border-[var(--color-primary)] bg-[var(--color-card)]"
-          : "border-[var(--color-border)] bg-[var(--color-card)]"
-      }`}
+          ? { borderColor: "var(--primary-line)", background: "var(--primary-wash)" }
+          : undefined
+      }
     >
-      <p className="text-xs uppercase tracking-wider text-[var(--color-muted-foreground)]">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-semibold tabular-nums">
-        {rate.toFixed(2)}
-        <span className="ml-1 text-xs font-normal text-[var(--color-muted-foreground)]">
-          lb/wk
-        </span>
-      </p>
-      <p className="mt-2 text-sm">
-        ETA{" "}
-        <span className="font-medium tabular-nums">
-          {etaWeeks !== null ? `${etaWeeks} weeks` : "—"}
-        </span>
-      </p>
+      <Overline>{label}</Overline>
+      <div className="mt-3">
+        <Stat value={rate.toFixed(2)} unit="lb/wk" size={26} />
+      </div>
+      <div className="mt-4">
+        <MetricBox
+          label="ETA"
+          value={etaWeeks !== null ? etaWeeks : "—"}
+          unit={etaWeeks !== null ? "weeks" : undefined}
+        />
+      </div>
       {etaDate && (
-        <p className="text-xs text-[var(--color-muted-foreground)]">
+        <p className="mt-2 font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-subtle)]">
           {new Date(etaDate).toLocaleDateString(undefined, {
             month: "short",
             day: "numeric",
@@ -181,6 +187,6 @@ function RateCard({
           })}
         </p>
       )}
-    </div>
+    </Card>
   );
 }

@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
+import { SectionHeader } from "@/components/kit";
 import { representativeRange, commonFrequency, type DoseRefLike } from "@/lib/dose-display";
 import { LibraryGrid, type LibraryCard } from "./library-grid";
 
@@ -50,18 +51,19 @@ export default async function LibraryPage() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Protocol Library</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {cards.length} compounds — evidence-graded reference, sourced from public literature.
-          Educational only, not medical advice.
-        </p>
-      </header>
+    <div className="mx-auto max-w-[980px]">
+      <SectionHeader title="Protocol library" note={`${cards.length} compounds`} />
+
+      <p className="mb-6 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+        Evidence-graded reference, sourced from public literature. Educational only, not medical
+        advice.
+      </p>
 
       <LibraryGrid cards={cards} />
 
-      <SafetyDisclaimer variant="compact" />
+      <div className="mt-6">
+        <SafetyDisclaimer variant="compact" />
+      </div>
     </div>
   );
 }

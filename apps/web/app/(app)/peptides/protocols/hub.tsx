@@ -71,7 +71,7 @@ export function ProtocolsHub({
 
   return (
     <div className="space-y-6">
-      <nav className="flex flex-wrap gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-1">
+      <nav className="flex flex-wrap gap-1 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface-1)] p-1">
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;
@@ -81,10 +81,10 @@ export function ProtocolsHub({
               type="button"
               onClick={() => go(t.id)}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-2 py-2 text-[13px] font-medium transition-colors",
+                "flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--r-md)] px-2 py-2 font-[family-name:var(--font-sans)] text-[12.5px] font-medium transition-colors",
                 active
-                  ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                  : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
+                  ? "border border-[var(--primary-line)] bg-[var(--primary-wash)] text-[var(--primary-bright)]"
+                  : "text-[var(--fg-muted)] hover:bg-[var(--surface-2)]",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />

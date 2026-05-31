@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
+import { Card, Overline } from "@/components/kit";
 
 type Angle = "front" | "back" | "left" | "right";
 const ANGLES: { id: Angle; label: string; tip: string }[] = [
@@ -100,36 +101,42 @@ export function CaptureFlow() {
   const completed = Object.values(photos).filter(Boolean).length;
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-        <p className="text-xs text-[var(--color-muted-foreground)]">
-          Progress · <span className="font-medium text-[var(--color-foreground)]">{completed}/4</span> angles uploaded
-        </p>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-muted)]">
+    <div className="space-y-[14px]">
+      <Card pad={18}>
+        <div className="flex items-baseline justify-between">
+          <Overline>Progress</Overline>
+          <span className="font-[family-name:var(--font-mono)] text-[12px] tabular-nums text-[var(--fg)]">
+            {completed}
+            <span className="text-[var(--fg-subtle)]">/4 angles</span>
+          </span>
+        </div>
+        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-[var(--r-pill)] bg-[var(--surface-2)]">
           <div
-            className="h-full bg-[var(--color-primary)] transition-all"
-            style={{ width: `${(completed / 4) * 100}%` }}
+            className="h-full transition-all"
+            style={{ width: `${(completed / 4) * 100}%`, background: "var(--primary)" }}
           />
         </div>
-      </div>
+      </Card>
 
-      <ul className="space-y-3">
+      <ul className="space-y-[14px]">
         {ANGLES.map((a) => {
           const uploaded = photos[a.id];
           return (
-            <li
-              key={a.id}
-              className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5"
-            >
+            <li key={a.id}>
+              <Card style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold">{a.label}</h3>
+                    <h3 className="font-[family-name:var(--font-sans)] text-[13.5px] font-semibold text-[var(--fg)]">
+                      {a.label}
+                    </h3>
                     {uploaded && (
-                      <CheckCircle2 className="h-4 w-4 text-[var(--color-accent)]" />
+                      <CheckCircle2 className="h-4 w-4" style={{ color: "var(--positive)" }} />
                     )}
                   </div>
-                  <p className="text-xs text-[var(--color-muted-foreground)]">{a.tip}</p>
+                  <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                    {a.tip}
+                  </p>
                 </div>
                 <label className="cursor-pointer">
                   <input
@@ -144,11 +151,11 @@ export function CaptureFlow() {
                     }}
                   />
                   <span
-                    className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center gap-2 rounded-[var(--r-md)] border px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] font-medium transition-colors hover:bg-[var(--surface-2)] ${
                       uploaded
-                        ? "border-[var(--color-border)] text-[var(--color-muted-foreground)]"
-                        : "border-[var(--color-primary)] text-[var(--color-primary)]"
-                    } hover:bg-[var(--color-muted)]`}
+                        ? "border-[var(--border)] text-[var(--fg-muted)]"
+                        : "border-[var(--primary-line)] text-[var(--primary-bright)]"
+                    }`}
                   >
                     {uploadingAngle === a.id ? (
                       "Uploading…"
@@ -165,7 +172,7 @@ export function CaptureFlow() {
                 </label>
               </div>
               {uploaded && (
-                <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
+                <div className="overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={uploaded.url}
@@ -174,13 +181,13 @@ export function CaptureFlow() {
                   />
                 </div>
               )}
+              </Card>
             </li>
           );
         })}
       </ul>
 
-      <div className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-        <h3 className="text-sm font-semibold">Optional</h3>
+      <Card title="Optional" pad={18} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="weight">Weight at capture (lb)</Label>
@@ -202,7 +209,7 @@ export function CaptureFlow() {
             />
           </div>
         </div>
-      </div>
+      </Card>
 
       <div className="flex gap-3">
         <Button asChild variant="outline" className="flex-1">

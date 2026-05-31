@@ -29,7 +29,7 @@ export function SyringeVisual({ model, unitsLabel }: { model: SyringeModel; unit
           y1={barrelY + barrelH / 2}
           x2={W - 2}
           y2={barrelY + barrelH / 2}
-          stroke="var(--color-muted-foreground)"
+          stroke="var(--fg-subtle)"
           strokeWidth={2}
         />
         {/* plunger flange (left) */}
@@ -39,8 +39,8 @@ export function SyringeVisual({ model, unitsLabel }: { model: SyringeModel; unit
           width={plungerW * 0.4}
           height={barrelH + 12}
           rx={2}
-          fill="var(--color-muted)"
-          stroke="var(--color-border)"
+          fill="var(--surface-2)"
+          stroke="var(--border)"
         />
         {/* barrel outline */}
         <rect
@@ -49,8 +49,8 @@ export function SyringeVisual({ model, unitsLabel }: { model: SyringeModel; unit
           width={barrelW}
           height={barrelH}
           rx={4}
-          fill="var(--color-card)"
-          stroke="var(--color-border)"
+          fill="var(--surface-1)"
+          stroke="var(--border)"
           strokeWidth={1.5}
         />
         {/* fill */}
@@ -60,7 +60,7 @@ export function SyringeVisual({ model, unitsLabel }: { model: SyringeModel; unit
           width={fillW}
           height={barrelH}
           rx={4}
-          fill={model.overfilled ? "var(--color-destructive)" : "var(--color-primary)"}
+          fill={model.overfilled ? "var(--danger)" : "var(--primary)"}
           opacity={0.28}
         />
         {/* fill leading edge */}
@@ -69,7 +69,7 @@ export function SyringeVisual({ model, unitsLabel }: { model: SyringeModel; unit
           y1={barrelY - 4}
           x2={barrelX + fillW}
           y2={barrelY + barrelH + 4}
-          stroke={model.overfilled ? "var(--color-destructive)" : "var(--color-primary)"}
+          stroke={model.overfilled ? "var(--danger)" : "var(--primary)"}
           strokeWidth={2}
         />
         {/* ticks */}
@@ -83,7 +83,7 @@ export function SyringeVisual({ model, unitsLabel }: { model: SyringeModel; unit
                 y1={barrelY}
                 x2={x}
                 y2={barrelY + len}
-                stroke="var(--color-muted-foreground)"
+                stroke="var(--fg-subtle)"
                 strokeWidth={t.major ? 1.2 : 0.6}
               />
               {t.major && (
@@ -92,7 +92,8 @@ export function SyringeVisual({ model, unitsLabel }: { model: SyringeModel; unit
                   y={barrelY - 4}
                   textAnchor="middle"
                   fontSize={7}
-                  fill="var(--color-muted-foreground)"
+                  fill="var(--fg-subtle)"
+                  fontFamily="var(--font-mono)"
                 >
                   {t.units}
                 </text>
@@ -101,11 +102,11 @@ export function SyringeVisual({ model, unitsLabel }: { model: SyringeModel; unit
           );
         })}
       </svg>
-      <p className="text-center text-xs text-[var(--color-muted-foreground)]">
+      <p className="text-center font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
         Draw to{" "}
         <span
-          className={`font-semibold tabular-nums ${
-            model.overfilled ? "text-[var(--color-destructive)]" : "text-[var(--color-primary)]"
+          className={`font-[family-name:var(--font-mono)] font-semibold tabular-nums ${
+            model.overfilled ? "text-[var(--danger)]" : "text-[var(--primary-bright)]"
           }`}
         >
           {model.fillUnits.toFixed(1)} {unitsLabel}

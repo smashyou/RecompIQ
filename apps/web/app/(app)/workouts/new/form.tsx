@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
+import { Card, Overline } from "@/components/kit";
 
 interface TemplateExercise {
   name: string;
@@ -145,8 +146,8 @@ export function NewWorkoutForm({
   }
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+    <div className="space-y-[18px]">
+      <Card title="Session" pad={20} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div className="space-y-2">
           <Label htmlFor="name">Session name</Label>
           <Input
@@ -225,27 +226,24 @@ export function NewWorkoutForm({
             onChange={(e) => setNotes(e.target.value)}
           />
         </div>
-      </section>
+      </Card>
 
       <section className="space-y-3">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-            Exercises
-          </h2>
+          <Overline>Exercises</Overline>
           <Button type="button" variant="outline" size="sm" onClick={addExercise}>
             <Plus className="h-3 w-3" /> Add exercise
           </Button>
         </div>
         {exercises.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-4 text-center text-xs text-[var(--color-muted-foreground)]">
-            No exercises yet. Add one above.
-          </p>
+          <Card style={{ borderStyle: "dashed", textAlign: "center", padding: 16 }}>
+            <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+              No exercises yet. Add one above.
+            </p>
+          </Card>
         ) : (
           exercises.map((e, idx) => (
-            <div
-              key={idx}
-              className="space-y-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4"
-            >
+            <Card key={idx} pad={16} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div className="flex items-center gap-2">
                 <Input
                   value={e.name}
@@ -257,7 +255,7 @@ export function NewWorkoutForm({
                   type="button"
                   onClick={() => removeExercise(idx)}
                   aria-label="Remove"
-                  className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+                  className="text-[var(--fg-subtle)] transition-colors hover:text-[var(--danger)]"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -286,11 +284,11 @@ export function NewWorkoutForm({
                 />
               </div>
               {e.notes && (
-                <p className="text-[10px] italic text-[var(--color-muted-foreground)]">
+                <p className="font-[family-name:var(--font-sans)] text-[11px] italic text-[var(--fg-muted)]">
                   {e.notes}
                 </p>
               )}
-            </div>
+            </Card>
           ))
         )}
       </section>

@@ -1,11 +1,19 @@
 import Link from "next/link";
-import { Beaker, Calculator, FlaskRound, Library, Plus, Syringe } from "lucide-react";
+import {
+  Beaker,
+  Calculator,
+  ChevronRight,
+  FlaskRound,
+  Library,
+  Plus,
+  Syringe,
+} from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 import { ContraindicationBanner } from "@/components/peptides/contraindication-banner";
+import { Card, SectionHeader, Overline } from "@/components/kit";
 import { evaluateContraindications } from "@peptide/peptides";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +43,13 @@ interface StackRow {
   is_active: boolean;
   peptide_stack_items: StackItemRow[];
 }
+
+const NAV = [
+  { href: "/peptides/library", label: "Protocol library", icon: Library },
+  { href: "/peptides/compounds", label: "Compound catalog", icon: Beaker },
+  { href: "/peptides/protocols", label: "Reconstitution & protocols", icon: Calculator },
+  { href: "/peptides/dose-log", label: "Dose log", icon: Syringe },
+] as const;
 
 export default async function PeptidesPage() {
   const user = await requireUser();
@@ -80,102 +95,129 @@ export default async function PeptidesPage() {
     );
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Peptides</h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Track stacks and doses you or your clinician have decided on. RecompIQ does not
-            prescribe.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link href="/peptides/library">
-              <Library className="h-4 w-4" /> Protocol Library
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/peptides/compounds">
-              <Beaker className="h-4 w-4" /> Catalog
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/peptides/protocols">
-              <Calculator className="h-4 w-4" /> Reconstitution &amp; protocols
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/peptides/dose-log">
-              <Syringe className="h-4 w-4" /> Log dose
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/peptides/stacks/new">
-              <Plus className="h-4 w-4" /> New stack
-            </Link>
-          </Button>
-        </div>
-      </header>
+    <div className="mx-auto max-w-[860px]">
+      <SectionHeader
+        num="07"
+        title="Peptides"
+        note="educational tracking · not prescriptive"
+      />
 
-      {allFindings.length > 0 && <ContraindicationBanner findings={allFindings} />}
+      <p className="mb-5 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+        Track stacks and doses you or your clinician have decided on. RecompIQ grades the evidence
+        and flags contraindications — it does not prescribe.
+      </p>
+
+      {/* nav tiles */}
+      <div className="mb-5 grid gap-3 sm:grid-cols-2">
+        {NAV.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className="group flex items-center gap-3 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-[14px] transition-colors hover:border-[var(--primary-line)]"
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] text-[var(--primary)]">
+              <Icon size={17} />
+            </span>
+            <span className="flex-1 font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+              {label}
+            </span>
+            <ChevronRight
+              size={16}
+              className="text-[var(--fg-subtle)] transition-transform group-hover:translate-x-0.5"
+            />
+          </Link>
+        ))}
+      </div>
+
+      <Link
+        href="/peptides/stacks/new"
+        className="mb-6 inline-flex items-center gap-2 rounded-[var(--r-md)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-4 py-2.5 font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--primary-bright)] transition-colors hover:bg-[var(--primary-line)]"
+      >
+        <Plus size={16} /> New stack
+      </Link>
+
+      {allFindings.length > 0 && (
+        <div className="mb-6">
+          <ContraindicationBanner findings={allFindings} />
+        </div>
+      )}
 
       {stacks.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-10 text-center">
-          <FlaskRound className="mx-auto mb-3 h-8 w-8 text-[var(--color-muted-foreground)]" />
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            No active stacks. Create one from the compounds you and your clinician have decided on.
-          </p>
-        </div>
+        <Card style={{ borderStyle: "dashed" }}>
+          <div className="py-6 text-center">
+            <FlaskRound className="mx-auto mb-3 h-8 w-8 text-[var(--fg-subtle)]" />
+            <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+              No active stacks. Create one from the compounds you and your clinician have decided on.
+            </p>
+          </div>
+        </Card>
       ) : (
-        <section className="space-y-4">
+        <div className="space-y-4">
           {stacks.map((stack) => (
-            <div
-              key={stack.id}
-              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5"
-            >
-              <div className="mb-3 flex items-baseline justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold">{stack.name}</h2>
-                  <p className="text-xs text-[var(--color-muted-foreground)]">
-                    {stack.phase ?? "—"} ·{" "}
-                    {stack.started_on
-                      ? `started ${new Date(stack.started_on).toLocaleDateString()}`
-                      : "not started"}
-                  </p>
+            <Card key={stack.id} pad={0}>
+              <div className="flex items-baseline justify-between gap-3 border-b border-[var(--border)] px-[18px] py-4">
+                <div className="flex items-baseline gap-3">
+                  <h2 className="font-[family-name:var(--font-display)] text-[17px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+                    {stack.name}
+                  </h2>
+                  {stack.phase && (
+                    <span className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-muted)]">
+                      {stack.phase}
+                    </span>
+                  )}
                 </div>
+                <span className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+                  {stack.started_on
+                    ? `started ${new Date(stack.started_on).toLocaleDateString()}`
+                    : "not started"}
+                </span>
               </div>
-              <ul className="divide-y divide-[var(--color-border)]">
+              <ul className="divide-y divide-[var(--border)]">
                 {stack.peptide_stack_items.map((item) => (
-                  <li key={item.id} className="flex items-center justify-between gap-3 py-3">
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 px-[18px] py-3"
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{item.compounds.name}</p>
+                        <Link
+                          href={`/peptides/library/${item.compounds.slug}`}
+                          className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)] hover:text-[var(--primary)]"
+                        >
+                          {item.compounds.name}
+                        </Link>
                         <EvidenceBadge
                           level={item.compounds.evidence_level as never}
                           fdaApproved={item.compounds.fda_approved}
                         />
                       </div>
-                      <p className="text-xs text-[var(--color-muted-foreground)]">
+                      <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
                         {item.frequency} · {item.route}
                         {item.notes ? ` · ${item.notes}` : ""}
                       </p>
                     </div>
-                    <div className="text-right text-sm tabular-nums">
-                      <p className="font-medium">
-                        {Number(item.dose_value)} {item.dose_unit}
+                    <div className="text-right">
+                      <p className="font-[family-name:var(--font-mono)] text-[14px] font-medium tabular-nums text-[var(--fg)]">
+                        {Number(item.dose_value)}
+                        <span className="ml-1 text-[11px] text-[var(--fg-subtle)]">
+                          {item.dose_unit}
+                        </span>
                       </p>
-                      <p className="text-xs text-[var(--color-muted-foreground)]">user-supplied</p>
+                      <Overline style={{ fontSize: 9, letterSpacing: "0.07em" }}>
+                        user-supplied
+                      </Overline>
                     </div>
                   </li>
                 ))}
               </ul>
-            </div>
+            </Card>
           ))}
-        </section>
+        </div>
       )}
 
-      <SafetyDisclaimer />
+      <div className="mt-6">
+        <SafetyDisclaimer />
+      </div>
     </div>
   );
 }

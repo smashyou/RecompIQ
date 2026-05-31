@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 import type { EvidenceLevel } from "@peptide/shared";
-import { cn } from "@/lib/cn";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
+import { Chip } from "@/components/kit";
 import { categoryLabel } from "@/lib/dose-display";
 
 export interface LibraryCard {
@@ -42,74 +42,74 @@ export function LibraryGrid({ cards }: { cards: LibraryCard[] }) {
     <div className="space-y-4">
       <div className="space-y-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search compounds…"
-            className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            className="h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] pl-9 pr-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
           {CATEGORIES.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCat(c)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
-                cat === c
-                  ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                  : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]",
-              )}
-            >
+            <Chip key={c} active={cat === c} onClick={() => setCat(c)}>
               {c === "all" ? "All" : c === "blends" ? "Blends" : categoryLabel(c)}
-            </button>
+            </Chip>
           ))}
         </div>
       </div>
 
-      <p className="text-xs text-[var(--color-muted-foreground)]">{filtered.length} shown</p>
+      <p className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+        {filtered.length} shown
+      </p>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((c) => (
           <Link
             key={c.slug}
             href={`/peptides/library/${c.slug}`}
-            className="group flex flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 transition-colors hover:border-[var(--color-primary)]"
+            className="group flex flex-col rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface-1)] p-4 transition-colors hover:border-[var(--primary-line)]"
           >
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-1">
                 {c.is_blend && (
-                  <span className="rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-primary-foreground)]">
+                  <span className="rounded-[var(--r-pill)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.08em] text-[var(--primary-bright)]">
                     Blend
                   </span>
                 )}
-                <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                <span className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
                   {categoryLabel(c.category)}
                 </span>
               </span>
               <EvidenceBadge level={c.evidence_level as EvidenceLevel} fdaApproved={c.fda_approved} />
             </div>
-            <h3 className="mt-2 text-sm font-semibold group-hover:text-[var(--color-primary)]">{c.name}</h3>
-            <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-[var(--color-muted-foreground)]">
+            <h3 className="mt-2 font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.01em] text-[var(--fg)] group-hover:text-[var(--primary)]">
+              {c.name}
+            </h3>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2.5 font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-subtle)]">
               {c.is_blend ? (
                 <span>{c.component_count} peptides</span>
               ) : (
                 <>
                   {c.typical_route && <span className="uppercase">{c.typical_route}</span>}
-                  {c.dose !== "—" && <span className="tabular-nums">{c.dose}</span>}
+                  {c.dose !== "—" && <span>{c.dose}</span>}
                   {c.frequency !== "—" && <span>{c.frequency}</span>}
                 </>
               )}
             </div>
-            <p className="mt-2 line-clamp-2 text-xs text-[var(--color-muted-foreground)]">{c.blurb}</p>
+            <p className="mt-2 line-clamp-2 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-muted)]">
+              {c.blurb}
+            </p>
+            <span className="mt-3 inline-flex items-center gap-1 font-[family-name:var(--font-sans)] text-[11px] font-medium text-[var(--fg-subtle)] group-hover:text-[var(--primary)]">
+              View detail
+              <ChevronRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+            </span>
           </Link>
         ))}
       </div>
 
       {filtered.length === 0 && (
-        <div className="rounded-xl border border-dashed border-[var(--color-border)] p-8 text-center text-sm text-[var(--color-muted-foreground)]">
+        <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--border)] p-8 text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
           No compounds match.
         </div>
       )}

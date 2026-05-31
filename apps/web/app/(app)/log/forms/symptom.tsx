@@ -36,10 +36,10 @@ function Picker({
             type="button"
             aria-label={`${name} ${v}`}
             onClick={() => onChange(v)}
-            className={`flex-1 rounded-md border py-2 text-lg transition-colors ${
+            className={`flex-1 rounded-[var(--r-md)] border py-2 text-lg transition-colors ${
               selected
-                ? "border-[var(--color-primary)] bg-[var(--color-muted)]"
-                : "border-[var(--color-border)] hover:bg-[var(--color-muted)]"
+                ? "border-[var(--primary-line)] bg-[var(--primary-wash)]"
+                : "border-border hover:bg-[var(--surface-2)]"
             }`}
           >
             {label}
@@ -116,7 +116,12 @@ export function SymptomForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="pain">Pain (0–10): {pain ?? 0}</Label>
+          <Label htmlFor="pain">
+            Pain (0–10):{" "}
+            <span className="font-[family-name:var(--font-mono)] tabular-nums text-foreground">
+              {pain ?? 0}
+            </span>
+          </Label>
           <input
             id="pain"
             type="range"
@@ -129,15 +134,15 @@ export function SymptomForm() {
           />
         </div>
         <div className="grid grid-cols-3 gap-3 text-sm">
-          <label className="flex items-center gap-2 rounded-md border border-[var(--color-border)] p-2">
+          <label className="flex items-center gap-2 rounded-[var(--r-md)] border border-border p-2 font-[family-name:var(--font-sans)]">
             <input type="checkbox" {...register("nausea")} />
             Nausea
           </label>
-          <label className="flex items-center gap-2 rounded-md border border-[var(--color-border)] p-2">
+          <label className="flex items-center gap-2 rounded-[var(--r-md)] border border-border p-2 font-[family-name:var(--font-sans)]">
             <input type="checkbox" {...register("reflux")} />
             Reflux
           </label>
-          <label className="flex items-center gap-2 rounded-md border border-[var(--color-border)] p-2">
+          <label className="flex items-center gap-2 rounded-[var(--r-md)] border border-border p-2 font-[family-name:var(--font-sans)]">
             <input type="checkbox" {...register("constipation")} />
             Constipation
           </label>

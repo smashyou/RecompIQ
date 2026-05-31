@@ -1,17 +1,16 @@
+import { SectionHeader } from "@/components/kit";
 import { CaptureFlow } from "./capture-flow";
 
 export const dynamic = "force-dynamic";
 
 export default function CapturePage() {
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">New body-shot session</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Four angles in even, consistent lighting. Same time of day, same outfit
-          if you can — that&apos;s what makes month-over-month comparison meaningful.
-        </p>
-      </header>
+    <div className="mx-auto flex max-w-2xl flex-col gap-[18px]">
+      <SectionHeader
+        num="12"
+        title="New body-shot session"
+        note="Four angles, even lighting. Same time of day, same outfit — that makes month-over-month meaningful."
+      />
       <CaptureFlow />
     </div>
   );

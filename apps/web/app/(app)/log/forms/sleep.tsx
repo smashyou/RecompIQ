@@ -97,7 +97,12 @@ export function SleepForm() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="quality">Quality (1–5): {quality}</Label>
+          <Label htmlFor="quality">
+            Quality (1–5):{" "}
+            <span className="font-[family-name:var(--font-mono)] tabular-nums text-foreground">
+              {quality}
+            </span>
+          </Label>
           <input
             id="quality"
             type="range"

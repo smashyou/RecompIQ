@@ -18,10 +18,12 @@ export default async function FoodPhotoPage() {
   const userProvider = (settings?.vision_provider as Provider | null) ?? "anthropic";
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Snap a meal</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
+    <div className="mx-auto max-w-2xl space-y-5">
+      <header>
+        <h1 className="font-[family-name:var(--font-display)] text-[26px] font-semibold tracking-[-0.02em] text-foreground">
+          Snap a meal
+        </h1>
+        <p className="mt-1 font-[family-name:var(--font-sans)] text-[13.5px] text-[var(--fg-subtle)]">
           Photo of your plate → AI identifies items → review and save. Macros come from USDA
           FoodData Central with Open Food Facts as fallback.
         </p>

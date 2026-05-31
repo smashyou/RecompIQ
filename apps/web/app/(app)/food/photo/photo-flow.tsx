@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
+import { Card, Chip } from "@/components/kit";
 
 type Provider = "anthropic" | "openai" | "google";
 
@@ -227,10 +228,12 @@ export function PhotoFlow({ userProvider }: { userProvider: Provider }) {
 
   if (state.kind === "uploading") {
     return (
-      <div className="space-y-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+      <Card pad={20} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <Preview src={state.previewUrl} />
-        <p className="text-sm text-[var(--color-muted-foreground)]">Uploading…</p>
-      </div>
+        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+          Uploading…
+        </p>
+      </Card>
     );
   }
 
@@ -253,15 +256,21 @@ export function PhotoFlow({ userProvider }: { userProvider: Provider }) {
 
   if (state.kind === "parsing") {
     return (
-      <div className="space-y-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+      <Card pad={20} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <Preview src={state.blobUrl} />
-        <p className="text-sm text-[var(--color-muted-foreground)]">Identifying items… (10-30 s)</p>
-      </div>
+        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+          Identifying items… (10–30 s)
+        </p>
+      </Card>
     );
   }
 
   if (state.kind === "saving") {
-    return <p className="text-sm text-[var(--color-muted-foreground)]">Saving…</p>;
+    return (
+      <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+        Saving…
+      </p>
+    );
   }
 
   // review
@@ -269,18 +278,19 @@ export function PhotoFlow({ userProvider }: { userProvider: Provider }) {
     <div className="space-y-5">
       <Preview src={state.blobUrl} compact />
 
-      <div className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--color-muted-foreground)]">
+      <Card pad={16} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="flex flex-wrap items-center justify-between gap-2 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
           <span>
-            Identified by <span className="font-medium text-[var(--color-foreground)]">{state.modelUsed}</span>
+            Identified by{" "}
+            <span className="font-medium text-foreground">{state.modelUsed}</span>
           </span>
           <div className="flex items-center gap-2">
-            <Label className="text-xs" htmlFor="reparse">Re-parse with:</Label>
+            <Label className="text-[12px]" htmlFor="reparse">Re-parse with:</Label>
             <select
               id="reparse"
               value={selectedProvider}
               onChange={(e) => setSelectedProvider(e.target.value as Provider)}
-              className="rounded-md border border-[var(--color-border)] bg-transparent px-2 py-1 text-xs"
+              className="rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1 font-[family-name:var(--font-sans)] text-[12px]"
             >
               {MODEL_PICKER.map((m) => (
                 <option key={m.value} value={m.value}>{m.label}</option>
@@ -297,28 +307,21 @@ export function PhotoFlow({ userProvider }: { userProvider: Provider }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Label className="text-xs">Meal type for all:</Label>
+          <Label className="text-[12px]">Meal type for all:</Label>
           {MEAL_TYPE.map((mt) => (
-            <button
-              key={mt}
-              type="button"
-              onClick={() => applyBulkMealType(mt)}
-              className={`rounded-md border px-2 py-1 text-xs capitalize transition-colors ${
-                bulkMealType === mt
-                  ? "border-[var(--color-primary)] text-[var(--color-primary)]"
-                  : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
-              }`}
-            >
-              {mt}
-            </button>
+            <Chip key={mt} active={bulkMealType === mt} onClick={() => applyBulkMealType(mt)}>
+              <span className="capitalize">{mt}</span>
+            </Chip>
           ))}
         </div>
-      </div>
+      </Card>
 
       {drafts.length === 0 ? (
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 text-center text-sm text-[var(--color-muted-foreground)]">
-          No food detected. Try a sharper photo or re-parse with a different model.
-        </div>
+        <Card pad={20}>
+          <p className="text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+            No food detected. Try a sharper photo or re-parse with a different model.
+          </p>
+        </Card>
       ) : (
         <ul className="space-y-3">
           {drafts.map((d, i) => (
@@ -358,11 +361,16 @@ function FilePicker({ onFile }: { onFile: (file: File) => void }) {
           e.target.value = "";
         }}
       />
-      <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-10 text-center transition-colors hover:bg-[var(--color-muted)]">
-        <Camera className="h-10 w-10 text-[var(--color-muted-foreground)]" />
+      <div
+        className="flex flex-col items-center gap-3 rounded-[var(--r-lg)] border border-dashed border-border p-10 text-center transition-colors hover:bg-[var(--surface-2)]"
+        style={{ background: "var(--surface-1)" }}
+      >
+        <Camera className="h-10 w-10 text-[var(--fg-subtle)]" />
         <div className="space-y-1">
-          <p className="text-sm font-medium">Snap a photo or upload one</p>
-          <p className="text-xs text-[var(--color-muted-foreground)]">
+          <p className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-foreground">
+            Snap a photo or upload one
+          </p>
+          <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
             JPEG · PNG · WEBP · HEIC · 10 MB max
           </p>
         </div>
@@ -379,7 +387,7 @@ function FilePicker({ onFile }: { onFile: (file: File) => void }) {
 
 function Preview({ src, compact = false }: { src: string; compact?: boolean }) {
   return (
-    <div className={`overflow-hidden rounded-lg border border-[var(--color-border)] ${compact ? "max-h-48" : ""}`}>
+    <div className={`overflow-hidden rounded-[var(--r-md)] border border-border ${compact ? "max-h-48" : ""}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
@@ -402,22 +410,32 @@ function ItemCard({
   const skipped = draft.selectedSourceId === null;
   const confidenceColor = useMemo(() => {
     const c = draft.parsed.confidence;
-    if (c >= 0.7) return "text-[var(--color-accent)]";
-    if (c >= 0.4) return "text-[var(--color-foreground)]";
-    return "text-[var(--color-muted-foreground)]";
+    if (c >= 0.7) return "text-[var(--positive)]";
+    if (c >= 0.4) return "text-foreground";
+    return "text-[var(--fg-subtle)]";
   }, [draft.parsed.confidence]);
 
   return (
     <li
-      className={`space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 ${
+      className={`space-y-3 rounded-[var(--r-lg)] border border-border p-4 ${
         skipped ? "opacity-60" : ""
       }`}
+      style={{ background: "var(--surface-1)" }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold capitalize">{draft.parsed.name}</p>
-          <p className={`text-xs ${confidenceColor}`}>
-            confidence {Math.round(draft.parsed.confidence * 100)}% · est. {Math.round(draft.parsed.estimated_grams)} g
+          <p className="truncate font-[family-name:var(--font-sans)] text-[13.5px] font-semibold capitalize text-foreground">
+            {draft.parsed.name}
+          </p>
+          <p className={`font-[family-name:var(--font-sans)] text-[12px] ${confidenceColor}`}>
+            confidence{" "}
+            <span className="font-[family-name:var(--font-mono)] tabular-nums">
+              {Math.round(draft.parsed.confidence * 100)}%
+            </span>{" "}
+            · est.{" "}
+            <span className="font-[family-name:var(--font-mono)] tabular-nums">
+              {Math.round(draft.parsed.estimated_grams)} g
+            </span>
           </p>
         </div>
         <button
@@ -427,7 +445,7 @@ function ItemCard({
               selectedSourceId: skipped ? draft.suggestions[0]?.sourceId ?? null : null,
             })
           }
-          className="rounded-md border border-[var(--color-border)] p-1 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+          className="rounded-[var(--r-sm)] border border-border p-1 text-[var(--fg-subtle)] hover:bg-[var(--surface-2)]"
           aria-label={skipped ? "Include" : "Skip"}
           title={skipped ? "Include" : "Skip"}
         >
@@ -437,11 +455,11 @@ function ItemCard({
 
       {!skipped && draft.suggestions.length > 0 && (
         <div className="space-y-1">
-          <Label className="text-xs">Match</Label>
+          <Label className="text-[12px]">Match</Label>
           <select
             value={draft.selectedSourceId ?? ""}
             onChange={(e) => onPatch({ selectedSourceId: e.target.value })}
-            className="w-full rounded-md border border-[var(--color-border)] bg-transparent px-2 py-1.5 text-xs"
+            className="w-full rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1.5 font-[family-name:var(--font-sans)] text-[12px]"
           >
             {draft.suggestions.map((s) => (
               <option key={s.sourceId} value={s.sourceId}>
@@ -454,7 +472,7 @@ function ItemCard({
       )}
 
       {!skipped && draft.suggestions.length === 0 && (
-        <p className="text-xs text-[var(--color-muted-foreground)]">
+        <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
           No USDA match found. Skip this item or log it manually from /food/log.
         </p>
       )}
@@ -462,21 +480,21 @@ function ItemCard({
       {!skipped && draft.selectedSourceId && (
         <div className="grid grid-cols-3 gap-2">
           <div className="col-span-1 space-y-1">
-            <Label className="text-xs">Amount</Label>
+            <Label className="text-[12px]">Amount</Label>
             <Input
               type="number"
               step="1"
               value={draft.amountG}
               onChange={(e) => onPatch({ amountG: Math.max(1, Number(e.target.value) || 0) })}
-              className="text-xs"
+              className="text-[12px]"
             />
           </div>
           <div className="col-span-1 space-y-1">
-            <Label className="text-xs">Unit</Label>
+            <Label className="text-[12px]">Unit</Label>
             <select
               value={draft.unit}
               onChange={(e) => onPatch({ unit: e.target.value as FoodUnit })}
-              className="w-full rounded-md border border-[var(--color-border)] bg-transparent px-2 py-1.5 text-xs"
+              className="w-full rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1.5 font-[family-name:var(--font-sans)] text-[12px]"
             >
               {FOOD_UNIT.map((u) => (
                 <option key={u} value={u}>{u}</option>
@@ -484,11 +502,11 @@ function ItemCard({
             </select>
           </div>
           <div className="col-span-1 space-y-1">
-            <Label className="text-xs">Meal</Label>
+            <Label className="text-[12px]">Meal</Label>
             <select
               value={draft.mealType}
               onChange={(e) => onPatch({ mealType: e.target.value as MealType })}
-              className="w-full rounded-md border border-[var(--color-border)] bg-transparent px-2 py-1.5 text-xs capitalize"
+              className="w-full rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1.5 font-[family-name:var(--font-sans)] text-[12px] capitalize"
             >
               {MEAL_TYPE.map((mt) => (
                 <option key={mt} value={mt} className="capitalize">{mt}</option>
@@ -499,7 +517,7 @@ function ItemCard({
       )}
 
       {!skipped && macros && (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-[var(--color-border)] pt-2 text-xs text-[var(--color-muted-foreground)]">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-2 font-[family-name:var(--font-mono)] text-[11.5px] tabular-nums text-[var(--fg-subtle)]">
           <span>{Math.round(macros.calories_kcal)} kcal</span>
           <span>P {Math.round(macros.protein_g)} g</span>
           <span>C {Math.round(macros.carbs_g)} g</span>

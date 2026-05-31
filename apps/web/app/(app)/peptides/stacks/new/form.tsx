@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
+import { Card, Overline } from "@/components/kit";
 
 interface CompoundLite {
   id: string;
@@ -117,56 +118,56 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
 
   return (
     <div className="space-y-6">
-      <section className="space-y-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-        <div className="space-y-2">
-          <Label htmlFor="name">Stack name</Label>
-          <Input
-            id="name"
-            value={name}
-            placeholder="e.g. Phase 1 — fat loss + tissue repair"
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+      <Card>
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="phase">Phase</Label>
-            <select
-              id="phase"
-              value={phase}
-              onChange={(e) => setPhase(e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-            >
-              {PHASES.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="started_on">Started</Label>
+            <Label htmlFor="name">Stack name</Label>
             <Input
-              id="started_on"
-              type="date"
-              value={startedOn}
-              onChange={(e) => setStartedOn(e.target.value)}
+              id="name"
+              value={name}
+              placeholder="e.g. Phase 1 — fat loss + tissue repair"
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="phase">Phase</Label>
+              <select
+                id="phase"
+                value={phase}
+                onChange={(e) => setPhase(e.target.value)}
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
+              >
+                {PHASES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="started_on">Started</Label>
+              <Input
+                id="started_on"
+                type="date"
+                value={startedOn}
+                onChange={(e) => setStartedOn(e.target.value)}
+              />
+            </div>
+          </div>
         </div>
-      </section>
+      </Card>
 
       <section className="space-y-3">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-            Compounds in this stack
-          </h2>
-          <span className="text-xs text-[var(--color-muted-foreground)]">
+          <Overline>Compounds in this stack</Overline>
+          <span className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
             {items.length} added
           </span>
         </div>
 
         {items.length === 0 && (
-          <p className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-4 text-center text-xs text-[var(--color-muted-foreground)]">
+          <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-4 text-center font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
             Pick from the catalog below to add compounds.
           </p>
         )}
@@ -174,20 +175,19 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
         {items.map((it, idx) => (
           <div
             key={`${it.compound_id}-${idx}`}
-            className="space-y-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4"
+            className="space-y-3 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface-1)] p-4"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-medium">{it.compound_name}</p>
-                <EvidenceBadge
-                  level={it.evidence_level as never}
-                  fdaApproved={it.fda_approved}
-                />
+                <p className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)]">
+                  {it.compound_name}
+                </p>
+                <EvidenceBadge level={it.evidence_level as never} fdaApproved={it.fda_approved} />
               </div>
               <button
                 type="button"
                 onClick={() => removeItem(idx)}
-                className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+                className="text-[var(--fg-subtle)] hover:text-[var(--fg)]"
                 aria-label="Remove"
               >
                 <X className="h-4 w-4" />
@@ -201,9 +201,7 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
                   step="0.01"
                   min={0}
                   value={it.dose_value}
-                  onChange={(e) =>
-                    updateItem(idx, { dose_value: e.target.valueAsNumber || 0 })
-                  }
+                  onChange={(e) => updateItem(idx, { dose_value: e.target.valueAsNumber || 0 })}
                 />
               </div>
               <div className="space-y-1">
@@ -211,7 +209,7 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
                 <select
                   value={it.dose_unit}
                   onChange={(e) => updateItem(idx, { dose_unit: e.target.value })}
-                  className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-2 text-sm"
+                  className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
                 >
                   {DOSE_UNITS.map((u) => (
                     <option key={u} value={u}>
@@ -225,7 +223,7 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
                 <select
                   value={it.route}
                   onChange={(e) => updateItem(idx, { route: e.target.value })}
-                  className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-2 text-sm"
+                  className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
                 >
                   {ROUTES.map((r) => (
                     <option key={r} value={r}>
@@ -256,16 +254,14 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-          Pick compound to add
-        </h2>
+        <Overline>Pick compound to add</Overline>
         <div className="flex flex-wrap gap-2">
           {compounds.map((c) => (
             <button
               key={c.id}
               type="button"
               onClick={() => addItem(c)}
-              className="flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-1.5 text-xs transition-colors hover:bg-[var(--color-muted)]"
+              className="flex items-center gap-2 rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)] transition-colors hover:border-[var(--primary-line)] hover:text-[var(--fg)]"
             >
               <Plus className="h-3 w-3" />
               {c.name}

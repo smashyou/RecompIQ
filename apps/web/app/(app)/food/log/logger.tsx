@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
+import { Card, MetricBox } from "@/components/kit";
 
 interface NutritionFacts {
   source: string;
@@ -124,7 +125,7 @@ export function FoodLogger() {
   return (
     <div className="space-y-4">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
         <Input
           type="search"
           autoFocus
@@ -137,7 +138,7 @@ export function FoodLogger() {
           <button
             type="button"
             onClick={() => setQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle)] hover:text-foreground"
             aria-label="Clear search"
           >
             <X className="h-4 w-4" />
@@ -146,30 +147,39 @@ export function FoodLogger() {
       </div>
 
       {searching && (
-        <p className="text-sm text-[var(--color-muted-foreground)]">Searching…</p>
+        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+          Searching…
+        </p>
       )}
       {searchError && (
-        <p className="text-sm text-[var(--color-destructive)]">{searchError}</p>
+        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--danger)]">
+          {searchError}
+        </p>
       )}
 
       {results.length > 0 && (
-        <ul className="divide-y divide-[var(--color-border)] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
+        <ul
+          className="divide-y divide-[var(--border)] overflow-hidden rounded-[var(--r-lg)] border border-border"
+          style={{ background: "var(--surface-1)" }}
+        >
           {results.map((r) => (
             <li key={`${r.source}:${r.sourceId}`}>
               <button
                 type="button"
                 onClick={() => setSelected(r)}
-                className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-[var(--color-muted)]"
+                className="flex w-full items-center justify-between gap-3 px-[18px] py-3.5 text-left transition-colors hover:bg-[var(--surface-2)]"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{r.description}</p>
-                  <p className="text-xs text-[var(--color-muted-foreground)]">
+                  <p className="truncate font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-foreground">
+                    {r.description}
+                  </p>
+                  <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
                     {r.brand ? `${r.brand} · ` : ""}
-                    <span className="uppercase tracking-wider">{r.source}</span>
+                    <span className="uppercase tracking-[0.08em]">{r.source}</span>
                   </p>
                 </div>
-                <div className="text-right text-xs tabular-nums text-[var(--color-muted-foreground)]">
-                  <p>{Math.round(r.caloriesKcal)} kcal</p>
+                <div className="text-right font-[family-name:var(--font-mono)] text-[11.5px] tabular-nums text-[var(--fg-subtle)]">
+                  <p className="text-foreground">{Math.round(r.caloriesKcal)} kcal</p>
                   <p>per {r.basis === "per_100g" ? "100 g" : `${r.servingSizeG ?? "?"} g`}</p>
                 </div>
               </button>
@@ -179,7 +189,10 @@ export function FoodLogger() {
       )}
 
       {!searching && query.trim() && results.length === 0 && !searchError && (
-        <p className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-6 text-center text-sm text-[var(--color-muted-foreground)]">
+        <p
+          className="rounded-[var(--r-lg)] border border-dashed border-border p-6 text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]"
+          style={{ background: "var(--surface-1)" }}
+        >
           No results. Try a simpler term, or check spelling. USDA search is rate-limited without
           a key — add USDA_FDC_API_KEY to .env.local for higher throughput.
         </p>
@@ -242,13 +255,15 @@ function PortionForm({
   }
 
   return (
-    <div className="space-y-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
+    <Card pad={24} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div className="space-y-1">
-        <p className="text-xs uppercase tracking-wider text-[var(--color-muted-foreground)]">
+        <p className="font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-[0.16em] text-[var(--fg-subtle)]">
           {food.source}
           {food.brand ? ` · ${food.brand}` : ""}
         </p>
-        <h2 className="text-lg font-semibold">{food.description}</h2>
+        <h2 className="font-[family-name:var(--font-display)] text-[18px] font-semibold tracking-[-0.01em] text-foreground">
+          {food.description}
+        </h2>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -303,20 +318,23 @@ function PortionForm({
         </select>
       </div>
 
-      <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-3">
-        {macros ? (
-          <dl className="grid grid-cols-4 gap-2 text-center text-xs">
-            <Stat label="kcal" value={macros.calories_kcal} />
-            <Stat label="P" value={macros.protein_g} suffix="g" />
-            <Stat label="C" value={macros.carbs_g} suffix="g" />
-            <Stat label="F" value={macros.fat_g} suffix="g" />
-          </dl>
-        ) : (
-          <p className="text-xs text-[var(--color-muted-foreground)]">
+      {macros ? (
+        <div className="grid grid-cols-4 gap-3">
+          <MetricBox label="Protein" value={Math.round(macros.protein_g)} unit="g" />
+          <MetricBox label="Carbs" value={Math.round(macros.carbs_g)} unit="g" />
+          <MetricBox label="Fat" value={Math.round(macros.fat_g)} unit="g" />
+          <MetricBox label="Calories" value={Math.round(macros.calories_kcal)} unit="kcal" />
+        </div>
+      ) : (
+        <div
+          className="rounded-[var(--r-md)] border border-border p-3"
+          style={{ background: "var(--surface-2)" }}
+        >
+          <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
             Pick a unit with a known conversion to see macros.
           </p>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
@@ -326,21 +344,7 @@ function PortionForm({
           {submitting ? "Saving…" : "Log meal"}
         </Button>
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value, suffix }: { label: string; value: number; suffix?: string }) {
-  return (
-    <div>
-      <dt className="text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-        {label}
-      </dt>
-      <dd className="tabular-nums">
-        {Math.round(value)}
-        {suffix ?? ""}
-      </dd>
-    </div>
+    </Card>
   );
 }
 

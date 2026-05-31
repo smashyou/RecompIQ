@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NewStackForm } from "./form";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
+import { SectionHeader } from "@/components/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -13,16 +14,16 @@ export default async function NewStackPage() {
     .select("id,slug,name,evidence_level,fda_approved,typical_route")
     .order("name");
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">New stack</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Record the compounds + doses your clinician has approved. Doses come from you — RecompIQ
-          does not prescribe.
-        </p>
-      </header>
+    <div className="mx-auto max-w-2xl">
+      <SectionHeader title="New stack" note="doses are user-supplied" />
+      <p className="mb-6 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+        Record the compounds + doses your clinician has approved. Doses come from you — RecompIQ
+        does not prescribe.
+      </p>
       <NewStackForm compounds={data ?? []} />
-      <SafetyDisclaimer />
+      <div className="mt-6">
+        <SafetyDisclaimer />
+      </div>
     </div>
   );
 }

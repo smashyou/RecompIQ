@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Card } from "@/components/kit";
 
 export function FormCard({
   title,
@@ -10,12 +11,16 @@ export function FormCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
+    <Card pad={24}>
       <header className="mb-5 space-y-1">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <p className="text-sm text-[var(--color-muted-foreground)]">{subtitle}</p>
+        <h2 className="font-[family-name:var(--font-display)] text-[18px] font-semibold tracking-[-0.01em] text-foreground">
+          {title}
+        </h2>
+        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+          {subtitle}
+        </p>
       </header>
       {children}
-    </section>
+    </Card>
   );
 }

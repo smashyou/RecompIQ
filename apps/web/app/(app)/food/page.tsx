@@ -3,6 +3,7 @@ import { Plus, Utensils } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { Card, MetricBox } from "@/components/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,13 @@ interface FoodLogRow {
 }
 
 const MEAL_ORDER: Record<string, number> = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 };
+const MEAL_LABEL: Record<string, string> = {
+  breakfast: "Breakfast",
+  lunch: "Lunch",
+  dinner: "Dinner",
+  snack: "Snack",
+  other: "Other",
+};
 
 export default async function FoodPage() {
   const user = await requireUser();
@@ -57,6 +65,10 @@ export default async function FoodPage() {
     { cal: 0, p: 0, c: 0, f: 0 },
   );
 
+  const proteinTarget = goal
+    ? `target ${goal.protein_target_g_min}–${goal.protein_target_g_max} g`
+    : null;
+
   const grouped = new Map<string, FoodLogRow[]>();
   for (const log of logs) {
     const key = log.meal_type ?? "other";
@@ -69,11 +81,13 @@ export default async function FoodPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="flex max-w-[1080px] flex-col gap-[18px]">
       <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Food</h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
+        <div>
+          <h1 className="font-[family-name:var(--font-display)] text-[26px] font-semibold tracking-[-0.02em] text-foreground">
+            Food
+          </h1>
+          <p className="mt-1 font-[family-name:var(--font-sans)] text-[13.5px] text-[var(--fg-subtle)]">
             What you ate today. Add anything, even rough estimates — patterns matter.
           </p>
         </div>
@@ -85,85 +99,70 @@ export default async function FoodPage() {
         </Button>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-4">
-        <Stat label="Calories" value={totals.cal} unit="kcal" />
-        <Stat
-          label="Protein"
-          value={totals.p}
-          unit="g"
-          target={goal ? `${goal.protein_target_g_min}–${goal.protein_target_g_max}` : null}
-        />
-        <Stat label="Carbs" value={totals.c} unit="g" />
-        <Stat label="Fat" value={totals.f} unit="g" />
-      </section>
+      <Card title="Today's macros" hint={today}>
+        <div className="grid gap-3 sm:grid-cols-4">
+          <MetricBox label="Protein" value={Math.round(totals.p)} unit="g" />
+          <MetricBox label="Carbs" value={Math.round(totals.c)} unit="g" />
+          <MetricBox label="Fat" value={Math.round(totals.f)} unit="g" />
+          <MetricBox label="Calories" value={Math.round(totals.cal)} unit="kcal" />
+        </div>
+        {proteinTarget && (
+          <p className="mt-3 font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
+            Protein {proteinTarget}
+          </p>
+        )}
+      </Card>
 
       {logs.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-10 text-center">
-          <Utensils className="mx-auto mb-3 h-8 w-8 text-[var(--color-muted-foreground)]" />
-          <p className="text-sm text-[var(--color-muted-foreground)]">
+        <div
+          className="rounded-[var(--r-lg)] border border-dashed border-border p-10 text-center"
+          style={{ background: "var(--surface-1)" }}
+        >
+          <Utensils className="mx-auto mb-3 h-8 w-8 text-[var(--fg-subtle)]" />
+          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
             Nothing logged today. Add your first meal to start filling the macros card.
           </p>
         </div>
       ) : (
-        <section className="space-y-6">
-          {groups.map(([mealType, items]) => (
-            <div key={mealType} className="space-y-2">
-              <h2 className="text-xs font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                {mealType === "other" ? "Other" : mealType}
-              </h2>
-              <ul className="divide-y divide-[var(--color-border)] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
-                {items.map((log) => (
-                  <li key={log.id} className="flex items-center justify-between gap-3 p-4">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{log.description}</p>
-                      <p className="text-xs text-[var(--color-muted-foreground)]">
-                        {log.brand ? `${log.brand} · ` : ""}
-                        {Number(log.amount)} {log.unit}
-                      </p>
-                    </div>
-                    <div className="text-right text-xs tabular-nums text-[var(--color-muted-foreground)]">
-                      <p className="text-[var(--color-foreground)]">
-                        {Math.round(Number(log.calories_kcal))} kcal
-                      </p>
-                      <p>
-                        P {Math.round(Number(log.protein_g))}g · C{" "}
-                        {Math.round(Number(log.carbs_g))}g · F{" "}
-                        {Math.round(Number(log.fat_g))}g
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </section>
-      )}
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  unit,
-  target,
-}: {
-  label: string;
-  value: number;
-  unit: string;
-  target?: string | null;
-}) {
-  return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-      <p className="text-xs text-[var(--color-muted-foreground)]">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums">
-        {Math.round(value)}
-        <span className="ml-1 text-xs font-normal text-[var(--color-muted-foreground)]">{unit}</span>
-      </p>
-      {target && (
-        <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-          target {target}
-        </p>
+        <div className="flex flex-col gap-[14px]">
+          {groups.map(([mealType, items]) => {
+            const mealCal = items.reduce((s, r) => s + Number(r.calories_kcal), 0);
+            return (
+              <Card
+                key={mealType}
+                title={MEAL_LABEL[mealType] ?? "Other"}
+                hint={`${Math.round(mealCal)} kcal`}
+                pad={0}
+              >
+                <ul className="divide-y divide-[var(--border)]">
+                  {items.map((log) => (
+                    <li key={log.id} className="flex items-center justify-between gap-3 px-[18px] py-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-foreground">
+                          {log.description}
+                        </p>
+                        <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+                          {log.brand ? `${log.brand} · ` : ""}
+                          <span className="font-[family-name:var(--font-mono)] tabular-nums">
+                            {Number(log.amount)}
+                          </span>{" "}
+                          {log.unit}
+                        </p>
+                      </div>
+                      <div className="text-right font-[family-name:var(--font-mono)] text-[11.5px] tabular-nums text-[var(--fg-subtle)]">
+                        <p className="text-foreground">{Math.round(Number(log.calories_kcal))} kcal</p>
+                        <p>
+                          P {Math.round(Number(log.protein_g))}g · C {Math.round(Number(log.carbs_g))}g · F{" "}
+                          {Math.round(Number(log.fat_g))}g
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            );
+          })}
+        </div>
       )}
     </div>
   );

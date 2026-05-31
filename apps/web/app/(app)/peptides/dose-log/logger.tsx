@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
+import { Card } from "@/components/kit";
 
 interface StackItemLite {
   id: string;
@@ -27,8 +28,12 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
 
   if (items.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-6 text-center text-sm text-[var(--color-muted-foreground)]">
-        No active stack. Create one in <a href="/peptides/stacks/new" className="underline">New stack</a> before logging doses.
+      <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-6 text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+        No active stack. Create one in{" "}
+        <a href="/peptides/stacks/new" className="text-[var(--primary)] underline">
+          New stack
+        </a>{" "}
+        before logging doses.
       </p>
     );
   }
@@ -70,12 +75,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-      <div>
-        <h2 className="text-sm font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-          Log a dose
-        </h2>
-      </div>
+    <Card title="Log a dose">
       <div className="flex flex-wrap gap-2">
         {items.map((it) => {
           const active = selectedId === it.id;
@@ -84,14 +84,16 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
               key={it.id}
               type="button"
               onClick={() => setSelectedId(active ? null : it.id)}
-              className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+              className={`rounded-[var(--r-md)] border px-3 py-2 text-left transition-colors ${
                 active
-                  ? "border-[var(--color-primary)] bg-[var(--color-muted)]"
-                  : "border-[var(--color-border)] hover:bg-[var(--color-muted)]"
+                  ? "border-[var(--primary-line)] bg-[var(--primary-wash)]"
+                  : "border-[var(--border)] hover:bg-[var(--surface-2)]"
               }`}
             >
-              <p className="text-sm font-medium">{it.compounds.name}</p>
-              <p className="text-xs text-[var(--color-muted-foreground)]">
+              <p className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+                {it.compounds.name}
+              </p>
+              <p className="mt-0.5 font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-subtle)]">
                 {Number(it.dose_value)} {it.dose_unit} · {it.route} · {it.frequency}
               </p>
             </button>
@@ -100,7 +102,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
       </div>
 
       {selected && (
-        <div className="space-y-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
+        <div className="mt-4 space-y-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-[10px] uppercase">Injection site</Label>
@@ -115,7 +117,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
               <select
                 value={adherence}
                 onChange={(e) => setAdherence(e.target.value as "taken" | "skipped" | "partial")}
-                className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-2 text-sm"
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
               >
                 <option value="taken">Taken</option>
                 <option value="partial">Partial</option>
@@ -128,6 +130,6 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
           </Button>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

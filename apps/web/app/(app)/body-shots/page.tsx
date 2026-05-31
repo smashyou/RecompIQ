@@ -3,6 +3,7 @@ import { Camera, ImageIcon } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { Card, SectionHeader } from "@/components/kit";
 import { Gallery } from "./gallery";
 
 export const dynamic = "force-dynamic";
@@ -32,28 +33,38 @@ export default async function BodyShotsPage() {
   const sessions = (data ?? []) as Session[];
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Body shots</h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Periodic 4-angle photos. The scale only tells half the story.
-          </p>
-        </div>
+    <div className="flex max-w-[1080px] flex-col gap-[18px]">
+      <SectionHeader
+        num="12"
+        title="Body shots"
+        note="Periodic 4-angle photos. The scale only tells half the story."
+      />
+
+      <div className="flex">
         <Button asChild>
           <Link href="/body-shots/capture">
             <Camera className="h-4 w-4" /> New session
           </Link>
         </Button>
-      </header>
+      </div>
 
       {sessions.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-10 text-center">
-          <ImageIcon className="mx-auto mb-3 h-8 w-8 text-[var(--color-muted-foreground)]" />
-          <p className="text-sm text-[var(--color-muted-foreground)]">
+        <Card
+          style={{
+            borderStyle: "dashed",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            padding: 40,
+            gap: 12,
+          }}
+        >
+          <ImageIcon size={28} style={{ color: "var(--fg-subtle)" }} />
+          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
             No sessions yet. Take your first set in even, consistent lighting.
           </p>
-        </div>
+        </Card>
       ) : (
         <Gallery sessions={sessions} />
       )}
