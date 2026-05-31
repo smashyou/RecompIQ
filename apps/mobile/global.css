@@ -1,3 +1,70 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Default values for the runtime theme CSS variables (see tailwind.config.js +
+ * lib/theme.ts `varsForScheme`). These are the DARK palette (the brand's
+ * primary mode) and act as a fallback for any element that is NOT under the
+ * root `vars()` scope set in app/_layout.tsx — e.g. content rendered inside a
+ * native RN <Modal>, which lives in a separate view host and does not inherit
+ * ancestor CSS variables. Normal screens are overridden at runtime by the
+ * active scheme's vars; modals that need light mode wrap their own content in
+ * `vars(cssVars)` (see ThemedModalRoot / useTheme().cssVars).
+ */
+:root {
+  --color-bg-deep: #04080b;
+  --color-background: #0b1014;
+  --color-surface-1: #13191e;
+  --color-surface-2: #1c2327;
+  --color-surface-3: #262c31;
+  --color-border: #292f33;
+  --color-border-strong: #42494e;
+
+  --color-foreground: #f3f5f7;
+  --color-muted-foreground: #a4acb2;
+  --color-fg-subtle: #747b81;
+  --color-fg-faint: #52595e;
+
+  --color-primary: #1fc2ce;
+  --color-primary-bright: #12e0d8;
+  --color-primary-dim: #007a7c;
+  --color-primary-foreground: #040c12;
+  --color-primary-wash: rgba(31, 194, 206, 0.12);
+  --color-primary-line: rgba(31, 194, 206, 0.4);
+
+  --color-positive: #2fdb92;
+  --color-positive-dim: #348f4f;
+  --color-positive-foreground: #060e07;
+  --color-positive-wash: rgba(47, 219, 146, 0.12);
+  --color-positive-line: rgba(47, 219, 146, 0.4);
+
+  --color-warn: #f9b13e;
+  --color-warn-dim: #b47825;
+  --color-warn-foreground: #120c04;
+  --color-warn-wash: rgba(249, 177, 62, 0.12);
+  --color-warn-line: rgba(249, 177, 62, 0.4);
+
+  --color-danger: #ed4a49;
+  --color-danger-bright: #ff5957;
+  --color-danger-foreground: #fff6f5;
+  --color-danger-wash: rgba(237, 74, 73, 0.12);
+  --color-danger-line: rgba(237, 74, 73, 0.4);
+
+  --color-ev-fda: #56db8f;
+  --color-ev-rct: #29d5a5;
+  --color-ev-obs: #1fc2ce;
+  --color-ev-animal: #61b7de;
+  --color-ev-mech: #87a1bd;
+  --color-ev-anecdotal: #d47452;
+
+  --color-muted: #1c2327;
+  --color-card: #13191e;
+  --color-card-foreground: #f3f5f7;
+  --color-input: #1c2327;
+  --color-accent: #2fdb92;
+  --color-accent-foreground: #060e07;
+  --color-destructive: #ed4a49;
+  --color-destructive-foreground: #fff6f5;
+  --color-ring: #1fc2ce;
+}

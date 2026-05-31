@@ -41,7 +41,7 @@ export default async function ProjectionsPage() {
 
   if (!goal) {
     return (
-      <div className="flex max-w-[1080px] flex-col gap-[18px]">
+      <div className="flex w-full flex-col gap-[18px]">
         <SectionHeader num="06" title="Projections" />
         <Card>
           <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
@@ -62,7 +62,7 @@ export default async function ProjectionsPage() {
 
   if (!projection) {
     return (
-      <div className="flex max-w-[1080px] flex-col gap-[18px]">
+      <div className="flex w-full flex-col gap-[18px]">
         <SectionHeader num="06" title="Projections" />
         <Card>
           <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
@@ -82,7 +82,7 @@ export default async function ProjectionsPage() {
         : { fg: "var(--fg-muted)", line: "var(--border)", wash: "var(--surface-1)" };
 
   return (
-    <div className="flex max-w-[1080px] flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[18px]">
       <SectionHeader
         num="06"
         title="Projections"

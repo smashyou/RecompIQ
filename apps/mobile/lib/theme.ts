@@ -204,6 +204,72 @@ export const light: ThemeTokens = {
 
 export const themes: Record<ColorScheme, ThemeTokens> = { light, dark };
 
+// ---- NativeWind runtime theming ----------------------------------------
+// tailwind.config.js declares every color as `var(--color-*)`. This builds the
+// matching CSS-variable map for a scheme; lib/theme-context.tsx feeds it to
+// NativeWind's `vars()` at the app root so EVERY className color (bg-card,
+// text-foreground, border-border, …) resolves to the active scheme's hex.
+// The keys here MUST match the `var(--color-*)` names in tailwind.config.js.
+export function varsForScheme(scheme: ColorScheme): Record<string, string> {
+  const t = themes[scheme];
+  return {
+    "--color-bg-deep": t.bgDeep,
+    "--color-background": t.background,
+    "--color-surface-1": t.surface1,
+    "--color-surface-2": t.surface2,
+    "--color-surface-3": t.surface3,
+    "--color-border": t.border,
+    "--color-border-strong": t.borderStrong,
+
+    "--color-foreground": t.foreground,
+    "--color-muted-foreground": t.mutedForeground,
+    "--color-fg-subtle": t.fgSubtle,
+    "--color-fg-faint": t.fgFaint,
+
+    "--color-primary": t.primary,
+    "--color-primary-bright": t.primaryBright,
+    "--color-primary-dim": t.primaryDim,
+    "--color-primary-foreground": t.primaryForeground,
+    "--color-primary-wash": t.primaryWash,
+    "--color-primary-line": t.primaryLine,
+
+    "--color-positive": t.positive,
+    "--color-positive-dim": t.positiveDim,
+    "--color-positive-foreground": t.positiveForeground,
+    "--color-positive-wash": t.positiveWash,
+    "--color-positive-line": t.positiveLine,
+
+    "--color-warn": t.warn,
+    "--color-warn-dim": t.warnDim,
+    "--color-warn-foreground": t.warnForeground,
+    "--color-warn-wash": t.warnWash,
+    "--color-warn-line": t.warnLine,
+
+    "--color-danger": t.danger,
+    "--color-danger-bright": t.dangerBright,
+    "--color-danger-foreground": t.dangerForeground,
+    "--color-danger-wash": t.dangerWash,
+    "--color-danger-line": t.dangerLine,
+
+    "--color-ev-fda": t.evFda,
+    "--color-ev-rct": t.evRct,
+    "--color-ev-obs": t.evObs,
+    "--color-ev-animal": t.evAnimal,
+    "--color-ev-mech": t.evMech,
+    "--color-ev-anecdotal": t.evAnecdotal,
+
+    "--color-muted": t.muted,
+    "--color-card": t.card,
+    "--color-card-foreground": t.cardForeground,
+    "--color-input": t.input,
+    "--color-accent": t.accent,
+    "--color-accent-foreground": t.accentForeground,
+    "--color-destructive": t.destructive,
+    "--color-destructive-foreground": t.destructiveForeground,
+    "--color-ring": t.ring,
+  };
+}
+
 // Live, mutable active palette. Defaults to dark (the brand's primary mode).
 // lib/theme-context.tsx calls applyScheme() to swap the values in place so
 // every static `import { colors }` reflects the active scheme.

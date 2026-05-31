@@ -1,7 +1,9 @@
 import "../global.css";
+import type { ReactNode } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
+import { vars } from "nativewind";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SessionProvider } from "@/lib/session";
@@ -10,39 +12,45 @@ import { ConsentProvider, useConsent } from "@/lib/consent";
 import { ConsentGate } from "@/components/ConsentGate";
 
 function ThemedApp() {
-  const { colors, scheme } = useTheme();
+  const { colors, scheme, cssVars } = useTheme();
   const { accepted, accept } = useConsent();
 
-  // Gate the whole app behind the consent + 18+ acknowledgement.
+  // Apply the active scheme's CSS variables at the root so that EVERY
+  // NativeWind className color (bg-card, text-foreground, border-border, …)
+  // below resolves to the active scheme. Inline `colors` styling reads the
+  // same token set, so className- and inline-styled UI stay in sync.
+  let body: ReactNode;
   if (accepted === null) {
-    return <View style={{ flex: 1, backgroundColor: colors.bgDeep }} />;
-  }
-  if (!accepted) {
-    return (
+    // Gate the whole app behind the consent + 18+ acknowledgement.
+    body = <View style={{ flex: 1, backgroundColor: colors.bgDeep }} />;
+  } else if (!accepted) {
+    body = (
       <>
         <StatusBar style={scheme === "dark" ? "light" : "dark"} />
         <ConsentGate onEnter={accept} />
       </>
     );
+  } else {
+    body = (
+      <>
+        <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(onboarding)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="legal" />
+        </Stack>
+      </>
+    );
   }
 
-  return (
-    <>
-      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(onboarding)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="legal" />
-      </Stack>
-    </>
-  );
+  return <View style={[{ flex: 1 }, vars(cssVars)]}>{body}</View>;
 }
 
 export default function RootLayout() {

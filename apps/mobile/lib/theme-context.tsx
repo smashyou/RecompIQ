@@ -13,7 +13,7 @@ import {
 } from "react";
 import { useColorScheme } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { applyScheme, themes, type ColorScheme, type ThemeTokens } from "./theme";
+import { applyScheme, themes, varsForScheme, type ColorScheme, type ThemeTokens } from "./theme";
 
 export type ThemePreference = "light" | "dark" | "system";
 
@@ -26,6 +26,12 @@ interface ThemeState {
   scheme: ColorScheme;
   /** The resolved token set for the active scheme. */
   colors: ThemeTokens;
+  /**
+   * NativeWind CSS-variable map for the active scheme. Apply via `vars()` at
+   * the app root so every className color (bg-card, text-foreground, …)
+   * resolves to this scheme. Exposed for app/_layout.tsx.
+   */
+  cssVars: Record<string, string>;
   setPreference: (next: ThemePreference) => void;
 }
 
@@ -61,7 +67,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<ThemeState>(
-    () => ({ preference, scheme, colors: themes[scheme], setPreference }),
+    () => ({
+      preference,
+      scheme,
+      colors: themes[scheme],
+      cssVars: varsForScheme(scheme),
+      setPreference,
+    }),
     [preference, scheme, setPreference],
   );
 

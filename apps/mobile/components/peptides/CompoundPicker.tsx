@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import { FlatList, Modal, Pressable, Text, View } from "react-native";
+import { vars } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { Input } from "@/components/ui/Input";
 import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
 
 export interface PickerOption {
   id: string;
@@ -24,6 +26,7 @@ export function CompoundPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const { cssVars } = useTheme();
   const selected = options.find((o) => o.id === value) ?? null;
 
   const filtered = useMemo(() => {
@@ -45,7 +48,10 @@ export function CompoundPicker({
       </Pressable>
 
       <Modal visible={open} animationType="slide" transparent onRequestClose={() => setOpen(false)}>
-        <View className="flex-1 justify-end bg-black/50">
+        {/* RN Modals render in a separate view host that does not inherit the
+            root vars() scope, so re-apply the active scheme's CSS variables here
+            (otherwise className colors fall back to the global.css dark default). */}
+        <View className="flex-1 justify-end bg-black/50" style={vars(cssVars)}>
           <View className="max-h-[80%] rounded-t-2xl border-t border-border bg-card p-4">
             <View className="mb-3 flex-row items-center justify-between">
               <Text className="text-base font-semibold text-foreground">Select peptide</Text>

@@ -1,13 +1,16 @@
 /** @type {import('tailwindcss').Config} */
 // NativeWind targets Tailwind v3; the web app is on Tailwind v4 (oklch theme).
-// React Native can't render oklch() and NativeWind compiles a STATIC palette, so
-// these are hex/rgba conversions of the design handoff
-// (Design/design_handoff_recompiq/colors_and_type.css). The DARK set is the
-// Tailwind default (brand primary mode); runtime light/dark is driven by
-// lib/theme-context.tsx + inline styles via lib/theme.ts where a class can't
-// reach. Keep the two (this file + lib/theme.ts `dark`) in visual sync by hand.
+// React Native can't render oklch(), so colors are hex/rgba conversions of the
+// design handoff (Design/design_handoff_recompiq/colors_and_type.css).
 //
-// Brand cyan/green use the logo literals #1FC2CE / #2FDB92 to match web.
+// RUNTIME THEMING: every color below is a CSS custom property `var(--color-*)`.
+// The actual hex values live in lib/theme.ts (`light` / `dark` token sets) and
+// are applied at the app root via NativeWind's `vars()` (see app/_layout.tsx →
+// lib/theme-context.tsx `varsForScheme`). Because className colors resolve the
+// var from the nearest ancestor that set it, toggling Light/Dark reskins EVERY
+// className-styled element. Inline `useTheme().colors` styling reads the same
+// token set, so the two stay in sync. The `var(--color-*)` name here must match
+// a key in lib/theme.ts `varsForScheme()`.
 module.exports = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   presets: [require("nativewind/preset")],
@@ -15,60 +18,60 @@ module.exports = {
     extend: {
       colors: {
         // neutrals
-        "bg-deep": "#04080b",
-        background: "#0b1014",
-        "surface-1": "#13191e",
-        "surface-2": "#1c2327",
-        "surface-3": "#262c31",
-        border: "#292f33",
-        "border-strong": "#42494e",
+        "bg-deep": "var(--color-bg-deep)",
+        background: "var(--color-background)",
+        "surface-1": "var(--color-surface-1)",
+        "surface-2": "var(--color-surface-2)",
+        "surface-3": "var(--color-surface-3)",
+        border: "var(--color-border)",
+        "border-strong": "var(--color-border-strong)",
         // text
-        foreground: "#f3f5f7",
-        "muted-foreground": "#a4acb2",
-        "fg-subtle": "#747b81",
-        "fg-faint": "#52595e",
+        foreground: "var(--color-foreground)",
+        "muted-foreground": "var(--color-muted-foreground)",
+        "fg-subtle": "var(--color-fg-subtle)",
+        "fg-faint": "var(--color-fg-faint)",
         // primary (cyan)
-        primary: "#1FC2CE",
-        "primary-bright": "#12e0d8",
-        "primary-dim": "#007a7c",
-        "primary-foreground": "#040c12",
-        "primary-wash": "rgba(31, 194, 206, 0.12)",
-        "primary-line": "rgba(31, 194, 206, 0.40)",
+        primary: "var(--color-primary)",
+        "primary-bright": "var(--color-primary-bright)",
+        "primary-dim": "var(--color-primary-dim)",
+        "primary-foreground": "var(--color-primary-foreground)",
+        "primary-wash": "var(--color-primary-wash)",
+        "primary-line": "var(--color-primary-line)",
         // positive (green)
-        positive: "#2FDB92",
-        "positive-dim": "#348f4f",
-        "positive-foreground": "#060e07",
-        "positive-wash": "rgba(47, 219, 146, 0.12)",
-        "positive-line": "rgba(47, 219, 146, 0.40)",
+        positive: "var(--color-positive)",
+        "positive-dim": "var(--color-positive-dim)",
+        "positive-foreground": "var(--color-positive-foreground)",
+        "positive-wash": "var(--color-positive-wash)",
+        "positive-line": "var(--color-positive-line)",
         // caution (amber)
-        warn: "#f9b13e",
-        "warn-dim": "#b47825",
-        "warn-foreground": "#120c04",
-        "warn-wash": "rgba(249, 177, 62, 0.12)",
-        "warn-line": "rgba(249, 177, 62, 0.40)",
+        warn: "var(--color-warn)",
+        "warn-dim": "var(--color-warn-dim)",
+        "warn-foreground": "var(--color-warn-foreground)",
+        "warn-wash": "var(--color-warn-wash)",
+        "warn-line": "var(--color-warn-line)",
         // danger (red)
-        danger: "#ed4a49",
-        "danger-bright": "#ff5957",
-        "danger-foreground": "#fff6f5",
-        "danger-wash": "rgba(237, 74, 73, 0.12)",
-        "danger-line": "rgba(237, 74, 73, 0.40)",
+        danger: "var(--color-danger)",
+        "danger-bright": "var(--color-danger-bright)",
+        "danger-foreground": "var(--color-danger-foreground)",
+        "danger-wash": "var(--color-danger-wash)",
+        "danger-line": "var(--color-danger-line)",
         // evidence-grade scale
-        "ev-fda": "#56db8f",
-        "ev-rct": "#29d5a5",
-        "ev-obs": "#1FC2CE",
-        "ev-animal": "#61b7de",
-        "ev-mech": "#87a1bd",
-        "ev-anecdotal": "#d47452",
+        "ev-fda": "var(--color-ev-fda)",
+        "ev-rct": "var(--color-ev-rct)",
+        "ev-obs": "var(--color-ev-obs)",
+        "ev-animal": "var(--color-ev-animal)",
+        "ev-mech": "var(--color-ev-mech)",
+        "ev-anecdotal": "var(--color-ev-anecdotal)",
         // ---- back-compat aliases (existing className usage) ----
-        muted: "#1c2327",
-        card: "#13191e",
-        "card-foreground": "#f3f5f7",
-        input: "#1c2327",
-        accent: "#2FDB92",
-        "accent-foreground": "#060e07",
-        destructive: "#ed4a49",
-        "destructive-foreground": "#fff6f5",
-        ring: "#1FC2CE",
+        muted: "var(--color-muted)",
+        card: "var(--color-card)",
+        "card-foreground": "var(--color-card-foreground)",
+        input: "var(--color-input)",
+        accent: "var(--color-accent)",
+        "accent-foreground": "var(--color-accent-foreground)",
+        destructive: "var(--color-destructive)",
+        "destructive-foreground": "var(--color-destructive-foreground)",
+        ring: "var(--color-ring)",
       },
       borderRadius: {
         DEFAULT: "10px",

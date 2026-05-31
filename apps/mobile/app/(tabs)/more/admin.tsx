@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, FlatList, Modal, Pressable, Text, View } from "react-native";
+import { vars } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -12,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
 
 // ---------- types (mirror /api/admin/* response shapes) ----------
 interface ProviderJoin {
@@ -373,6 +375,7 @@ function ModelPicker({
   onChange: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const { cssVars } = useTheme();
   const selected = options.find((o) => o.id === value) ?? null;
 
   return (
@@ -391,7 +394,9 @@ function ModelPicker({
       </Pressable>
 
       <Modal visible={open} animationType="slide" transparent onRequestClose={() => setOpen(false)}>
-        <View className="flex-1 justify-end bg-black/50">
+        {/* RN Modals render outside the root vars() scope; re-apply the active
+            scheme's CSS variables so className colors theme correctly. */}
+        <View className="flex-1 justify-end bg-black/50" style={vars(cssVars)}>
           <View className="max-h-[80%] rounded-t-2xl border-t border-border bg-card p-4">
             <View className="mb-3 flex-row items-center justify-between">
               <Text className="text-base font-semibold text-foreground">Select model</Text>

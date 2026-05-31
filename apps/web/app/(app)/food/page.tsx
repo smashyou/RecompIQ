@@ -81,7 +81,7 @@ export default async function FoodPage() {
   );
 
   return (
-    <div className="flex max-w-[1080px] flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[18px]">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-[26px] font-semibold tracking-[-0.02em] text-foreground">

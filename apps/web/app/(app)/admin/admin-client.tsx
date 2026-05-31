@@ -127,7 +127,7 @@ export function AdminClient({
   }
 
   return (
-    <div className="flex max-w-[1080px] flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[18px]">
       <SectionHeader
         num="—"
         title="Admin"

@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   const insight = deriveInsight(snapshot);
 
   return (
-    <div className="flex max-w-[1080px] flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[18px]">
       <header>
         <h1 className="font-[family-name:var(--font-display)] text-[26px] font-semibold tracking-[-0.02em] text-foreground">
           Welcome back, {firstName}

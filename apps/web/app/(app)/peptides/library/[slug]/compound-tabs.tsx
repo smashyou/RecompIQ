@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Calculator,
   ExternalLink,
   ChevronDown,
   Check,
+  FileText,
+  Syringe,
+  BookOpen,
+  HelpCircle,
 } from "lucide-react";
 import type { EvidenceLevel } from "@peptide/shared";
 import type { ContraindicationFinding } from "@peptide/peptides";
@@ -159,9 +164,44 @@ function selfFindings(
   ];
 }
 
+// ── Tabbed layout ────────────────────────────────────────────────────────────
+// The detail page is organized into four tabs (Overview / Dosing & protocol /
+// Research / FAQ). Contraindication banners + the safety disclaimer stay OUTSIDE
+// the tabs (rendered by page.tsx / here above the tab content) so compliance-
+// critical warnings are always visible regardless of the active tab.
+
+const TABS = [
+  { id: "overview", label: "Overview", icon: FileText },
+  { id: "dosing", label: "Dosing & protocol", icon: Syringe },
+  { id: "research", label: "Research", icon: BookOpen },
+  { id: "faq", label: "FAQ", icon: HelpCircle },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+const TAB_IDS = TABS.map((t) => t.id) as readonly TabId[];
+
+// Exported entry — keeps the same name + props so page.tsx is untouched.
+// useSearchParams requires a Suspense boundary, so wrap the inner client view.
 export function CompoundTabs({ detail }: { detail: CompoundDetail }) {
+  return (
+    <Suspense fallback={<CompoundTabsInner detail={detail} />}>
+      <CompoundTabsInner detail={detail} />
+    </Suspense>
+  );
+}
+
+function CompoundTabsInner({ detail }: { detail: CompoundDetail }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const requested = searchParams.get("tab");
+  const initialTab: TabId = TAB_IDS.includes(requested as TabId)
+    ? (requested as TabId)
+    : "overview";
+  const [tab, setTab] = useState<TabId>(initialTab);
+
   const calcHref = `/peptides/protocols?tab=reconstitution&compound=${encodeURIComponent(detail.slug)}`;
 
+  // Contraindications are compliance-critical → rendered above the tabs, always visible.
   const findings = selfFindings(
     detail.name,
     detail.slug,
@@ -169,6 +209,58 @@ export function CompoundTabs({ detail }: { detail: CompoundDetail }) {
     detail.relative_contraindications,
   );
 
+  function go(id: TabId) {
+    setTab(id);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", id);
+    router.replace(`/peptides/library/${detail.slug}?${params.toString()}`, { scroll: false });
+  }
+
+  return (
+    <div>
+      {/* Always-visible compliance banners (do NOT hide inside a tab) */}
+      {findings.length > 0 && (
+        <Card title="Contraindications" hint="this compound" className="mb-[14px]">
+          <ContraindicationBanner findings={findings} />
+        </Card>
+      )}
+
+      {/* Tab nav — pill style matching the kit <Chip> aesthetic */}
+      <nav className="mb-[18px] flex flex-wrap gap-2">
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => go(t.id)}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "inline-flex items-center gap-[7px] rounded-[var(--r-pill)] border px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12.5px] font-medium transition-colors",
+                active
+                  ? "border-[var(--primary-line)] bg-[var(--primary-wash)] text-[var(--primary-bright)]"
+                  : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:bg-[var(--surface-2)]",
+              )}
+            >
+              <Icon size={14} className="shrink-0" />
+              {t.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Tab panels */}
+      {tab === "overview" && <OverviewTab detail={detail} />}
+      {tab === "dosing" && <DosingTab detail={detail} calcHref={calcHref} />}
+      {tab === "research" && <ResearchTab detail={detail} />}
+      {tab === "faq" && <FaqSection detail={detail} />}
+    </div>
+  );
+}
+
+// ── Overview: summary, mechanism, blend components, synergies ────────────────
+function OverviewTab({ detail }: { detail: CompoundDetail }) {
   return (
     <div>
       {/* blend note (real) — shown before the summary for blends */}
@@ -201,13 +293,43 @@ export function CompoundTabs({ detail }: { detail: CompoundDetail }) {
         </Sec>
       )}
 
-      {/* Contraindications — reuse <ContraindicationBanner> (absolute=danger / relative=warn) */}
-      {findings.length > 0 && (
-        <Card title="Contraindications" hint="this compound" className="mb-[14px]">
-          <ContraindicationBanner findings={findings} />
-        </Card>
+      {/* Commonly stacked with (real synergies) */}
+      {detail.synergies.length > 0 && (
+        <Sec title="Commonly stacked with">
+          <p className="mb-3 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-subtle)]">
+            Educational pharmacologic rationale only — not a recommended protocol. Review any
+            combination with a clinician and against your contraindications.
+          </p>
+          <ul className="space-y-2">
+            {detail.synergies.map((s) => (
+              <li key={s.id} className="rounded-[var(--r-md)] border border-[var(--border)] p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+                    {s.paired_name}
+                  </span>
+                  <EvidenceBadge level={s.evidence_level as EvidenceLevel} />
+                </div>
+                <p className="mt-1 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-muted)]">
+                  {s.rationale}
+                </p>
+                {s.caution_notes && (
+                  <p className="mt-1 font-[family-name:var(--font-sans)] text-[12px] text-[var(--danger)]">
+                    Caution: {s.caution_notes}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </Sec>
       )}
+    </div>
+  );
+}
 
+// ── Dosing & protocol: dose ranges, side effects, SAEs, monitoring, calc link ─
+function DosingTab({ detail, calcHref }: { detail: CompoundDetail; calcHref: string }) {
+  return (
+    <div>
       {/* Dosing — literature reference, doses via DoseAnnotatedText */}
       <DosingSection detail={detail} calcHref={calcHref} />
 
@@ -263,92 +385,63 @@ export function CompoundTabs({ detail }: { detail: CompoundDetail }) {
           </ul>
         </Sec>
       )}
-
-      {/* Commonly stacked with (real synergies) */}
-      {detail.synergies.length > 0 && (
-        <Sec title="Commonly stacked with">
-          <p className="mb-3 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-subtle)]">
-            Educational pharmacologic rationale only — not a recommended protocol. Review any
-            combination with a clinician and against your contraindications.
-          </p>
-          <ul className="space-y-2">
-            {detail.synergies.map((s) => (
-              <li key={s.id} className="rounded-[var(--r-md)] border border-[var(--border)] p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
-                    {s.paired_name}
-                  </span>
-                  <EvidenceBadge level={s.evidence_level as EvidenceLevel} />
-                </div>
-                <p className="mt-1 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-muted)]">
-                  {s.rationale}
-                </p>
-                {s.caution_notes && (
-                  <p className="mt-1 font-[family-name:var(--font-sans)] text-[12px] text-[var(--danger)]">
-                    Caution: {s.caution_notes}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Sec>
-      )}
-
-      {/* Evidence & citations (reference list style) */}
-      <Sec title="Evidence & citations">
-        {detail.references.length > 0 ? (
-          <div className="flex flex-col">
-            {detail.references.map((c, i) => {
-              const meta = [c.source, c.year].filter(Boolean).join(" · ");
-              const inner = (
-                <>
-                  <span className="shrink-0 font-[family-name:var(--font-mono)] text-[11px] text-[var(--primary)]">
-                    [{i + 1}]
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]">
-                      {c.title ?? c.source ?? "Reference"}
-                    </div>
-                    {meta && (
-                      <div className="mt-0.5 font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
-                        {meta}
-                      </div>
-                    )}
-                  </div>
-                  {c.url && <ExternalLink size={15} className="shrink-0 text-[var(--fg-subtle)]" />}
-                </>
-              );
-              const rowCls = cn(
-                "flex items-center gap-3 py-[11px]",
-                i > 0 && "border-t border-[var(--border)]",
-              );
-              return c.url ? (
-                <a
-                  key={i}
-                  href={c.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(rowCls, "no-underline")}
-                >
-                  {inner}
-                </a>
-              ) : (
-                <div key={i} className={rowCls}>
-                  {inner}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
-            No catalogued references for this compound yet.
-          </p>
-        )}
-      </Sec>
-
-      {/* FAQ (real, derived) */}
-      <FaqSection detail={detail} />
     </div>
+  );
+}
+
+// ── Research: evidence & citations ───────────────────────────────────────────
+function ResearchTab({ detail }: { detail: CompoundDetail }) {
+  return (
+    <Sec title="Evidence & citations">
+      {detail.references.length > 0 ? (
+        <div className="flex flex-col">
+          {detail.references.map((c, i) => {
+            const meta = [c.source, c.year].filter(Boolean).join(" · ");
+            const inner = (
+              <>
+                <span className="shrink-0 font-[family-name:var(--font-mono)] text-[11px] text-[var(--primary)]">
+                  [{i + 1}]
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]">
+                    {c.title ?? c.source ?? "Reference"}
+                  </div>
+                  {meta && (
+                    <div className="mt-0.5 font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+                      {meta}
+                    </div>
+                  )}
+                </div>
+                {c.url && <ExternalLink size={15} className="shrink-0 text-[var(--fg-subtle)]" />}
+              </>
+            );
+            const rowCls = cn(
+              "flex items-center gap-3 py-[11px]",
+              i > 0 && "border-t border-[var(--border)]",
+            );
+            return c.url ? (
+              <a
+                key={i}
+                href={c.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(rowCls, "no-underline")}
+              >
+                {inner}
+              </a>
+            ) : (
+              <div key={i} className={rowCls}>
+                {inner}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+          No catalogued references for this compound yet.
+        </p>
+      )}
+    </Sec>
   );
 }
 
