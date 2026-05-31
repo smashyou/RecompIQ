@@ -14,7 +14,7 @@ const env = Object.fromEntries(
     .split("\n").filter((l) => l && !l.startsWith("#"))
     .map((l) => { const [k, ...r] = l.split("="); return [k, r.join("=").trim().replace(/^"(.*)"$/, "$1")]; }),
 );
-const URL = env.NEXT_PUBLIC_SUPABASE_URL, KEY = env.SUPABASE_SERVICE_ROLE_KEY;
+const URL = env.NEXT_PUBLIC_SUPABASE_URL, KEY = env.SUPABASE_SECRET_KEY;
 const headers = { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" };
 
 // slug -> typical vial mg (most common research vial size)

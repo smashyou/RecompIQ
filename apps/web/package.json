@@ -15,6 +15,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@peptide/agent": "workspace:*",
+    "@peptide/email": "workspace:*",
     "@peptide/nutrition": "workspace:*",
     "@peptide/peptides": "workspace:*",
     "@peptide/projections": "workspace:*",
@@ -27,6 +28,7 @@
     "@radix-ui/react-toast": "^1.2.4",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
+    "standardwebhooks": "^1.0.0",
     "@vercel/blob": "^2.4.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

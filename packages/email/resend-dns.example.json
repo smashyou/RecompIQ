@@ -1,0 +1,27 @@
+[
+  {
+    "type": "TXT",
+    "name": "send.recompiq.com",
+    "content": "v=spf1 include:amazonses.com ~all",
+    "ttl": 3600
+  },
+  {
+    "type": "TXT",
+    "name": "resend._domainkey.send.recompiq.com",
+    "content": "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCB__REPLACE_WITH_RESEND_DKIM_KEY",
+    "ttl": 3600
+  },
+  {
+    "type": "MX",
+    "name": "send.recompiq.com",
+    "content": "feedback-smtp.us-east-1.amazonses.com",
+    "priority": 10,
+    "ttl": 3600
+  },
+  {
+    "type": "TXT",
+    "name": "_dmarc.recompiq.com",
+    "content": "v=DMARC1; p=none; rua=mailto:admin@recompiq.com",
+    "ttl": 3600
+  }
+]

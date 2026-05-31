@@ -24,7 +24,7 @@ export async function createSupabaseServerClient() {
 
   return createServerClient(
     serverEnv.NEXT_PUBLIC_SUPABASE_URL,
-    serverEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    serverEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
       // When a Bearer token is present (mobile), forward it so RLS-scoped
       // queries run as that user. Web requests have no such header and keep

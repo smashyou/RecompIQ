@@ -7,15 +7,15 @@ import { AppState } from "react-native";
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const publishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-if (!url || !anonKey) {
+if (!url || !publishableKey) {
   throw new Error(
-    "Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY. Copy .env.example to .env.local.",
+    "Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY. Copy .env.example to .env.local.",
   );
 }
 
-export const supabase = createClient(url, anonKey, {
+export const supabase = createClient(url, publishableKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,

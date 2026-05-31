@@ -15,6 +15,7 @@ export default function MoreLayout() {
       <Stack.Screen name="body-shots/index" options={{ title: "Body Shots" }} />
       <Stack.Screen name="body-shots/capture" options={{ title: "Capture" }} />
       <Stack.Screen name="projections" options={{ title: "Projections" }} />
+      <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
       <Stack.Screen name="admin" options={{ title: "Admin" }} />
     </Stack>
   );

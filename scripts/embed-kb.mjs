@@ -22,7 +22,7 @@ const env = Object.fromEntries(
 );
 
 const URL = env.NEXT_PUBLIC_SUPABASE_URL;
-const KEY = env.SUPABASE_SERVICE_ROLE_KEY;
+const KEY = env.SUPABASE_SECRET_KEY;
 const VOYAGE_KEY = env.VOYAGE_API_KEY;
 if (!URL || !KEY) {
   console.error("Missing Supabase env vars");

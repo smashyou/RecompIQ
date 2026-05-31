@@ -43,6 +43,9 @@ export default function More() {
         </>
       ) : null}
 
+      <Text className="mb-1 mt-3 text-sm font-semibold text-foreground">Settings</Text>
+      <ListRow title="Notifications" subtitle="In-app, email, or both · reminder types" icon="notifications-outline" onPress={() => router.push("/(tabs)/more/notifications")} />
+
       <Text className="mb-1 mt-3 text-sm font-semibold text-foreground">About</Text>
       <ListRow title="Legal & Safety" subtitle="Disclaimer · Research-use · Terms · Privacy" icon="shield-checkmark-outline" onPress={() => router.push("/legal")} />
 

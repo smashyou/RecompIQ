@@ -1,0 +1,39 @@
+{
+  "name": "@peptide/email",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./render": "./src/render.ts",
+    "./send": "./src/send.ts",
+    "./templates": "./src/templates.ts",
+    "./palette": "./src/palette.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'no lint configured' && exit 0",
+    "test": "echo 'no tests yet' && exit 0",
+    "build": "echo 'sources consumed directly' && exit 0",
+    "clean": "rm -rf .turbo .preview *.tsbuildinfo",
+    "email": "email dev --dir src/emails --port 3030",
+    "preview": "tsx scripts/render-all.mts",
+    "assets": "node scripts/build-logo-assets.mjs"
+  },
+  "dependencies": {
+    "@peptide/shared": "workspace:*",
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.0.8",
+    "resend": "^6.12.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-email": "^6.5.0",
+    "sharp": "^0.34.5",
+    "tsx": "^4.22.0",
+    "typescript": "^5.7.3"
+  }
+}
