@@ -29,7 +29,8 @@
     "seed:catalog": "node scripts/seed-catalog.mjs",
     "seed:blends": "node scripts/seed-blends.mjs",
     "test:projections": "tsx scripts/test-projections.mjs",
-    "test:reconstitution": "tsx scripts/test-reconstitution.mjs"
+    "test:reconstitution": "tsx scripts/test-reconstitution.mjs",
+    "test:inventory": "tsx scripts/test-inventory.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

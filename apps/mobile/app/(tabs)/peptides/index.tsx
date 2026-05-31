@@ -198,6 +198,7 @@ export default function PeptidesHub() {
         <ListRow title="Reconstitution" subtitle="Vial math + syringe draw" icon="flask-outline" onPress={() => router.push("/(tabs)/peptides/reconstitution")} />
         <ListRow title="Protocols" subtitle="Titration schedules + reference" icon="calendar-outline" onPress={() => router.push("/(tabs)/peptides/protocols")} />
         <ListRow title="Dose Log" subtitle="Record doses taken" icon="checkmark-done-outline" onPress={() => router.push("/(tabs)/peptides/dose-log")} />
+        <ListRow title="Inventory & Spend" subtitle="Purchases, cost-per-dose, expenses" icon="wallet-outline" onPress={() => router.push("/(tabs)/peptides/inventory")} />
       </View>
     </Content>
   );

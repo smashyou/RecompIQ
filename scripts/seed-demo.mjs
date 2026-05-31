@@ -435,6 +435,35 @@ async function seedRegimen(uid) {
 }
 
 // ---------------------------------------------------------------------------
+// Demo vial purchases (inventory & expenses). Illustrative user-entered prices.
+// ---------------------------------------------------------------------------
+const DEMO_PURCHASES = [
+  { slug: "retatrutide", vial_mg: 24, vial_count: 1, price_usd: 210, vendor: "Demo Vendor A", daysAgo: 50 },
+  { slug: "aod-9604", vial_mg: 5, vial_count: 2, price_usd: 90, vendor: "Demo Vendor A", daysAgo: 44 },
+  { slug: "bpc-157", vial_mg: 10, vial_count: 1, price_usd: 42, vendor: "Demo Vendor B", daysAgo: 30 },
+  { slug: "ghk-cu", vial_mg: 50, vial_count: 1, price_usd: 38, vendor: "Demo Vendor B", daysAgo: 30 },
+  { slug: "tb-500", vial_mg: 10, vial_count: 1, price_usd: 55, vendor: "Demo Vendor B", daysAgo: 12 },
+];
+
+async function seedPurchases(uid) {
+  const compoundsRes = await api(`/rest/v1/compounds?select=id,slug`);
+  const slugToId = new Map(compoundsRes.map((c) => [c.slug, c.id]));
+  await del("peptide_purchases", `user_id=eq.${uid}&is_demo=eq.true`);
+  const rows = DEMO_PURCHASES.filter((p) => slugToId.has(p.slug)).map((p) => ({
+    user_id: uid,
+    compound_id: slugToId.get(p.slug),
+    vial_mg: p.vial_mg,
+    vial_count: p.vial_count,
+    price_usd: p.price_usd,
+    vendor: p.vendor,
+    purchased_on: new Date(Date.now() - p.daysAgo * 86_400_000).toISOString().slice(0, 10),
+    is_demo: true,
+  }));
+  await insert("peptide_purchases", rows);
+  console.log(`✓ ${rows.length} purchases`);
+}
+
+// ---------------------------------------------------------------------------
 // Demo workouts — 6 Phase-1 sessions across 14 days
 // ---------------------------------------------------------------------------
 async function seedWorkouts(uid) {
@@ -507,6 +536,7 @@ try {
   await seedHealthContext(uid);
   await seedLogs(uid);
   await seedRegimen(uid);
+  await seedPurchases(uid);
   await seedWorkouts(uid);
   console.log("");
   console.log("=== Demo User A ready ===");

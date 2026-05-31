@@ -12,6 +12,7 @@ import { SafetyDisclaimer } from "@/components/ui/SafetyDisclaimer";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Loading } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
+import { loadSpendSnapshot } from "@/lib/inventory";
 import { useSession } from "@/lib/session";
 import { useTheme } from "@/lib/theme-context";
 import { radius } from "@/lib/theme";
@@ -38,6 +39,7 @@ interface Snap {
   recentDoses: { taken_at: string; adherence: string }[];
   activePhase: string | null;
   protocol: ProtocolItem[];
+  spend: { last30Usd: number; allTimeUsd: number };
   bodyShot: { lastCapturedAt: string | null; frequencyDays: number; overdue: boolean } | null;
 }
 
@@ -115,6 +117,8 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
   const lastCap = (bodyRes.data as any)?.captured_at ?? null;
   const overdue = !lastCap || Date.now() - new Date(lastCap).getTime() > freqDays * 86400000;
 
+  const spend = await loadSpendSnapshot(uid);
+
   return {
     name: (profile.data as any)?.display_name ?? email ?? "there",
     isDemo: Boolean((profile.data as any)?.is_demo),
@@ -131,6 +135,7 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
     recentDoses: (dosesRes.data ?? []) as any[],
     activePhase: currentPhase?.legacy_phase ?? currentPhase?.name ?? null,
     protocol,
+    spend,
     bodyShot: { lastCapturedAt: lastCap, frequencyDays: freqDays, overdue },
   };
 }
@@ -336,6 +341,28 @@ export default function Dashboard() {
                 <SafetyDisclaimer variant="compact" />
               </View>
             </MCard>
+          ) : null}
+
+          {/* Spend snapshot */}
+          {snap.spend.allTimeUsd > 0 ? (
+            <Pressable onPress={() => router.push("/(tabs)/peptides/inventory")}>
+              <MCard colors={colors}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 11 }}>
+                  <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.surface2, alignItems: "center", justifyContent: "center" }}>
+                    <Ionicons name="wallet-outline" size={15} color={colors.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontWeight: "600", fontSize: 13.5, color: colors.foreground }}>
+                      ${Math.round(snap.spend.last30Usd).toLocaleString()} spent · last 30 days
+                    </Text>
+                    <Text style={{ fontSize: 11, color: colors.fgSubtle }}>
+                      ${Math.round(snap.spend.allTimeUsd).toLocaleString()} all-time · tap for inventory
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={colors.fgSubtle} />
+                </View>
+              </MCard>
+            </Pressable>
           ) : null}
         </View>
       </ScrollView>

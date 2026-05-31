@@ -9,7 +9,8 @@
     "./contraindications": "./src/contraindications.ts",
     "./reconstitution": "./src/reconstitution.ts",
     "./compounds": "./src/compounds.ts",
-    "./alerts": "./src/alerts.ts"
+    "./alerts": "./src/alerts.ts",
+    "./inventory": "./src/inventory.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

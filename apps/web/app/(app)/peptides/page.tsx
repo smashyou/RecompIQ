@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Beaker, Calculator, ChevronRight, Library, Syringe } from "lucide-react";
+import { Beaker, Calculator, ChevronRight, Library, Syringe, Wallet } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadActiveRegimen } from "@/lib/queries/regimen";
@@ -16,6 +16,7 @@ const NAV = [
   { href: "/peptides/compounds", label: "Compound catalog", icon: Beaker },
   { href: "/peptides/protocols", label: "Reconstitution & protocols", icon: Calculator },
   { href: "/peptides/dose-log", label: "Dose log", icon: Syringe },
+  { href: "/peptides/inventory", label: "Inventory & spend", icon: Wallet },
 ] as const;
 
 export default async function PeptidesPage() {

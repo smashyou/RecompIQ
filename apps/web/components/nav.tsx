@@ -17,6 +17,7 @@ import {
   Settings,
   Syringe,
   Utensils,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -36,6 +37,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/peptides", label: "Peptides", icon: Syringe },
   { href: "/peptides/library", label: "Protocol Library", icon: Library },
   { href: "/peptides/protocols", label: "Protocols", icon: FlaskRound },
+  { href: "/peptides/inventory", label: "Inventory & spend", icon: Wallet },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
   { href: "/body-shots", label: "Body shots", icon: Camera },
   { href: "/projections", label: "Projections", icon: BarChart3 },

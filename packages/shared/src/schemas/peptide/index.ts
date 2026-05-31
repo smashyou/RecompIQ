@@ -268,3 +268,18 @@ export const regimenPhaseAdvanceInput = z.object({
   close_current: z.boolean().default(true),
 });
 export type RegimenPhaseAdvanceInput = z.infer<typeof regimenPhaseAdvanceInput>;
+
+// ---------------------------------------------------------------
+// Inventory & expenses (Phase 3 — PRD §4.2/§5.5). A logged vial purchase.
+// price_usd is the TOTAL paid for the purchase (vial_count vials).
+// ---------------------------------------------------------------
+export const peptidePurchaseInput = z.object({
+  compound_id: z.string().uuid(),
+  vial_mg: z.number().positive().max(100000),
+  vial_count: z.number().int().positive().max(1000).default(1),
+  price_usd: z.number().min(0).max(1000000),
+  vendor: z.string().trim().max(200).nullable().optional(),
+  purchased_on: z.coerce.date().default(() => new Date()),
+  notes: z.string().max(500).nullable().optional(),
+});
+export type PeptidePurchaseInput = z.infer<typeof peptidePurchaseInput>;

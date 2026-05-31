@@ -13,6 +13,7 @@ export default function PeptidesLayout() {
         <Stack.Screen name="reconstitution" options={{ title: "Reconstitution" }} />
         <Stack.Screen name="protocols" options={{ title: "Protocols" }} />
         <Stack.Screen name="dose-log" options={{ title: "Dose Log" }} />
+        <Stack.Screen name="inventory" options={{ title: "Inventory & Spend" }} />
         <Stack.Screen name="stacks-new" options={{ title: "Add to Regimen" }} />
       </Stack>
     </PeptideSelectionProvider>

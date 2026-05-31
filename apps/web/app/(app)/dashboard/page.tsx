@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { AlertTriangle, ChevronRight } from "lucide-react";
 import { requireUser } from "@/lib/auth";
+import { Wallet } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadDashboard } from "@/lib/queries/dashboard";
+import { loadSpendSnapshot } from "@/lib/queries/inventory";
 import {
   ActiveProtocolCard,
   AdherenceCard,
@@ -22,12 +24,14 @@ export default async function DashboardPage() {
   const snapshot = await loadDashboard(user.id);
 
   const supabase = await createSupabaseServerClient();
-  const [conditionsRes, medicationsRes] = await Promise.all([
+  const [conditionsRes, medicationsRes, spend] = await Promise.all([
     supabase.from("conditions").select("name").eq("user_id", user.id).eq("active", true),
     supabase.from("medications").select("name").eq("user_id", user.id).eq("active", true),
+    loadSpendSnapshot(user.id),
   ]);
   const conditions = (conditionsRes.data ?? []).map((c) => c.name as string);
   const medications = (medicationsRes.data ?? []).map((m) => m.name as string);
+  const usd = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
   const fullName = snapshot.profile?.display_name ?? user.email ?? "there";
   const firstName = fullName.split(/[\s@]/)[0] || fullName;
@@ -82,6 +86,24 @@ export default async function DashboardPage() {
         <AdherenceCard snapshot={snapshot} />
         <CoachInsightCard insight={insight} />
       </div>
+
+      {spend.allTimeUsd > 0 && (
+        <Link
+          href="/peptides/inventory"
+          className="flex items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 transition-colors hover:border-[var(--primary-line)]"
+        >
+          <Wallet size={18} className="text-[var(--primary)]" />
+          <div className="flex-1">
+            <span className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--fg)]">
+              {usd(spend.last30Usd)} spent in the last 30 days
+            </span>
+            <span className="ml-2 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+              {usd(spend.allTimeUsd)} all-time{spend.topCompound ? ` · most on ${spend.topCompound}` : ""}
+            </span>
+          </div>
+          <ChevronRight size={16} className="text-[var(--fg-subtle)]" />
+        </Link>
+      )}
 
       <div className="flex items-center justify-between">
         <h2 className="font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
