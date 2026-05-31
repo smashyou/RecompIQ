@@ -218,8 +218,8 @@ export async function GET(req: Request) {
           let items: DueItem[] = [];
 
           if (wantsDose) {
-            const { data: activeStack } = await supabase
-              .from("peptide_stacks")
+            const { data: activeRegimen } = await supabase
+              .from("regimens")
               .select("id")
               .eq("user_id", user.id)
               .eq("is_active", true)
@@ -227,13 +227,16 @@ export async function GET(req: Request) {
               .limit(1)
               .maybeSingle();
 
-            if (activeStack?.id) {
-              const { data: stackItems } = await supabase
-                .from("peptide_stack_items")
-                .select("frequency, route, compounds(name)")
-                .eq("stack_id", activeStack.id as string);
+            if (activeRegimen?.id) {
+              // Current items = those in still-open phases that haven't ended.
+              const { data: regimenItems } = await supabase
+                .from("regimen_items")
+                .select("frequency, route, compounds(name), regimen_phases!inner(ends_on)")
+                .eq("regimen_id", activeRegimen.id as string)
+                .is("regimen_phases.ends_on", null)
+                .is("ends_on", null);
 
-              items = (stackItems ?? []).map((row) => {
+              items = (regimenItems ?? []).map((row) => {
                 const r = row as {
                   frequency: string | null;
                   route: string | null;

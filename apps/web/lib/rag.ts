@@ -81,16 +81,19 @@ export async function retrieveKb(opts: RetrieveOptions): Promise<KbHit[]> {
   return (data ?? []) as KbHit[];
 }
 
-// Pull compound slugs the user's active stack uses, so RAG can be biased toward them.
+// Pull compound slugs the user's active regimen uses, so RAG can be biased
+// toward them. Reads the regimen model (current items in still-open phases).
 export async function userActiveCompoundSlugs(userId: string): Promise<string[]> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
-    .from("peptide_stack_items")
-    .select("compounds(slug), peptide_stacks!inner(is_active)")
+    .from("regimen_items")
+    .select("compounds(slug), regimen_phases!inner(ends_on), regimens!inner(is_active)")
     .eq("user_id", userId)
-    .eq("peptide_stacks.is_active", true);
-  const rows = (data ?? []) as unknown as { compounds: { slug: string } }[];
-  return Array.from(new Set(rows.map((r) => r.compounds?.slug).filter(Boolean)));
+    .eq("regimens.is_active", true)
+    .is("regimen_phases.ends_on", null)
+    .is("ends_on", null);
+  const rows = (data ?? []) as unknown as { compounds: { slug: string } | null }[];
+  return Array.from(new Set(rows.map((r) => r.compounds?.slug).filter(Boolean) as string[]));
 }
 
 // Best-effort compound detection in free-form text. Returns slugs whose

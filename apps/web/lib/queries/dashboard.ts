@@ -1,5 +1,10 @@
 import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  regimenSelectFields,
+  shapeRegimen,
+  type ActiveRegimenView,
+} from "@/lib/queries/regimen";
 
 export interface DashboardSnapshot {
   profile: { display_name: string | null; is_demo: boolean } | null;
@@ -86,7 +91,7 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
     todaySteps,
     todaySleep,
     todayFoods,
-    activeStacks,
+    activeRegimenRow,
     recentDoses,
     todayWorkoutRow,
     latestBodyShot,
@@ -145,14 +150,13 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         .gte("logged_at", `${today}T00:00:00`)
         .lte("logged_at", `${today}T23:59:59.999`),
       supabase
-        .from("peptide_stacks")
-        .select(
-          "id,phase, peptide_stack_items(id, compounds(slug,name,short_description,evidence_level,fda_approved))",
-        )
+        .from("regimens")
+        .select(regimenSelectFields)
         .eq("user_id", userId)
         .eq("is_active", true)
         .order("created_at", { ascending: false })
-        .limit(1),
+        .limit(1)
+        .maybeSingle(),
       supabase
         .from("peptide_doses")
         .select("taken_at,adherence")
@@ -185,6 +189,9 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
     logged_at: w.logged_at as string,
     value_lb: Number(w.value_lb),
   }));
+  const regimen = shapeRegimen(
+    (activeRegimenRow.data as Parameters<typeof shapeRegimen>[0]) ?? null,
+  );
   const latestWeight =
     weightSeries.length > 0 ? weightSeries[weightSeries.length - 1]! : null;
 
@@ -236,8 +243,8 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
       }),
       { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
     ),
-    hasActiveStack: (activeStacks.data?.length ?? 0) > 0,
-    activeStack: mapActiveStack(activeStacks.data?.[0] as RawStackRow | undefined),
+    hasActiveStack: (regimen?.currentItems.length ?? 0) > 0,
+    activeStack: mapActiveRegimen(regimen),
     recentDoses: (recentDoses.data ?? []).map((d) => ({
       taken_at: d.taken_at as string,
       adherence: d.adherence as string,
@@ -298,37 +305,26 @@ async function pickWorkoutSuggestion(
     : null;
 }
 
-interface RawCompound {
-  slug?: string | null;
-  name?: string | null;
-  short_description?: string | null;
-  evidence_level?: string | null;
-  fda_approved?: boolean | null;
-}
-
-interface RawStackRow {
-  phase?: string | null;
-  // Supabase types a nested join as an array even for to-one relationships.
-  peptide_stack_items?:
-    | { compounds?: RawCompound | RawCompound[] | null }[]
-    | null;
-}
-
-function mapActiveStack(
-  row: RawStackRow | null | undefined,
+// Maps the active regimen's current items into the dashboard's "active stack"
+// card shape. "Current" = items in still-open phases that haven't ended — i.e.
+// what the user is on right now (handles a regimen with concurrent phases).
+function mapActiveRegimen(
+  regimen: ActiveRegimenView | null,
 ): DashboardSnapshot["activeStack"] {
-  if (!row) return null;
-  const items = (row.peptide_stack_items ?? [])
-    .map((i) => (Array.isArray(i.compounds) ? i.compounds[0] : i.compounds))
-    .filter((c): c is RawCompound => Boolean(c?.slug && c?.name))
+  if (!regimen || regimen.currentItems.length === 0) return null;
+  const items = regimen.currentItems
+    .map((i) => i.compound)
+    .filter((c): c is NonNullable<typeof c> => Boolean(c))
     .map((c) => ({
-      slug: c.slug as string,
-      name: c.name as string,
+      slug: c.slug,
+      name: c.name,
       descriptor: c.short_description ?? null,
       evidence_level: c.evidence_level ?? "ANECDOTAL",
-      fda_approved: Boolean(c.fda_approved),
+      fda_approved: c.fda_approved,
     }));
-  return { phase: row.phase ?? null, items };
+  const phaseLabel =
+    regimen.currentPhase?.legacy_phase ?? regimen.currentPhase?.name ?? null;
+  return { phase: phaseLabel, items };
 }
 
 // naiveProjection removed — use buildProjection from @peptide/projections instead.

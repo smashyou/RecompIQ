@@ -16,6 +16,7 @@ export async function POST(req: Request) {
       .from("peptide_doses")
       .insert({
         user_id: user.id,
+        regimen_item_id: data.regimen_item_id ?? null,
         stack_item_id: data.stack_item_id ?? null,
         compound_id: data.compound_id,
         taken_at: takenAt.toISOString(),

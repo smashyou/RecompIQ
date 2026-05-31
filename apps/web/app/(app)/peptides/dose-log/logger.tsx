@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
+import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { Card } from "@/components/kit";
 
 interface StackItemLite {
@@ -15,7 +16,7 @@ interface StackItemLite {
   route: string;
   frequency: string;
   compound_id: string;
-  compounds: { slug: string; name: string };
+  compounds: { slug: string; name: string; evidence_level: string; fda_approved: boolean };
 }
 
 export function DoseLogger({ items }: { items: StackItemLite[] }) {
@@ -29,9 +30,9 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
   if (items.length === 0) {
     return (
       <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-6 text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
-        No active stack. Create one in{" "}
+        No compounds with a set dose in your regimen yet. Add one in{" "}
         <a href="/peptides/stacks/new" className="text-[var(--primary)] underline">
-          New stack
+          your regimen
         </a>{" "}
         before logging doses.
       </p>
@@ -47,7 +48,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        stack_item_id: selected.id,
+        regimen_item_id: selected.id,
         compound_id: selected.compound_id,
         dose_value: Number(selected.dose_value),
         dose_unit: selected.dose_unit,
@@ -90,9 +91,15 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
                   : "border-[var(--border)] hover:bg-[var(--surface-2)]"
               }`}
             >
-              <p className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
-                {it.compounds.name}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+                  {it.compounds.name}
+                </p>
+                <EvidenceBadge
+                  level={it.compounds.evidence_level as never}
+                  fdaApproved={it.compounds.fda_approved}
+                />
+              </div>
               <p className="mt-0.5 font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-subtle)]">
                 {Number(it.dose_value)} {it.dose_unit} · {it.route} · {it.frequency}
               </p>

@@ -306,7 +306,8 @@ async function seedLogs(uid) {
 }
 
 // ---------------------------------------------------------------------------
-// Demo Phase-1 peptide stack + 14 days of dose history.
+// Demo regimen (Phase 1) + 14 days of dose history. The goal-driven Regimen
+// model (REGIMEN_GOALS_PRD §4.1) is the live object the app reads.
 // Dose values are illustrative *user-supplied* numbers — RecompIQ does not prescribe.
 // ---------------------------------------------------------------------------
 const DEMO_STACK_ITEMS = [
@@ -318,7 +319,7 @@ const DEMO_STACK_ITEMS = [
   { slug: "kpv",         dose_value: 500, dose_unit: "mcg", route: "oral", frequency: "daily" },
 ];
 
-async function seedPeptideStack(uid) {
+async function seedRegimen(uid) {
   // 1. Look up compound IDs by slug
   const compoundsRes = await api(`/rest/v1/compounds?select=id,slug`);
   const slugToId = new Map(compoundsRes.map((c) => [c.slug, c.id]));
@@ -328,59 +329,96 @@ async function seedPeptideStack(uid) {
     }
   }
 
-  // 2. Clear any prior demo stacks (cascade deletes items + doses via FK)
+  const startedOn = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
+
+  // 2. Clear prior demo data. Regimen delete cascades phases/items/changes.
+  //    Also clear any legacy demo stacks left from the pre-redesign seed.
+  await del("regimens", `user_id=eq.${uid}&is_demo=eq.true`);
   await del("peptide_stacks", `user_id=eq.${uid}&is_demo=eq.true`);
-  // Doses with stack_item_id will null on cascade, but is_demo flag cleans them too.
   await del("peptide_doses", `user_id=eq.${uid}&is_demo=eq.true`);
 
-  // 3. Create the Phase-1 stack
-  const stackRow = await api("/rest/v1/peptide_stacks", {
+  // 3. Create the living regimen + its current Phase 1.
+  const regimenRow = await api("/rest/v1/regimens", {
     method: "POST",
     headers: { Prefer: "return=representation" },
     body: JSON.stringify({
       user_id: uid,
-      name: "Phase 1 — fat loss + tissue repair",
-      phase: "P1",
-      started_on: new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10),
-      notes: "Demo data. User-supplied dose values, not prescriptions.",
+      title: "My Regimen",
       is_active: true,
       is_demo: true,
     }),
   });
-  const stackId = Array.isArray(stackRow) ? stackRow[0].id : stackRow.id;
+  const regimenId = Array.isArray(regimenRow) ? regimenRow[0].id : regimenRow.id;
 
-  // 4. Add stack items
+  const phaseRow = await api("/rest/v1/regimen_phases", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({
+      regimen_id: regimenId,
+      user_id: uid,
+      ordinal: 1,
+      name: "Phase 1 — fat loss + tissue repair",
+      legacy_phase: "P1",
+      starts_on: startedOn,
+      notes: "Demo data. User-supplied dose values, not prescriptions.",
+      is_demo: true,
+    }),
+  });
+  const phaseId = Array.isArray(phaseRow) ? phaseRow[0].id : phaseRow.id;
+
+  // 4. Add regimen items.
   const items = DEMO_STACK_ITEMS.filter((it) => slugToId.has(it.slug)).map((it) => ({
-    stack_id: stackId,
+    regimen_id: regimenId,
+    phase_id: phaseId,
     user_id: uid,
     compound_id: slugToId.get(it.slug),
     dose_value: it.dose_value,
     dose_unit: it.dose_unit,
     route: it.route,
     frequency: it.frequency,
+    source: "user",
+    starts_on: startedOn,
     is_demo: true,
   }));
-  const itemRows = await api("/rest/v1/peptide_stack_items", {
+  const itemRows = await api("/rest/v1/regimen_items", {
     method: "POST",
     headers: { Prefer: "return=representation" },
     body: JSON.stringify(items),
   });
-  const itemByCompound = new Map(itemRows.map((r) => [r.compound_id, r.id]));
 
-  // 5. 14 days of dose history with ~90% adherence
+  // 5. Seed the append-only change-log spine (one 'add' per item).
+  await insert(
+    "regimen_changes",
+    itemRows.map((r) => ({
+      regimen_id: regimenId,
+      item_id: r.id,
+      user_id: uid,
+      kind: "add",
+      after: {
+        compound_id: r.compound_id,
+        dose_value: r.dose_value,
+        dose_unit: r.dose_unit,
+        route: r.route,
+        frequency: r.frequency,
+      },
+      effective_on: startedOn,
+    })),
+  );
+
+  // 6. 14 days of dose history with ~90% adherence, linked to regimen items.
   const doses = [];
   const today = new Date();
   for (let dAgo = 0; dAgo <= 13; dAgo++) {
     const d = new Date(today);
     d.setDate(today.getDate() - dAgo);
-    for (const it of items) {
+    for (const it of itemRows) {
       // Weekly compounds only fire on Mondays-ish (every 7 days from start).
       const itemDef = DEMO_STACK_ITEMS.find((x) => slugToId.get(x.slug) === it.compound_id);
       if (itemDef?.frequency === "weekly" && dAgo % 7 !== 0) continue;
       const skipped = Math.random() < 0.1;
       doses.push({
         user_id: uid,
-        stack_item_id: it.id,
+        regimen_item_id: it.id,
         compound_id: it.compound_id,
         taken_at: new Date(d.setHours(8, 0, 0, 0)).toISOString(),
         dose_value: it.dose_value,
@@ -393,7 +431,7 @@ async function seedPeptideStack(uid) {
     }
   }
   await insert("peptide_doses", doses);
-  console.log(`✓ peptide stack + ${doses.length} doses`);
+  console.log(`✓ regimen + ${doses.length} doses`);
 }
 
 // ---------------------------------------------------------------------------
@@ -468,7 +506,7 @@ try {
   await seedGoal(uid);
   await seedHealthContext(uid);
   await seedLogs(uid);
-  await seedPeptideStack(uid);
+  await seedRegimen(uid);
   await seedWorkouts(uid);
   console.log("");
   console.log("=== Demo User A ready ===");

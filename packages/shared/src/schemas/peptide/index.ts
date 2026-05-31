@@ -25,8 +25,72 @@ export const stackInput = z.object({
 });
 export type StackInput = z.infer<typeof stackInput>;
 
+// ---------------------------------------------------------------
+// Regimen model (goal-driven redesign — REGIMEN_GOALS_PRD §4.1).
+// One living regimen per user, phased over time. Replaces the multi-"stack"
+// model. DOSE VALUES ARE USER/CLINICIAN-SUPPLIED — the app does NOT prescribe;
+// dose fields are nullable (null = undecided, never a fabricated number).
+// ---------------------------------------------------------------
+export const REGIMEN_ITEM_SOURCE = ["user", "clinician", "ai_suggested"] as const;
+export type RegimenItemSource = (typeof REGIMEN_ITEM_SOURCE)[number];
+
+export const REGIMEN_CHANGE_KIND = [
+  "add",
+  "edit",
+  "stop",
+  "dose_change",
+  "phase_advance",
+  "phase_add",
+] as const;
+export type RegimenChangeKind = (typeof REGIMEN_CHANGE_KIND)[number];
+
+export const regimenInput = z.object({
+  title: z.string().trim().min(1).max(120).default("My Regimen"),
+  is_active: z.boolean().default(true),
+});
+export type RegimenInput = z.infer<typeof regimenInput>;
+
+export const regimenPhaseInput = z.object({
+  ordinal: z.number().int().min(1).max(100).optional(),
+  name: z.string().trim().min(1).max(120),
+  legacy_phase: z.enum(GOAL_PHASE).nullable().optional(),
+  goal_ids: z.array(z.string().uuid()).max(20).default([]),
+  starts_on: z.coerce.date().nullable().optional(),
+  ends_on: z.coerce.date().nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+});
+export type RegimenPhaseInput = z.infer<typeof regimenPhaseInput>;
+
+export const regimenItemInput = z.object({
+  phase_id: z.string().uuid().nullable().optional(),
+  compound_id: z.string().uuid(),
+  dose_value: z.number().positive().max(100000).nullable().optional(),
+  dose_unit: z.enum(DOSE_UNIT).nullable().optional(),
+  route: z.enum(ROUTE).nullable().optional(),
+  frequency: z.string().trim().min(1).max(80).nullable().optional(),
+  schedule_id: z.string().uuid().nullable().optional(),
+  source: z.enum(REGIMEN_ITEM_SOURCE).default("user"),
+  starts_on: z.coerce.date().nullable().optional(),
+  ends_on: z.coerce.date().nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+});
+export type RegimenItemInput = z.infer<typeof regimenItemInput>;
+
+// Append-only change-log row (the versioning spine).
+export const regimenChangeInsert = z.object({
+  item_id: z.string().uuid().nullable().optional(),
+  kind: z.enum(REGIMEN_CHANGE_KIND),
+  before: z.record(z.unknown()).nullable().optional(),
+  after: z.record(z.unknown()).nullable().optional(),
+  effective_on: z.coerce.date().default(() => new Date()),
+});
+export type RegimenChangeInsert = z.infer<typeof regimenChangeInsert>;
+
 // Each dose taken
 export const doseLogInput = z.object({
+  // Back-reference to the regimen item this dose realizes (preferred).
+  regimen_item_id: z.string().uuid().nullable().optional(),
+  // Legacy stack-item reference — retained for backward compatibility.
   stack_item_id: z.string().uuid().nullable().optional(),
   compound_id: z.string().uuid(),
   taken_at: z.coerce.date().default(() => new Date()),

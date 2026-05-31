@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { loadActiveRegimen } from "@/lib/queries/regimen";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 import { ContraindicationBanner } from "@/components/peptides/contraindication-banner";
@@ -17,32 +18,6 @@ import { Card, SectionHeader, Overline } from "@/components/kit";
 import { evaluateContraindications } from "@peptide/peptides";
 
 export const dynamic = "force-dynamic";
-
-interface StackItemRow {
-  id: string;
-  dose_value: number;
-  dose_unit: string;
-  route: string;
-  frequency: string;
-  notes: string | null;
-  compounds: {
-    slug: string;
-    name: string;
-    evidence_level: string;
-    fda_approved: boolean;
-    absolute_contraindications?: string[];
-    relative_contraindications?: string[];
-  };
-}
-
-interface StackRow {
-  id: string;
-  name: string;
-  phase: string | null;
-  started_on: string | null;
-  is_active: boolean;
-  peptide_stack_items: StackItemRow[];
-}
 
 const NAV = [
   { href: "/peptides/library", label: "Protocol library", icon: Library },
@@ -55,44 +30,34 @@ export default async function PeptidesPage() {
   const user = await requireUser();
   const supabase = await createSupabaseServerClient();
 
-  const [stacksRes, conditionsRes, medicationsRes, compoundsRes] = await Promise.all([
-    supabase
-      .from("peptide_stacks")
-      .select(
-        "id,name,phase,started_on,is_active, peptide_stack_items(id,dose_value,dose_unit,route,frequency,notes, compounds(slug,name,evidence_level,fda_approved))",
-      )
-      .eq("user_id", user.id)
-      .eq("is_active", true)
-      .order("created_at", { ascending: false }),
+  const [regimen, conditionsRes, medicationsRes] = await Promise.all([
+    loadActiveRegimen(user.id),
     supabase.from("conditions").select("name").eq("user_id", user.id).eq("active", true),
     supabase.from("medications").select("name").eq("user_id", user.id).eq("active", true),
-    supabase
-      .from("compounds")
-      .select("slug,name,absolute_contraindications,relative_contraindications"),
   ]);
 
-  const stacks = (stacksRes.data ?? []) as unknown as StackRow[];
+  const phases = regimen?.phases ?? [];
   const conditions = (conditionsRes.data ?? []).map((c) => c.name as string);
   const medications = (medicationsRes.data ?? []).map((m) => m.name as string);
-  const compounds = compoundsRes.data ?? [];
 
-  // Compute contraindications across all stack compounds
-  const slugsInStacks = new Set(
-    stacks.flatMap((s) => s.peptide_stack_items.map((i) => i.compounds.slug)),
+  // Compute contraindications across the compounds the user is currently on.
+  const currentCompounds = new Map(
+    (regimen?.currentItems ?? [])
+      .map((i) => i.compound)
+      .filter((c): c is NonNullable<typeof c> => Boolean(c))
+      .map((c) => [c.slug, c] as const),
   );
-  const allFindings = compounds
-    .filter((c) => slugsInStacks.has(c.slug as string))
-    .flatMap((c) =>
-      evaluateContraindications(
-        {
-          slug: c.slug as string,
-          name: c.name as string,
-          absolute_contraindications: (c.absolute_contraindications as string[]) ?? [],
-          relative_contraindications: (c.relative_contraindications as string[]) ?? [],
-        },
-        { conditions, medications, age: null },
-      ),
-    );
+  const allFindings = Array.from(currentCompounds.values()).flatMap((c) =>
+    evaluateContraindications(
+      {
+        slug: c.slug,
+        name: c.name,
+        absolute_contraindications: c.absolute_contraindications ?? [],
+        relative_contraindications: c.relative_contraindications ?? [],
+      },
+      { conditions, medications, age: null },
+    ),
+  );
 
   return (
     <div className="mx-auto max-w-[860px]">
@@ -103,8 +68,9 @@ export default async function PeptidesPage() {
       />
 
       <p className="mb-5 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
-        Track stacks and doses you or your clinician have decided on. RecompIQ grades the evidence
-        and flags contraindications — it does not prescribe.
+        Your living regimen, phased over time. Track the compounds and doses you or your clinician
+        have decided on. RecompIQ grades the evidence and flags contraindications — it does not
+        prescribe.
       </p>
 
       {/* nav tiles */}
@@ -133,7 +99,7 @@ export default async function PeptidesPage() {
         href="/peptides/stacks/new"
         className="mb-6 inline-flex items-center gap-2 rounded-[var(--r-md)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-4 py-2.5 font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--primary-bright)] transition-colors hover:bg-[var(--primary-line)]"
       >
-        <Plus size={16} /> New stack
+        <Plus size={16} /> Add to regimen
       </Link>
 
       {allFindings.length > 0 && (
@@ -142,76 +108,100 @@ export default async function PeptidesPage() {
         </div>
       )}
 
-      {stacks.length === 0 ? (
+      {phases.length === 0 ? (
         <Card style={{ borderStyle: "dashed" }}>
           <div className="py-6 text-center">
             <FlaskRound className="mx-auto mb-3 h-8 w-8 text-[var(--fg-subtle)]" />
             <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
-              No active stacks. Create one from the compounds you and your clinician have decided on.
+              Your regimen is empty. Add the compounds you and your clinician have decided on.
             </p>
           </div>
         </Card>
       ) : (
         <div className="space-y-4">
-          {stacks.map((stack) => (
-            <Card key={stack.id} pad={0}>
-              <div className="flex items-baseline justify-between gap-3 border-b border-[var(--border)] px-[18px] py-4">
-                <div className="flex items-baseline gap-3">
-                  <h2 className="font-[family-name:var(--font-display)] text-[17px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
-                    {stack.name}
-                  </h2>
-                  {stack.phase && (
-                    <span className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-muted)]">
-                      {stack.phase}
-                    </span>
-                  )}
+          {phases.map((phase) => {
+            const isCurrent = phase.ends_on === null;
+            return (
+              <Card key={phase.id} pad={0}>
+                <div className="flex items-baseline justify-between gap-3 border-b border-[var(--border)] px-[18px] py-4">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <Overline style={{ fontSize: 9 }}>Phase {phase.ordinal}</Overline>
+                    <h2 className="font-[family-name:var(--font-display)] text-[17px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+                      {phase.name}
+                    </h2>
+                    {phase.legacy_phase && (
+                      <span className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-muted)]">
+                        {phase.legacy_phase}
+                      </span>
+                    )}
+                    {isCurrent && (
+                      <span className="rounded-[var(--r-pill)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--primary-bright)]">
+                        current
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+                    {phase.starts_on
+                      ? `started ${new Date(phase.starts_on).toLocaleDateString()}`
+                      : "not started"}
+                  </span>
                 </div>
-                <span className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
-                  {stack.started_on
-                    ? `started ${new Date(stack.started_on).toLocaleDateString()}`
-                    : "not started"}
-                </span>
-              </div>
-              <ul className="divide-y divide-[var(--border)]">
-                {stack.peptide_stack_items.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex items-center justify-between gap-3 px-[18px] py-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/peptides/library/${item.compounds.slug}`}
-                          className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)] hover:text-[var(--primary)]"
-                        >
-                          {item.compounds.name}
-                        </Link>
-                        <EvidenceBadge
-                          level={item.compounds.evidence_level as never}
-                          fdaApproved={item.compounds.fda_approved}
-                        />
-                      </div>
-                      <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
-                        {item.frequency} · {item.route}
-                        {item.notes ? ` · ${item.notes}` : ""}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-[family-name:var(--font-mono)] text-[14px] font-medium tabular-nums text-[var(--fg)]">
-                        {Number(item.dose_value)}
-                        <span className="ml-1 text-[11px] text-[var(--fg-subtle)]">
-                          {item.dose_unit}
-                        </span>
-                      </p>
-                      <Overline style={{ fontSize: 9, letterSpacing: "0.07em" }}>
-                        user-supplied
-                      </Overline>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          ))}
+                {phase.items.length === 0 ? (
+                  <p className="px-[18px] py-4 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+                    No compounds in this phase.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-[var(--border)]">
+                    {phase.items.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 px-[18px] py-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/peptides/library/${item.compound!.slug}`}
+                              className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)] hover:text-[var(--primary)]"
+                            >
+                              {item.compound!.name}
+                            </Link>
+                            <EvidenceBadge
+                              level={item.compound!.evidence_level as never}
+                              fdaApproved={item.compound!.fda_approved}
+                            />
+                          </div>
+                          <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                            {[item.frequency, item.route, item.notes]
+                              .filter(Boolean)
+                              .join(" · ") || "schedule not set"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          {item.dose_value !== null ? (
+                            <>
+                              <p className="font-[family-name:var(--font-mono)] text-[14px] font-medium tabular-nums text-[var(--fg)]">
+                                {item.dose_value}
+                                <span className="ml-1 text-[11px] text-[var(--fg-subtle)]">
+                                  {item.dose_unit}
+                                </span>
+                              </p>
+                              <Overline style={{ fontSize: 9, letterSpacing: "0.07em" }}>
+                                user-supplied
+                              </Overline>
+                            </>
+                          ) : (
+                            <p className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+                              dose not set
+                            </p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
 
