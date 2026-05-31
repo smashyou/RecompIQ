@@ -107,6 +107,7 @@ export function ProtocolsHub({
       {tab === "reference" && (
         <CompoundReferenceTab
           compounds={referenceCompounds}
+          selectedCompoundId={selectedId}
           onUseInCalculator={(slug) => {
             const match = compounds.find((c) => c.slug === slug);
             if (match) selectCompound(match.id);

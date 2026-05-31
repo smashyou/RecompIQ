@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { EvidenceLevel } from "@peptide/shared";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { DoseAnnotatedText } from "@/components/peptides/dose-disclaimer";
@@ -43,12 +43,29 @@ export interface ReferenceCompound {
 
 export function CompoundReferenceTab({
   compounds,
+  selectedCompoundId,
   onUseInCalculator,
 }: {
   compounds: ReferenceCompound[];
+  selectedCompoundId?: string;
   onUseInCalculator: (slug: string) => void;
 }) {
-  const [open, setOpen] = useState<string | null>(compounds[0]?.id ?? null);
+  // Expand the peptide the user came from (deep link / calculator / detail page),
+  // falling back to the first compound when there's no selection.
+  const initialOpen =
+    selectedCompoundId && compounds.some((c) => c.id === selectedCompoundId)
+      ? selectedCompoundId
+      : (compounds[0]?.id ?? null);
+  const [open, setOpen] = useState<string | null>(initialOpen);
+  const openRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll the came-from compound into view when arriving with a selection.
+  useEffect(() => {
+    if (selectedCompoundId && openRef.current) {
+      openRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -61,7 +78,11 @@ export function CompoundReferenceTab({
       {compounds.map((c) => {
         const isOpen = open === c.id;
         return (
-          <div key={c.id} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
+          <div
+            key={c.id}
+            ref={c.id === initialOpen ? openRef : undefined}
+            className="scroll-mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]"
+          >
             <button
               type="button"
               onClick={() => setOpen(isOpen ? null : c.id)}
