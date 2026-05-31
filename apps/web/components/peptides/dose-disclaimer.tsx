@@ -8,11 +8,14 @@ import { ShieldAlert } from "lucide-react";
 
 interface Props {
   text: string;
+  // When false, suppress the inline footer (caller renders one shared footer
+  // for a list of dose lines instead of one per line).
+  showFooter?: boolean;
 }
 
 const SEGMENT_PATTERN = /\[edu\]([\s\S]*?)\[\/edu\]/g;
 
-export function DoseAnnotatedText({ text }: Props) {
+export function DoseAnnotatedText({ text, showFooter = true }: Props) {
   const parts: { kind: "text" | "dose"; value: string }[] = [];
   let lastIndex = 0;
   let m: RegExpExecArray | null;
@@ -42,7 +45,7 @@ export function DoseAnnotatedText({ text }: Props) {
           ),
         )}
       </span>
-      {anyDose && <DoseDisclaimerFooter />}
+      {anyDose && showFooter && <DoseDisclaimerFooter />}
     </>
   );
 }

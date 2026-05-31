@@ -211,3 +211,60 @@ export const protocolScheduleInput = z.object({
   weeks: z.array(scheduleWeekInput).min(1).max(208),
 });
 export type ProtocolScheduleInput = z.infer<typeof protocolScheduleInput>;
+
+// ---------------------------------------------------------------
+// Granular regimen API (Phase 2 inline add/edit drawer — PRD §5.3).
+// Defined here (after reconstitutionRecordInput) because add/edit embed an
+// optional reconstitution mix to persist + link. DOSE VALUES ARE
+// USER/CLINICIAN-SUPPLIED; nullable = undecided, never fabricated.
+// ---------------------------------------------------------------
+
+// Add one item to the user's active regimen (current phase). Optionally persist
+// a reconstitution mix (linked via regimen_items.reconstitution_record_id) and
+// optionally log the first dose ("Add & log first dose" save fork).
+export const regimenItemAddInput = z.object({
+  compound_id: z.string().uuid(),
+  phase_id: z.string().uuid().nullable().optional(),
+  dose_value: z.number().positive().max(100000).nullable().optional(),
+  dose_unit: z.enum(DOSE_UNIT).nullable().optional(),
+  route: z.enum(ROUTE).nullable().optional(),
+  frequency: z.string().trim().min(1).max(80).nullable().optional(),
+  source: z.enum(REGIMEN_ITEM_SOURCE).default("user"),
+  starts_on: z.coerce.date().nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  reconstitution: reconstitutionRecordInput.optional(),
+  log_first_dose: z.boolean().default(false),
+  injection_site: z.string().max(80).nullable().optional(),
+});
+export type RegimenItemAddInput = z.infer<typeof regimenItemAddInput>;
+
+// Edit an existing regimen item. All fields optional; a dose change is recorded
+// as a 'dose_change' entry in the change log (else 'edit').
+export const regimenItemPatchInput = z.object({
+  dose_value: z.number().positive().max(100000).nullable().optional(),
+  dose_unit: z.enum(DOSE_UNIT).nullable().optional(),
+  route: z.enum(ROUTE).nullable().optional(),
+  frequency: z.string().trim().min(1).max(80).nullable().optional(),
+  starts_on: z.coerce.date().nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  reconstitution: reconstitutionRecordInput.optional(),
+});
+export type RegimenItemPatchInput = z.infer<typeof regimenItemPatchInput>;
+
+// Stop (end) an item — records a 'stop' change with the prior state.
+export const regimenItemStopInput = z.object({
+  ends_on: z.coerce.date().default(() => new Date()),
+  notes: z.string().max(500).nullable().optional(),
+});
+export type RegimenItemStopInput = z.infer<typeof regimenItemStopInput>;
+
+// Advance the regimen to a new phase: closes the current open phase(s) and opens
+// a new one. Records a 'phase_advance' change.
+export const regimenPhaseAdvanceInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  legacy_phase: z.enum(GOAL_PHASE).nullable().optional(),
+  starts_on: z.coerce.date().default(() => new Date()),
+  notes: z.string().max(2000).nullable().optional(),
+  close_current: z.boolean().default(true),
+});
+export type RegimenPhaseAdvanceInput = z.infer<typeof regimenPhaseAdvanceInput>;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, ChevronRight } from "lucide-react";
 import { requireUser } from "@/lib/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadDashboard } from "@/lib/queries/dashboard";
 import {
   ActiveProtocolCard,
@@ -11,6 +12,7 @@ import {
   VitalsCard,
   WeightCard,
 } from "@/components/dashboard/cards";
+import { DashboardAddPeptide } from "@/components/dashboard/add-peptide";
 import { deriveAlerts, deriveInsight } from "@/components/dashboard/derive";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +20,14 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const user = await requireUser();
   const snapshot = await loadDashboard(user.id);
+
+  const supabase = await createSupabaseServerClient();
+  const [conditionsRes, medicationsRes] = await Promise.all([
+    supabase.from("conditions").select("name").eq("user_id", user.id).eq("active", true),
+    supabase.from("medications").select("name").eq("user_id", user.id).eq("active", true),
+  ]);
+  const conditions = (conditionsRes.data ?? []).map((c) => c.name as string);
+  const medications = (medicationsRes.data ?? []).map((m) => m.name as string);
 
   const fullName = snapshot.profile?.display_name ?? user.email ?? "there";
   const firstName = fullName.split(/[\s@]/)[0] || fullName;
@@ -73,6 +83,12 @@ export default async function DashboardPage() {
         <CoachInsightCard insight={insight} />
       </div>
 
+      <div className="flex items-center justify-between">
+        <h2 className="font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+          Active regimen
+        </h2>
+        <DashboardAddPeptide conditions={conditions} medications={medications} />
+      </div>
       <ActiveProtocolCard snapshot={snapshot} />
     </div>
   );

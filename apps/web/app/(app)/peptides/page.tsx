@@ -1,20 +1,12 @@
 import Link from "next/link";
-import {
-  Beaker,
-  Calculator,
-  ChevronRight,
-  FlaskRound,
-  Library,
-  Plus,
-  Syringe,
-} from "lucide-react";
+import { Beaker, Calculator, ChevronRight, Library, Syringe } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadActiveRegimen } from "@/lib/queries/regimen";
-import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 import { ContraindicationBanner } from "@/components/peptides/contraindication-banner";
-import { Card, SectionHeader, Overline } from "@/components/kit";
+import { SectionHeader } from "@/components/kit";
+import { RegimenBoard, type BoardPhase } from "@/components/regimen/regimen-board";
 import { evaluateContraindications } from "@peptide/peptides";
 
 export const dynamic = "force-dynamic";
@@ -36,9 +28,31 @@ export default async function PeptidesPage() {
     supabase.from("medications").select("name").eq("user_id", user.id).eq("active", true),
   ]);
 
-  const phases = regimen?.phases ?? [];
   const conditions = (conditionsRes.data ?? []).map((c) => c.name as string);
   const medications = (medicationsRes.data ?? []).map((m) => m.name as string);
+
+  const phases: BoardPhase[] = (regimen?.phases ?? []).map((p) => ({
+    id: p.id,
+    ordinal: p.ordinal,
+    name: p.name,
+    legacy_phase: p.legacy_phase,
+    starts_on: p.starts_on,
+    ends_on: p.ends_on,
+    items: p.items.map((i) => ({
+      id: i.id,
+      compound_id: i.compound_id,
+      compound_slug: i.compound?.slug ?? "",
+      compound_name: i.compound?.name ?? "Unknown",
+      evidence_level: i.compound?.evidence_level ?? "ANECDOTAL",
+      fda_approved: i.compound?.fda_approved ?? false,
+      dose_value: i.dose_value,
+      dose_unit: i.dose_unit,
+      route: i.route,
+      frequency: i.frequency,
+      starts_on: i.starts_on,
+      notes: i.notes,
+    })),
+  }));
 
   // Compute contraindications across the compounds the user is currently on.
   const currentCompounds = new Map(
@@ -95,115 +109,13 @@ export default async function PeptidesPage() {
         ))}
       </div>
 
-      <Link
-        href="/peptides/stacks/new"
-        className="mb-6 inline-flex items-center gap-2 rounded-[var(--r-md)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-4 py-2.5 font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--primary-bright)] transition-colors hover:bg-[var(--primary-line)]"
-      >
-        <Plus size={16} /> Add to regimen
-      </Link>
-
       {allFindings.length > 0 && (
         <div className="mb-6">
           <ContraindicationBanner findings={allFindings} />
         </div>
       )}
 
-      {phases.length === 0 ? (
-        <Card style={{ borderStyle: "dashed" }}>
-          <div className="py-6 text-center">
-            <FlaskRound className="mx-auto mb-3 h-8 w-8 text-[var(--fg-subtle)]" />
-            <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
-              Your regimen is empty. Add the compounds you and your clinician have decided on.
-            </p>
-          </div>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {phases.map((phase) => {
-            const isCurrent = phase.ends_on === null;
-            return (
-              <Card key={phase.id} pad={0}>
-                <div className="flex items-baseline justify-between gap-3 border-b border-[var(--border)] px-[18px] py-4">
-                  <div className="flex flex-wrap items-baseline gap-2">
-                    <Overline style={{ fontSize: 9 }}>Phase {phase.ordinal}</Overline>
-                    <h2 className="font-[family-name:var(--font-display)] text-[17px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
-                      {phase.name}
-                    </h2>
-                    {phase.legacy_phase && (
-                      <span className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-muted)]">
-                        {phase.legacy_phase}
-                      </span>
-                    )}
-                    {isCurrent && (
-                      <span className="rounded-[var(--r-pill)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--primary-bright)]">
-                        current
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
-                    {phase.starts_on
-                      ? `started ${new Date(phase.starts_on).toLocaleDateString()}`
-                      : "not started"}
-                  </span>
-                </div>
-                {phase.items.length === 0 ? (
-                  <p className="px-[18px] py-4 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
-                    No compounds in this phase.
-                  </p>
-                ) : (
-                  <ul className="divide-y divide-[var(--border)]">
-                    {phase.items.map((item) => (
-                      <li
-                        key={item.id}
-                        className="flex items-center justify-between gap-3 px-[18px] py-3"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <Link
-                              href={`/peptides/library/${item.compound!.slug}`}
-                              className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)] hover:text-[var(--primary)]"
-                            >
-                              {item.compound!.name}
-                            </Link>
-                            <EvidenceBadge
-                              level={item.compound!.evidence_level as never}
-                              fdaApproved={item.compound!.fda_approved}
-                            />
-                          </div>
-                          <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
-                            {[item.frequency, item.route, item.notes]
-                              .filter(Boolean)
-                              .join(" · ") || "schedule not set"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          {item.dose_value !== null ? (
-                            <>
-                              <p className="font-[family-name:var(--font-mono)] text-[14px] font-medium tabular-nums text-[var(--fg)]">
-                                {item.dose_value}
-                                <span className="ml-1 text-[11px] text-[var(--fg-subtle)]">
-                                  {item.dose_unit}
-                                </span>
-                              </p>
-                              <Overline style={{ fontSize: 9, letterSpacing: "0.07em" }}>
-                                user-supplied
-                              </Overline>
-                            </>
-                          ) : (
-                            <p className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
-                              dose not set
-                            </p>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-      )}
+      <RegimenBoard phases={phases} conditions={conditions} medications={medications} />
 
       <div className="mt-6">
         <SafetyDisclaimer />
