@@ -146,6 +146,17 @@ carries the evidence badge + disclaimer.
   circumference/photo metrics.
 - Photos: extend `body_photos` with an `angle/kind` so face/skin/hair shots live
   alongside physique shots, tagged to a goal.
+- **Cognitive check-in:** the ~30-sec reaction/memory mini-test result is stored as
+  `goal_metrics` rows (e.g. `metric_key='cognition_reaction_ms'`,
+  `'cognition_memory_score'`), shown as an objective line beside the `focus` self-rating.
+
+### 4.4 Labs / biomarkers (in v1)
+- **`lab_results`** — `{ id, user_id, panel, marker, value, unit, ref_low, ref_high,
+  collected_on, source('manual'|'ocr'), photo_url, ocr_raw jsonb }`. Upload a lab
+  report photo → vision OCR (reuse the `feature='vision'` gateway + Blob) → parsed
+  markers (A1c, fasting glucose, lipid panel, CBC/CMP) → reference-range highlighting.
+  Feeds longevity/metabolic (and any) goal cards + the unified timeline. Educational,
+  not diagnostic — flagged out-of-range, never interpreted as medical advice.
 
 ---
 
@@ -232,28 +243,40 @@ A single sheet, reachable from dashboard + regimen:
 3. **Inventory & expenses** (#5) + auto cost-per-dose + range aggregation.
 4. **Goal model + capture** (list + NL + AI auto-stacker + phasing warnings),
    onboarding integration.
-5. **Goal metrics logging** + generalized projections + per-goal dashboard cards.
-6. **Unified timeline.**
-7. Mobile parity throughout (web + mobile per the standing directive).
+5. **Goal metrics logging** (1–10 sliders + photos + the cognition mini-test) +
+   generalized projections (lines for fat-loss + muscle + skin in v1, trend-only
+   elsewhere) + per-goal dashboard cards.
+6. **Labs / biomarkers** — lab-photo upload + vision OCR + reference-range
+   highlighting, wired into longevity/metabolic goal cards + the timeline.
+7. **Unified timeline** (any date range: doses, active peptides, food/calories,
+   training + calories burned, weight + each goal metric, labs, spend).
+8. Mobile parity throughout (web + mobile per the standing directive).
 
 Each phase: typecheck + Vercel deploy gate; `safety-reviewer` on any dose/projection
 path; no fabricated doses; evidence + disclaimer on every compound/dose/projection.
 
 ---
 
-## 9. Open decisions (for review)
-1. **Concurrent goals** — allow running multiple goals in one phase (with the
-   warning) or hard-encourage sequential phases? (Proposal: allow, but default the
-   AI to a phased plan.)
-2. **Goal projection ambition — DECIDED: option 2** (always-on actual trend + an
-   illustrative, literature-grounded projection layered on top; evidence-graded,
-   "not a predicted outcome," safety-gated). Remaining sub-question: *which goals*
-   get a projection line in v1 vs trend-only until their evidence model is graded.
-   (Proposal: projection for weight + muscle + skin/GHK from day one; trend-only for
-   the rest, promoting each to a projection as `evidence-researcher` + `safety-reviewer`
-   sign off on its literature basis.)
-3. **Subjective scales** — define the canonical 1–10 metrics + any quick cognitive
-   check-in (e.g., a 30-sec reaction/memory task) or keep it self-rating only for v1.
-4. **Labs/biomarkers** — pull the deferred Labs OCR in for longevity/metabolic goals,
-   or keep labs out of v1?
-5. **Migration timing** — one-shot stacks→regimen migration vs. dual-read transition.
+## 9. Decisions (RESOLVED 2026-05-31)
+1. **Concurrent goals → phased by default, user can override.** When several goals
+   are picked, the AI proposes a phased sequence (P1 → P2 → P3) and explains why;
+   the user may reorder, merge, or choose to run goals concurrently after
+   acknowledging the warning (cost / tracking / conflicting aims).
+2. **Projections → option 2, well-researched goals first.** Always show the actual
+   trend for every goal; add an illustrative literature-grounded projection line
+   (evidence-graded, "not a predicted outcome," safety-gated). **v1 projection lines:
+   fat-loss (existing engine), muscle, and skin.** All other goals are trend-only
+   until `evidence-researcher` + `safety-reviewer` grade their literature, then each
+   is promoted to a projection.
+3. **Feel-based goals → 1–10 sliders + photos, plus a 30-sec cognitive check-in.**
+   Canonical subjective metrics logged as quick 1–10 sliders (skin, focus, energy,
+   libido, pain, mood…) + tagged photos (face/skin/hair/physique). The **cognition
+   goal additionally gets a ~30-second reaction/memory mini-test** so "focus" has an
+   objective number alongside the self-rating.
+4. **Labs → IN v1.** Build lab-photo upload + auto-read (vision OCR) + reference-range
+   highlighting, feeding longevity/metabolic (and any) goals real biomarkers
+   (A1c, lipids, CBC/CMP…). Pulls the deferred "Labs OCR" feature into this redesign.
+5. **Migration → one-shot, reversible** (engineering call): fold the active stack
+   into one regimen + current phase in a single migration; keep legacy
+   `peptide_stacks`/`_items` tables intact (read-only) for rollback. `schema-guardian`
+   review; RLS on all new tables.
