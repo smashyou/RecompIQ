@@ -13,7 +13,7 @@ function CenterFab() {
   const { colors } = useTheme();
   const router = useRouter();
   return (
-    <View style={{ width: 56, alignItems: "center" }}>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Quick log"

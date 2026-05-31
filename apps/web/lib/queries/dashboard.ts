@@ -38,6 +38,16 @@ export interface DashboardSnapshot {
     fat_g: number;
   };
   hasActiveStack: boolean;
+  activeStack: {
+    phase: string | null;
+    items: {
+      slug: string;
+      name: string;
+      descriptor: string | null;
+      evidence_level: string;
+      fda_approved: boolean;
+    }[];
+  } | null;
   recentDoses: { taken_at: string; adherence: string }[];
   todayWorkout: {
     id: string;
@@ -136,9 +146,12 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         .lte("logged_at", `${today}T23:59:59.999`),
       supabase
         .from("peptide_stacks")
-        .select("id")
+        .select(
+          "id,phase, peptide_stack_items(id, compounds(slug,name,short_description,evidence_level,fda_approved))",
+        )
         .eq("user_id", userId)
         .eq("is_active", true)
+        .order("created_at", { ascending: false })
         .limit(1),
       supabase
         .from("peptide_doses")
@@ -224,6 +237,7 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
       { calories_kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
     ),
     hasActiveStack: (activeStacks.data?.length ?? 0) > 0,
+    activeStack: mapActiveStack(activeStacks.data?.[0] as RawStackRow | undefined),
     recentDoses: (recentDoses.data ?? []).map((d) => ({
       taken_at: d.taken_at as string,
       adherence: d.adherence as string,
@@ -282,6 +296,39 @@ async function pickWorkoutSuggestion(
         session_type: data.session_type as string,
       }
     : null;
+}
+
+interface RawCompound {
+  slug?: string | null;
+  name?: string | null;
+  short_description?: string | null;
+  evidence_level?: string | null;
+  fda_approved?: boolean | null;
+}
+
+interface RawStackRow {
+  phase?: string | null;
+  // Supabase types a nested join as an array even for to-one relationships.
+  peptide_stack_items?:
+    | { compounds?: RawCompound | RawCompound[] | null }[]
+    | null;
+}
+
+function mapActiveStack(
+  row: RawStackRow | null | undefined,
+): DashboardSnapshot["activeStack"] {
+  if (!row) return null;
+  const items = (row.peptide_stack_items ?? [])
+    .map((i) => (Array.isArray(i.compounds) ? i.compounds[0] : i.compounds))
+    .filter((c): c is RawCompound => Boolean(c?.slug && c?.name))
+    .map((c) => ({
+      slug: c.slug as string,
+      name: c.name as string,
+      descriptor: c.short_description ?? null,
+      evidence_level: c.evidence_level ?? "ANECDOTAL",
+      fda_approved: Boolean(c.fda_approved),
+    }));
+  return { phase: row.phase ?? null, items };
 }
 
 // naiveProjection removed — use buildProjection from @peptide/projections instead.
