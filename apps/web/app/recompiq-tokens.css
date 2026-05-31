@@ -80,12 +80,16 @@
   --ev-mech:       light-dark(oklch(0.50 0.04 250), oklch(0.70 0.05 250));  /* Mechanistic               */
   --ev-anecdotal:  light-dark(oklch(0.55 0.16 40),  oklch(0.66 0.13 40));   /* Anecdotal     — weakest    */
 
-  /* ---- Data-viz line ramp (projections, biomarkers) -------------------- */
-  --viz-actual:    var(--fg);
-  --viz-ma:        light-dark(oklch(0.55 0.13 200), oklch(0.82 0.13 190));
-  --viz-target:    var(--primary);
-  --viz-conservative: var(--fg-subtle);
-  --viz-aggressive:   var(--positive);
+  /* ---- Data-viz line ramp (projections, biomarkers) --------------------
+     Distinct hues so overlapping lines are easy to tell apart:
+       actual=white · 7d-MA=cyan · target=violet · conservative=amber ·
+       aggressive=green · grid=faint slate. (Previously MA+target were both
+       cyan and actual+conservative+grid were all neutral — hard to read.) */
+  --viz-actual:    var(--fg);                                                  /* white — your real data */
+  --viz-ma:        light-dark(oklch(0.55 0.13 200), oklch(0.82 0.13 190));     /* cyan — 7-day moving avg */
+  --viz-target:    light-dark(oklch(0.52 0.20 300), oklch(0.72 0.17 300));     /* violet — target trajectory */
+  --viz-conservative: light-dark(oklch(0.60 0.14 70), oklch(0.80 0.13 75));    /* amber — conservative */
+  --viz-aggressive:   var(--positive);                                         /* green — aggressive */
   --viz-grid:      light-dark(oklch(0.80 0.010 240 / 0.7), oklch(0.30 0.012 240 / 0.6));
 
   /* ---- Radii ----------------------------------------------------------- */

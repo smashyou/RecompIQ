@@ -320,7 +320,7 @@ function ProjectionChart({
         <Polyline
           points={polyline(conservative)}
           fill="none"
-          stroke={colors.mutedForeground}
+          stroke={colors.vizConservative}
           strokeWidth={1.5}
           strokeDasharray="4 4"
         />
@@ -334,7 +334,7 @@ function ProjectionChart({
         <Polyline
           points={polyline(target)}
           fill="none"
-          stroke={colors.primary}
+          stroke={colors.vizTarget}
           strokeWidth={2}
           strokeDasharray="4 4"
         />
@@ -344,7 +344,7 @@ function ProjectionChart({
           <Polyline
             points={polyline(maPts)}
             fill="none"
-            stroke={colors.foreground}
+            stroke={colors.vizMa}
             strokeWidth={2}
           />
         ) : null}
@@ -385,9 +385,10 @@ function ProjectionChart({
 
       {/* legend */}
       <View className="mt-2 flex-row flex-wrap gap-x-3 gap-y-1">
-        <LegendDot color={colors.foreground} label="7-day MA / actual" />
-        <LegendDot color={colors.primary} label="Target" />
-        <LegendDot color={colors.mutedForeground} label="Conservative" />
+        <LegendDot color={colors.foreground} label="Actual" />
+        <LegendDot color={colors.vizMa} label="7-day MA" />
+        <LegendDot color={colors.vizTarget} label="Target" />
+        <LegendDot color={colors.vizConservative} label="Conservative" />
         <LegendDot color={colors.accent} label="Aggressive" />
       </View>
     </View>

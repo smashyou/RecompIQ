@@ -64,6 +64,8 @@ export interface ThemeTokens {
   evAnecdotal: string;
   // data-viz
   vizMa: string;
+  vizTarget: string;
+  vizConservative: string;
   vizGrid: string;
 
   // ---- back-compat aliases (existing components import these names) ----
@@ -129,6 +131,8 @@ export const dark: ThemeTokens = {
   evAnecdotal: "#d47452",
 
   vizMa: "#3adfd7",
+  vizTarget: "#b18bf5",
+  vizConservative: "#e6b13e",
   vizGrid: "rgba(41, 47, 51, 0.6)",
 
   muted: "#1c2327",
@@ -189,6 +193,8 @@ export const light: ThemeTokens = {
   evAnecdotal: "#bb4717",
 
   vizMa: "#00878f",
+  vizTarget: "#7c3fd4",
+  vizConservative: "#b8851f",
   vizGrid: "rgba(184, 191, 196, 0.7)",
 
   muted: "#f1f4f6",
