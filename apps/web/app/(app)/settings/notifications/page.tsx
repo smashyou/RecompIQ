@@ -5,6 +5,7 @@ import {
 } from "@peptide/shared";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SectionHeader } from "@/components/kit";
 import { NotificationsForm } from "./notifications-form";
 
 export const dynamic = "force-dynamic";
@@ -29,14 +30,11 @@ export default async function NotificationsSettingsPage() {
     : DEFAULT_NOTIFICATION_SETTINGS;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Pick how you want reminders delivered, and which ones. Account emails
-          (welcome, security, data exports) always send.
-        </p>
-      </header>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-[18px]">
+      <SectionHeader
+        title="Notifications"
+        note="Pick how you want reminders delivered, and which ones. Account emails always send."
+      />
 
       <NotificationsForm initial={initial} />
     </div>

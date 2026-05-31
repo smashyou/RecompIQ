@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useFireToast } from "@/components/ui/toast";
 import { postJson } from "@/lib/post-json";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Card } from "@/components/kit";
 
 interface ExportResult {
   url: string;
@@ -62,45 +63,51 @@ export function AccountForm({ email }: { email: string }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-[18px]">
       {/* Account identity */}
-      <section className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-        <h2 className="text-sm font-semibold">Account</h2>
-        <div className="text-sm">
-          <span className="text-[var(--color-muted-foreground)]">Email</span>
-          <p className="font-medium">{email}</p>
+      <Card title="Account">
+        <div className="font-[family-name:var(--font-sans)] text-[13px]">
+          <span className="text-[var(--fg-muted)]">Email</span>
+          <p className="mt-0.5 font-mono text-[13px] text-[var(--fg)]">{email}</p>
         </div>
-      </section>
+      </Card>
 
       {/* Export */}
-      <section className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-        <div className="space-y-1">
-          <h2 className="text-sm font-semibold">Export your data</h2>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Download a complete copy of everything you&apos;ve logged — profile,
-            protocols, doses, weights, workouts, food, photos metadata, and more
-            — as a single JSON file. We&apos;ll also email you the download link.
-          </p>
+      <Card title="Export your data">
+        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          Download a complete copy of everything you&apos;ve logged — profile,
+          protocols, doses, weights, workouts, food, photos metadata, and more —
+          as a single JSON file. We&apos;ll also email you the download link.
+        </p>
+        <div className="mt-4">
+          <Button onClick={onExport} disabled={exporting}>
+            {exporting ? "Preparing…" : "Export my data"}
+          </Button>
         </div>
-        <Button onClick={onExport} disabled={exporting}>
-          {exporting ? "Preparing…" : "Export my data"}
-        </Button>
-      </section>
+      </Card>
 
       {/* Danger zone */}
-      <section className="space-y-4 rounded-xl border border-[var(--color-destructive)] bg-[color-mix(in_srgb,var(--color-destructive)_6%,var(--color-card))] p-5">
+      <Card
+        style={{
+          border: "1px solid var(--danger)",
+          background: "color-mix(in srgb, var(--danger) 6%, var(--surface-1))",
+        }}
+      >
         <div className="space-y-1">
-          <h2 className="text-sm font-semibold text-[var(--color-destructive)]">
+          <h2 className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--danger)]">
             Delete account
           </h2>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
+          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
             This permanently deletes your account and all associated data —
             protocols, logs, photos, and AI conversations. This cannot be undone.
             Consider exporting your data first.
           </p>
         </div>
-        <div className="space-y-2">
-          <label htmlFor="confirm-delete" className="block text-sm font-medium">
+        <div className="mt-4 space-y-2">
+          <label
+            htmlFor="confirm-delete"
+            className="block font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]"
+          >
             Type <span className="font-mono font-semibold">DELETE</span> to confirm
           </label>
           <input
@@ -110,18 +117,20 @@ export function AccountForm({ email }: { email: string }) {
             onChange={(e) => setConfirmText(e.target.value)}
             autoComplete="off"
             spellCheck={false}
-            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            className="w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 font-mono text-[13px] text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
             placeholder="DELETE"
           />
         </div>
-        <Button
-          variant="destructive"
-          onClick={onDelete}
-          disabled={!canDelete || deleting}
-        >
-          {deleting ? "Deleting…" : "Delete my account"}
-        </Button>
-      </section>
+        <div className="mt-4">
+          <Button
+            variant="destructive"
+            onClick={onDelete}
+            disabled={!canDelete || deleting}
+          >
+            {deleting ? "Deleting…" : "Delete my account"}
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }

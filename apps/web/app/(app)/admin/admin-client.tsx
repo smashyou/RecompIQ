@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Activity, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFireToast } from "@/components/ui/toast";
+import { Card, Chip, MetricBox, Overline, SectionHeader } from "@/components/kit";
 
 interface Provider {
   id: string;
@@ -41,6 +42,9 @@ const FEATURE_INFO: Record<string, { label: string; description: string; modalit
   stacker: { label: "Stacker", description: "AI peptide framework reasoning.", modality: "chat" },
   transcribe: { label: "Transcription", description: "Future voice input.", modality: "chat" },
 };
+
+const SELECT_CLASS =
+  "flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
 
 export function AdminClient({
   providers,
@@ -123,51 +127,40 @@ export function AdminClient({
   }
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Admin</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          AI provider configuration, model selection per feature, and usage monitoring.
-        </p>
-      </header>
+    <div className="flex max-w-[1080px] flex-col gap-[18px]">
+      <SectionHeader
+        num="—"
+        title="Admin"
+        note="AI provider config, per-feature model selection, and usage monitoring."
+      />
 
-      <nav className="flex gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-1">
-        <TabButton active={section === "features"} onClick={() => setSection("features")}>
+      <div className="flex flex-wrap gap-2">
+        <Chip active={section === "features"} onClick={() => setSection("features")}>
           Feature config
-        </TabButton>
-        <TabButton active={section === "catalog"} onClick={() => setSection("catalog")}>
+        </Chip>
+        <Chip active={section === "catalog"} onClick={() => setSection("catalog")}>
           Model catalog
-        </TabButton>
-        <TabButton active={section === "usage"} onClick={() => setSection("usage")}>
+        </Chip>
+        <Chip active={section === "usage"} onClick={() => setSection("usage")}>
           Usage
-        </TabButton>
-      </nav>
+        </Chip>
+      </div>
 
       {section === "features" && (
-        <section className="space-y-4">
+        <div className="flex flex-col gap-[14px]">
           {Object.entries(FEATURE_INFO).map(([feature, info]) => {
             const cfg = configState.find((c) => c.feature === feature);
             const available = modelsForFeature(feature);
             const primary = cfg?.primary_model_id ?? available[0]?.id ?? "";
             const fallbacks = cfg?.fallback_ids ?? [];
             return (
-              <div
-                key={feature}
-                className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5"
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <div>
-                    <h2 className="text-sm font-semibold">{info.label}</h2>
-                    <p className="text-xs text-[var(--color-muted-foreground)]">
-                      {info.description}
-                    </p>
-                  </div>
-                </div>
+              <Card key={feature} title={info.label} hint={info.modality}>
+                <p className="-mt-2 mb-4 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                  {info.description}
+                </p>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                    Primary model
-                  </label>
+                  <Overline style={{ fontSize: 10 }}>Primary model</Overline>
                   <select
                     value={primary}
                     onChange={(e) => {
@@ -178,7 +171,7 @@ export function AdminClient({
                         ),
                       );
                     }}
-                    className="flex h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
+                    className={SELECT_CLASS}
                   >
                     {available.map((m) => (
                       <option key={m.id} value={m.id}>
@@ -188,10 +181,8 @@ export function AdminClient({
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                    Fallback chain ({fallbacks.length})
-                  </label>
+                <div className="mt-4 space-y-2">
+                  <Overline style={{ fontSize: 10 }}>Fallback chain ({fallbacks.length})</Overline>
                   {fallbacks.map((fbId, idx) => {
                     const fbModel = available.find((m) => m.id === fbId);
                     return (
@@ -207,7 +198,7 @@ export function AdminClient({
                               ),
                             );
                           }}
-                          className="flex h-9 flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 text-sm"
+                          className={`${SELECT_CLASS} h-9 flex-1`}
                         >
                           {available.map((m) => (
                             <option key={m.id} value={m.id}>
@@ -225,7 +216,8 @@ export function AdminClient({
                               ),
                             );
                           }}
-                          className="rounded-md border border-[var(--color-border)] px-2 text-xs"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border)] text-[12px] text-[var(--fg-muted)] hover:text-[var(--fg)]"
+                          aria-label="Remove fallback"
                         >
                           ✕
                         </button>
@@ -234,17 +226,17 @@ export function AdminClient({
                             type="button"
                             onClick={() => testModel(fbId)}
                             disabled={testing === fbId}
-                            className="rounded-md border border-[var(--color-border)] px-2 text-xs"
+                            className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border)] text-[var(--fg-muted)] hover:text-[var(--fg)]"
                             title="Test connection"
                           >
                             {testing === fbId ? (
-                              <RefreshCw className="h-3 w-3 animate-spin" />
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                             ) : testResults[fbId]?.ok ? (
-                              <CheckCircle2 className="h-3 w-3 text-[var(--color-accent)]" />
+                              <CheckCircle2 className="h-3.5 w-3.5 text-[var(--positive)]" />
                             ) : testResults[fbId] ? (
-                              <XCircle className="h-3 w-3 text-[var(--color-destructive)]" />
+                              <XCircle className="h-3.5 w-3.5 text-[var(--danger)]" />
                             ) : (
-                              <Activity className="h-3 w-3" />
+                              <Activity className="h-3.5 w-3.5" />
                             )}
                           </button>
                         )}
@@ -263,13 +255,13 @@ export function AdminClient({
                         ),
                       );
                     }}
-                    className="rounded-md border border-dashed border-[var(--color-border)] px-3 py-1 text-xs"
+                    className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)] hover:text-[var(--fg)]"
                   >
                     + Add fallback
                   </button>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="mt-4 flex gap-2">
                   <Button
                     size="sm"
                     onClick={() => testModel(primary)}
@@ -288,104 +280,71 @@ export function AdminClient({
                 </div>
                 {testResults[primary] && (
                   <p
-                    className={`text-xs ${
-                      testResults[primary]!.ok
-                        ? "text-[var(--color-accent)]"
-                        : "text-[var(--color-destructive)]"
-                    }`}
+                    className="mt-2 font-mono text-[12px]"
+                    style={{
+                      color: testResults[primary]!.ok ? "var(--positive)" : "var(--danger)",
+                    }}
                   >
                     {testResults[primary]!.msg}
                   </p>
                 )}
-              </div>
+              </Card>
             );
           })}
-        </section>
+        </div>
       )}
 
       {section === "catalog" && (
-        <section className="space-y-4">
+        <div className="flex flex-col gap-[14px]">
           {providers.map((p) => {
             const providerModels = models.filter((m) => m.ai_providers.slug === p.slug);
             return (
-              <div
-                key={p.id}
-                className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold">{p.name}</h3>
-                    <span className="rounded-full border border-[var(--color-border)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                      {p.kind}
-                    </span>
-                    <span className="rounded-full border border-[var(--color-border)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                      env: {p.env_key_var}
-                    </span>
-                  </div>
+              <Card key={p.id} title={p.name}>
+                <div className="-mt-2 mb-4 flex flex-wrap items-center gap-2">
+                  <Chip>{p.kind}</Chip>
+                  <Chip>env: {p.env_key_var}</Chip>
                   {p.notes && (
-                    <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">{p.notes}</p>
+                    <span className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                      {p.notes}
+                    </span>
                   )}
                 </div>
-                <table className="w-full text-xs">
+                <table className="w-full font-[family-name:var(--font-sans)] text-[12px]">
                   <thead>
-                    <tr className="text-left text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                      <th className="pb-1 pr-3">Model</th>
-                      <th className="pb-1 pr-3">Modality</th>
-                      <th className="pb-1 pr-3">Context</th>
-                      <th className="pb-1 pr-3">In $/1M</th>
-                      <th className="pb-1">Out $/1M</th>
+                    <tr className="text-left">
+                      <th className="pb-2 pr-3"><Overline style={{ fontSize: 9.5 }}>Model</Overline></th>
+                      <th className="pb-2 pr-3"><Overline style={{ fontSize: 9.5 }}>Modality</Overline></th>
+                      <th className="pb-2 pr-3 text-right"><Overline style={{ fontSize: 9.5 }}>Context</Overline></th>
+                      <th className="pb-2 pr-3 text-right"><Overline style={{ fontSize: 9.5 }}>In $/1M</Overline></th>
+                      <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Out $/1M</Overline></th>
                     </tr>
                   </thead>
                   <tbody>
                     {providerModels.map((m) => (
-                      <tr key={m.id} className="border-t border-[var(--color-border)]">
-                        <td className="py-1.5 pr-3 tabular-nums">{m.display_name}</td>
-                        <td className="py-1.5 pr-3">{m.modality}</td>
-                        <td className="py-1.5 pr-3 tabular-nums">
+                      <tr key={m.id} className="border-t border-[var(--border)]">
+                        <td className="py-2 pr-3 text-[var(--fg)]">{m.display_name}</td>
+                        <td className="py-2 pr-3 text-[var(--fg-muted)]">{m.modality}</td>
+                        <td className="py-2 pr-3 text-right font-mono tabular-nums text-[var(--fg)]">
                           {m.context_window ? m.context_window.toLocaleString() : "—"}
                         </td>
-                        <td className="py-1.5 pr-3 tabular-nums">
+                        <td className="py-2 pr-3 text-right font-mono tabular-nums text-[var(--fg)]">
                           {m.input_cost_per_1m !== null ? `$${m.input_cost_per_1m}` : "—"}
                         </td>
-                        <td className="py-1.5 tabular-nums">
+                        <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
                           {m.output_cost_per_1m !== null ? `$${m.output_cost_per_1m}` : "—"}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </Card>
             );
           })}
-        </section>
+        </div>
       )}
 
       {section === "usage" && <UsageSection />}
     </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-        active
-          ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-          : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -416,16 +375,18 @@ function UsageSection() {
   }
 
   return (
-    <section className="space-y-4">
-      <Button onClick={load} disabled={loading} variant="outline">
-        {loading ? "Loading…" : data ? "Refresh" : "Load 7-day usage"}
-      </Button>
+    <div className="flex flex-col gap-[14px]">
+      <div>
+        <Button onClick={load} disabled={loading} variant="outline">
+          {loading ? "Loading…" : data ? "Refresh" : "Load 7-day usage"}
+        </Button>
+      </div>
       {data && (
         <>
-          <div className="grid grid-cols-3 gap-3">
-            <Stat label="Calls (7d)" value={data.total_calls.toLocaleString()} />
-            <Stat label="Cost (7d)" value={`$${data.total_cost_usd.toFixed(4)}`} />
-            <Stat
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <MetricBox label="Calls (7d)" value={data.total_calls.toLocaleString()} />
+            <MetricBox label="Cost (7d)" value={`$${data.total_cost_usd.toFixed(4)}`} />
+            <MetricBox
               label="Errors / Fallbacks"
               value={`${data.by_feature.reduce((a, b) => a + b.errors, 0)} / ${data.by_feature.reduce(
                 (a, b) => a + b.fallbacks,
@@ -433,71 +394,64 @@ function UsageSection() {
               )}`}
             />
           </div>
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-            <h4 className="mb-3 text-xs uppercase tracking-wider text-[var(--color-muted-foreground)]">
-              By feature
-            </h4>
-            <table className="w-full text-xs">
+
+          <Card title="By feature">
+            <table className="w-full font-[family-name:var(--font-sans)] text-[12px]">
               <thead>
-                <tr className="text-left text-[10px] uppercase text-[var(--color-muted-foreground)]">
-                  <th className="pb-1">Feature</th>
-                  <th className="pb-1 text-right">Calls</th>
-                  <th className="pb-1 text-right">Cost</th>
-                  <th className="pb-1 text-right">Err</th>
-                  <th className="pb-1 text-right">FB</th>
+                <tr className="text-left">
+                  <th className="pb-2"><Overline style={{ fontSize: 9.5 }}>Feature</Overline></th>
+                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Calls</Overline></th>
+                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Cost</Overline></th>
+                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Err</Overline></th>
+                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>FB</Overline></th>
                 </tr>
               </thead>
               <tbody>
                 {data.by_feature.map((r) => (
-                  <tr key={r.feature} className="border-t border-[var(--color-border)]">
-                    <td className="py-1.5">{r.feature}</td>
-                    <td className="py-1.5 text-right tabular-nums">{r.calls}</td>
-                    <td className="py-1.5 text-right tabular-nums">${r.cost_usd.toFixed(4)}</td>
-                    <td className="py-1.5 text-right tabular-nums">{r.errors}</td>
-                    <td className="py-1.5 text-right tabular-nums">{r.fallbacks}</td>
+                  <tr key={r.feature} className="border-t border-[var(--border)]">
+                    <td className="py-2 text-[var(--fg)]">{r.feature}</td>
+                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.calls}</td>
+                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
+                      ${r.cost_usd.toFixed(4)}
+                    </td>
+                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.errors}</td>
+                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.fallbacks}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-            <h4 className="mb-3 text-xs uppercase tracking-wider text-[var(--color-muted-foreground)]">
-              By model
-            </h4>
-            <table className="w-full text-xs">
+          </Card>
+
+          <Card title="By model">
+            <table className="w-full font-[family-name:var(--font-sans)] text-[12px]">
               <thead>
-                <tr className="text-left text-[10px] uppercase text-[var(--color-muted-foreground)]">
-                  <th className="pb-1">Model</th>
-                  <th className="pb-1 text-right">Calls</th>
-                  <th className="pb-1 text-right">Cost</th>
-                  <th className="pb-1 text-right">Avg ms</th>
+                <tr className="text-left">
+                  <th className="pb-2"><Overline style={{ fontSize: 9.5 }}>Model</Overline></th>
+                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Calls</Overline></th>
+                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Cost</Overline></th>
+                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Avg ms</Overline></th>
                 </tr>
               </thead>
               <tbody>
                 {data.by_model.map((r) => (
-                  <tr key={r.model_string} className="border-t border-[var(--color-border)]">
-                    <td className="py-1.5 font-mono text-[11px]">
+                  <tr key={r.model_string} className="border-t border-[var(--border)]">
+                    <td className="py-2 font-mono text-[11px] text-[var(--fg)]">
                       {r.provider_slug}/{r.model_string}
                     </td>
-                    <td className="py-1.5 text-right tabular-nums">{r.calls}</td>
-                    <td className="py-1.5 text-right tabular-nums">${r.cost_usd.toFixed(4)}</td>
-                    <td className="py-1.5 text-right tabular-nums">{r.avg_latency_ms}</td>
+                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.calls}</td>
+                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
+                      ${r.cost_usd.toFixed(4)}
+                    </td>
+                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
+                      {r.avg_latency_ms}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </Card>
         </>
       )}
-    </section>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-      <p className="text-xs text-[var(--color-muted-foreground)]">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
     </div>
   );
 }

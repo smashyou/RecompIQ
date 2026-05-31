@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useFireToast } from "@/components/ui/toast";
 import { postJson } from "@/lib/post-json";
 import { cn } from "@/lib/cn";
+import { Card } from "@/components/kit";
 
 const CHANNEL_OPTIONS: { value: NotificationChannel; label: string }[] = [
   { value: "in_app", label: "In-app" },
@@ -100,19 +101,16 @@ export function NotificationsForm({ initial }: { initial: NotificationSettings }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-[18px]">
       {/* Channel */}
-      <section className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-        <div className="space-y-1">
-          <h2 className="text-sm font-semibold">Delivery</h2>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            How should reminders reach you?
-          </p>
-        </div>
+      <Card title="Delivery">
+        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          How should reminders reach you?
+        </p>
         <div
           role="radiogroup"
           aria-label="Notification channel"
-          className="inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-1"
+          className="mt-3 inline-flex rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-1"
         >
           {CHANNEL_OPTIONS.map((opt) => {
             const active = settings.notification_channel === opt.value;
@@ -136,33 +134,37 @@ export function NotificationsForm({ initial }: { initial: NotificationSettings }
           })}
         </div>
         {isOff ? (
-          <p className="text-xs text-[var(--color-muted-foreground)]">
+          <p className="mt-3 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
             All reminders are paused. Account emails (welcome, security, data
             exports) still send.
           </p>
         ) : !channelSendsEmail ? (
-          <p className="text-xs text-[var(--color-muted-foreground)]">
+          <p className="mt-3 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
             Reminders show in the app only — no reminder emails will be sent.
           </p>
         ) : (
-          <p className="text-xs text-[var(--color-muted-foreground)]">
+          <p className="mt-3 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
             Reminders below will be delivered by{" "}
             {settings.notification_channel === "both" ? "in-app and email" : "email"}.
           </p>
         )}
-      </section>
+      </Card>
 
       {/* Per-type toggles */}
-      <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
-        <div className="border-b border-[var(--color-border)] p-5">
-          <h2 className="text-sm font-semibold">Which reminders</h2>
+      <Card pad={0}>
+        <div className="border-b border-[var(--border)] p-4">
+          <h2 className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--fg)]">
+            Which reminders
+          </h2>
         </div>
-        <ul className="divide-y divide-[var(--color-border)]">
+        <ul className="divide-y divide-[var(--border)]">
           {REMINDERS.map((r) => (
             <li key={r.key} className="flex items-center gap-4 p-4">
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">{r.label}</span>
-                <span className="block text-sm text-[var(--color-muted-foreground)]">
+                <span className="block font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)]">
+                  {r.label}
+                </span>
+                <span className="block font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
                   {r.hint}
                 </span>
               </span>
@@ -175,7 +177,7 @@ export function NotificationsForm({ initial }: { initial: NotificationSettings }
             </li>
           ))}
         </ul>
-      </section>
+      </Card>
 
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving}>
