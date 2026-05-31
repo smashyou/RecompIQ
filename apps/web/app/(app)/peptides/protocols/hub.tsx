@@ -44,15 +44,29 @@ export function ProtocolsHub({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<TabId>(initialTab);
-  // The calculator's selected peptide is owned here so the Compound Reference
-  // tab and the deep link can drive it.
-  const [calcCompoundId, setCalcCompoundId] = useState<string>(initialCompoundId ?? "");
+  // The selected peptide is the single source of truth across every tab, mirrored
+  // into the URL (?compound=slug) so it survives tab switches, page navigations,
+  // and deep links from a compound's detail page.
+  const [selectedId, setSelectedId] = useState<string>(initialCompoundId ?? "");
+
+  function urlWith(params: URLSearchParams) {
+    return `/peptides/protocols?${params.toString()}`;
+  }
 
   function go(id: TabId) {
     setTab(id);
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", id);
-    router.replace(`/peptides/protocols?${params.toString()}`, { scroll: false });
+    router.replace(urlWith(params), { scroll: false });
+  }
+
+  function selectCompound(id: string) {
+    setSelectedId(id);
+    const params = new URLSearchParams(searchParams.toString());
+    const slug = compounds.find((c) => c.id === id)?.slug;
+    if (slug) params.set("compound", slug);
+    else params.delete("compound");
+    router.replace(urlWith(params), { scroll: false });
   }
 
   return (
@@ -83,17 +97,19 @@ export function ProtocolsHub({
       {tab === "reconstitution" && (
         <ReconstitutionTab
           compounds={compounds}
-          compoundId={calcCompoundId}
-          onCompoundChange={setCalcCompoundId}
+          compoundId={selectedId}
+          onCompoundChange={selectCompound}
         />
       )}
-      {tab === "builder" && <ProtocolBuilderTab compounds={compounds} />}
+      {tab === "builder" && (
+        <ProtocolBuilderTab compounds={compounds} defaultCompoundId={selectedId} />
+      )}
       {tab === "reference" && (
         <CompoundReferenceTab
           compounds={referenceCompounds}
           onUseInCalculator={(slug) => {
             const match = compounds.find((c) => c.slug === slug);
-            if (match) setCalcCompoundId(match.id);
+            if (match) selectCompound(match.id);
             go("reconstitution");
           }}
         />

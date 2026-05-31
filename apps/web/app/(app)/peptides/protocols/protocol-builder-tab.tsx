@@ -23,13 +23,22 @@ interface WeekRow {
   frequency: string;
 }
 
-export function ProtocolBuilderTab({ compounds }: { compounds: CompoundOption[] }) {
+export function ProtocolBuilderTab({
+  compounds,
+  defaultCompoundId,
+}: {
+  compounds: CompoundOption[];
+  defaultCompoundId?: string;
+}) {
   const router = useRouter();
   const toast = useFireToast();
   const [name, setName] = useState("");
+  // Default the first week's compound to the peptide carried over from the
+  // calculator / detail page, falling back to the first catalog compound.
+  const firstCompound = defaultCompoundId || compounds[0]?.id || "";
   const [rows, setRows] = useState<WeekRow[]>([
     {
-      compound_id: compounds[0]?.id ?? "",
+      compound_id: firstCompound,
       week_number: 1,
       dose_value: 0,
       dose_unit: "mg",
