@@ -15,6 +15,7 @@ const serverEnvSchema = z.object({
   AI_GATEWAY_API_KEY: optionalString,
   RESEND_API_KEY: optionalString,
   SEND_EMAIL_HOOK_SECRET: optionalString,
+  CRON_SECRET: optionalString,
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   NEXT_PUBLIC_ENABLE_DEMO: z
     .enum(["true", "false"])
@@ -29,6 +30,7 @@ export const serverEnv = serverEnvSchema.parse({
   AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   SEND_EMAIL_HOOK_SECRET: process.env.SEND_EMAIL_HOOK_SECRET,
+  CRON_SECRET: process.env.CRON_SECRET,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NEXT_PUBLIC_ENABLE_DEMO: process.env.NEXT_PUBLIC_ENABLE_DEMO,
 });

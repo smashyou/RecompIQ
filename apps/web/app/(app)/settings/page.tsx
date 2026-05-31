@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, ChevronRight } from "lucide-react";
+import { Bell, ChevronRight, UserCog } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +17,12 @@ const SECTIONS: SettingsLink[] = [
     title: "Notifications",
     description: "Choose in-app, email, or both — and which reminders you get.",
     icon: Bell,
+  },
+  {
+    href: "/settings/account",
+    title: "Account",
+    description: "Export your data, or permanently delete your account.",
+    icon: UserCog,
   },
 ];
 

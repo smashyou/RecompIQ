@@ -116,6 +116,69 @@ export async function sendEmail<K extends TemplateName>(
   });
 }
 
+export interface BatchEmailMessage {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  /** Per-user unsubscribe URL; when set, adds the List-Unsubscribe headers. */
+  unsubscribeUrl?: string;
+}
+
+/**
+ * Send many already-rendered lifecycle emails in one shot via Resend's batch
+ * endpoint. Chunks at 100 (Resend's per-request cap) and throws on any non-2xx
+ * response so the caller can decide whether the run failed. Used by the
+ * reminder cron, which renders with `renderTemplate` then hands the array here.
+ */
+export async function sendEmailBatch(messages: BatchEmailMessage[]): Promise<void> {
+  if (messages.length === 0) return;
+
+  const key = process.env.RESEND_API_KEY;
+  if (!key) {
+    throw new Error(
+      "RESEND_API_KEY is not set — cannot send email. See docs/EMAIL.md.",
+    );
+  }
+
+  const BATCH_LIMIT = 100;
+  for (let i = 0; i < messages.length; i += BATCH_LIMIT) {
+    const chunk = messages.slice(i, i + BATCH_LIMIT);
+    const payload = chunk.map((m) => ({
+      from: FROM_EMAIL,
+      to: m.to,
+      subject: m.subject,
+      html: m.html,
+      text: m.text,
+      reply_to: REPLY_TO,
+      ...(m.unsubscribeUrl
+        ? {
+            headers: {
+              "List-Unsubscribe": `<${m.unsubscribeUrl}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
+          }
+        : {}),
+    }));
+
+    const res = await fetch("https://api.resend.com/emails/batch", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      throw new Error(
+        `Resend batch send failed: ${res.status} ${res.statusText}${detail ? ` — ${detail}` : ""}`,
+      );
+    }
+  }
+}
+
 /**
  * Render + send a Group A auth email resolved from the Supabase Send Email
  * hook. Transactional — no unsubscribe, no preference gating.

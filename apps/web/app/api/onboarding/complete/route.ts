@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { jsonOk, jsonError } from "@/lib/api";
 import { AppError } from "@peptide/shared";
+import { sendEmail } from "@peptide/email/send";
 
 export const runtime = "nodejs";
 
@@ -31,6 +32,22 @@ export async function POST() {
       .single();
 
     if (error) throw error;
+
+    // Welcome email — transactional, always sent. Guarded so a Resend hiccup
+    // never blocks onboarding completion.
+    if (user.email) {
+      try {
+        const firstName = profile.data.display_name?.trim().split(/\s+/)[0];
+        await sendEmail({
+          to: user.email,
+          template: "welcome",
+          props: { firstName },
+        });
+      } catch (mailErr) {
+        console.error("[onboarding/complete] welcome email failed", mailErr);
+      }
+    }
+
     return jsonOk(data);
   } catch (err) {
     return jsonError(err);

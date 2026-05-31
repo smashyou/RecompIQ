@@ -3,5 +3,6 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile && cd apps/web",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "crons": [{ "path": "/api/cron/reminders", "schedule": "0 13 * * *" }]
 }
