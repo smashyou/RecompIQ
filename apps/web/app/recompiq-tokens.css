@@ -1,0 +1,204 @@
+/* ============================================================================
+   RecompIQ — Color & Type Foundations
+   ----------------------------------------------------------------------------
+   Dark, instrument-grade UI. Cyan/teal primary, green positive, amber caution,
+   red danger. Neutrals are a cool slate (hue ~240) so the cyan reads as the
+   single accent. Values extend the product's oklch tokens
+   (apps/web/app/globals.css) into a fuller depth + state scale.
+
+   Fonts (loaded via Google Fonts CDN — see note at bottom):
+     Display / wordmark : Space Grotesk
+     Body / UI          : IBM Plex Sans
+     Data / mono        : IBM Plex Mono
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   THEMING — light / dark / system
+   Every color token is authored once as light-dark(<light>, <dark>). The active
+   side is chosen by the inherited `color-scheme`, which `[data-theme]` flips:
+     • default (no attribute) ............ dark  (the brand's primary mode)
+     • <html data-theme="light"> ......... forces light
+     • <html data-theme="dark"> .......... forces dark
+     • <html data-theme="system"> ........ follows the OS setting
+   Toggle from JS:  document.documentElement.dataset.theme = 'light' | 'dark' | 'system'
+   light-dark() is Baseline 2024 (Chrome 123+, Safari 17.5+, Firefox 120+).
+   ---------------------------------------------------------------------------- */
+:root            { color-scheme: dark; }        /* default = dark */
+:root[data-theme="light"]  { color-scheme: light; }
+:root[data-theme="dark"]   { color-scheme: dark; }
+:root[data-theme="system"] { color-scheme: light dark; }
+
+:root {
+  /* ---- Neutrals (cool slate, hue 240) ----------- light-dark(LIGHT, DARK) - */
+  --bg-deep:      light-dark(oklch(0.95 0.006 240), oklch(0.13 0.012 240));  /* app void / behind cards */
+  --bg:           light-dark(oklch(0.985 0.003 240), oklch(0.17 0.012 240)); /* default app background  */
+  --surface-1:    light-dark(oklch(1 0 0),           oklch(0.21 0.013 240)); /* cards, panels           */
+  --surface-2:    light-dark(oklch(0.965 0.005 240), oklch(0.25 0.013 240)); /* inputs, hover           */
+  --surface-3:    light-dark(oklch(0.93 0.008 240),  oklch(0.29 0.013 240)); /* popovers, pressed       */
+  --border:       light-dark(oklch(0.90 0.008 240),  oklch(0.30 0.012 240)); /* hairline dividers       */
+  --border-strong:light-dark(oklch(0.78 0.012 240),  oklch(0.40 0.012 240)); /* emphasized edges        */
+
+  --fg:           light-dark(oklch(0.24 0.020 240), oklch(0.97 0.004 240));  /* primary text            */
+  --fg-muted:     light-dark(oklch(0.44 0.018 240), oklch(0.74 0.012 240));  /* secondary text          */
+  --fg-subtle:    light-dark(oklch(0.56 0.014 240), oklch(0.58 0.012 240));  /* tertiary, placeholders  */
+  --fg-faint:     light-dark(oklch(0.70 0.010 240), oklch(0.46 0.012 240));  /* disabled, watermarks    */
+
+  /* ---- Primary — cyan / teal (deeper on light for contrast on white) ---- */
+  --primary:          light-dark(oklch(0.60 0.13 200),  oklch(0.74 0.13 195));
+  --primary-bright:   light-dark(oklch(0.52 0.13 202),  oklch(0.82 0.14 190));  /* hover/ring (darker on light) */
+  --primary-dim:      light-dark(oklch(0.72 0.10 198),  oklch(0.52 0.10 196));  /* pressed, borders */
+  --primary-foreground: light-dark(oklch(0.99 0.005 200), oklch(0.15 0.02 235));/* text on a primary fill */
+  --primary-wash:     light-dark(oklch(0.60 0.13 200 / 0.10), oklch(0.74 0.13 195 / 0.12));
+  --primary-line:     light-dark(oklch(0.60 0.13 200 / 0.28), oklch(0.74 0.13 195 / 0.40));
+
+  /* ---- Positive — green (success, on-track, fat loss) ------------------ */
+  --positive:         light-dark(oklch(0.55 0.15 150),  oklch(0.78 0.17 150));
+  --positive-dim:     light-dark(oklch(0.70 0.12 150),  oklch(0.58 0.13 150));
+  --positive-foreground: light-dark(oklch(0.99 0.005 150), oklch(0.15 0.02 150));
+  --positive-wash:    light-dark(oklch(0.55 0.15 150 / 0.12), oklch(0.78 0.17 150 / 0.12));
+  --positive-line:    light-dark(oklch(0.55 0.15 150 / 0.30), oklch(0.78 0.17 150 / 0.40));
+
+  /* ---- Caution — amber (relative contraindication, watch) -------------- */
+  --warn:             light-dark(oklch(0.62 0.14 68),  oklch(0.81 0.15 75));
+  --warn-dim:         light-dark(oklch(0.70 0.12 68),  oklch(0.62 0.12 70));
+  --warn-foreground:  light-dark(oklch(0.99 0.005 75), oklch(0.16 0.02 75));
+  --warn-wash:        light-dark(oklch(0.62 0.14 68 / 0.14), oklch(0.81 0.15 75 / 0.12));
+  --warn-line:        light-dark(oklch(0.62 0.14 68 / 0.32), oklch(0.81 0.15 75 / 0.40));
+
+  /* ---- Danger — red (destructive, absolute contraindication, alert) ---- */
+  --danger:           light-dark(oklch(0.55 0.21 27),  oklch(0.64 0.20 25));
+  --danger-bright:    light-dark(oklch(0.48 0.22 27),  oklch(0.70 0.21 25));
+  --danger-foreground: light-dark(oklch(0.99 0.01 25), oklch(0.98 0.01 25));
+  --danger-wash:      light-dark(oklch(0.55 0.21 27 / 0.10), oklch(0.64 0.20 25 / 0.12));
+  --danger-line:      light-dark(oklch(0.55 0.21 27 / 0.30), oklch(0.64 0.20 25 / 0.40));
+
+  /* ---- Evidence-grade scale (darker on light for white-bg legibility) -- */
+  --ev-fda:        light-dark(oklch(0.52 0.15 155), oklch(0.80 0.16 155));  /* FDA approved  — strongest */
+  --ev-rct:        light-dark(oklch(0.52 0.13 168), oklch(0.78 0.15 168));  /* Human RCT                 */
+  --ev-obs:        light-dark(oklch(0.55 0.13 200), oklch(0.74 0.13 195));  /* Human observational       */
+  --ev-animal:     light-dark(oklch(0.54 0.10 235), oklch(0.74 0.10 230));  /* Animal only               */
+  --ev-mech:       light-dark(oklch(0.50 0.04 250), oklch(0.70 0.05 250));  /* Mechanistic               */
+  --ev-anecdotal:  light-dark(oklch(0.55 0.16 40),  oklch(0.66 0.13 40));   /* Anecdotal     — weakest    */
+
+  /* ---- Data-viz line ramp (projections, biomarkers) -------------------- */
+  --viz-actual:    var(--fg);
+  --viz-ma:        light-dark(oklch(0.55 0.13 200), oklch(0.82 0.13 190));
+  --viz-target:    var(--primary);
+  --viz-conservative: var(--fg-subtle);
+  --viz-aggressive:   var(--positive);
+  --viz-grid:      light-dark(oklch(0.80 0.010 240 / 0.7), oklch(0.30 0.012 240 / 0.6));
+
+  /* ---- Radii ----------------------------------------------------------- */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;   /* default control radius            */
+  --r-lg: 14px;   /* cards                             */
+  --r-xl: 20px;   /* hero panels, sheets               */
+  --r-pill: 999px;
+
+  /* ---- Elevation — soft; darker translucency on light, near-black on dark */
+  --shadow-sm:  light-dark(0 1px 2px oklch(0.45 0.03 240 / 0.10),  0 1px 2px oklch(0 0 0 / 0.30));
+  --shadow-md:  light-dark(0 4px 16px -4px oklch(0.45 0.03 240 / 0.14), 0 4px 16px -4px oklch(0 0 0 / 0.45));
+  --shadow-lg:  light-dark(0 16px 40px -12px oklch(0.45 0.03 240 / 0.20), 0 16px 40px -12px oklch(0 0 0 / 0.55));
+  --shadow-pop: light-dark(0 8px 28px -6px oklch(0.45 0.03 240 / 0.22), 0 8px 28px -6px oklch(0 0 0 / 0.60));
+  /* Primary glow — used sparingly on the wordmark mark + key CTAs */
+  --glow-primary: 0 0 0 1px var(--primary-line), 0 8px 30px -8px light-dark(oklch(0.60 0.13 200 / 0.30), oklch(0.74 0.13 195 / 0.45));
+
+  /* ---- Spacing scale (4px base) ---------------------------------------- */
+  --s-1: 4px;   --s-2: 8px;   --s-3: 12px;  --s-4: 16px;
+  --s-5: 20px;  --s-6: 24px;  --s-8: 32px;  --s-10: 40px;
+  --s-12: 48px; --s-16: 64px; --s-20: 80px; --s-24: 96px;
+
+  /* ---- Type families --------------------------------------------------- */
+  --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-sans:    "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ---- Type scale (semantic) ------------------------------------------- */
+  /* Display uses Space Grotesk, tight tracking. Numbers use mono + tnum.   */
+  --t-display-size: 56px;  --t-display-lh: 1.02; --t-display-ls: -0.025em; --t-display-wt: 600;
+  --t-h1-size: 34px;       --t-h1-lh: 1.08;      --t-h1-ls: -0.02em;       --t-h1-wt: 600;
+  --t-h2-size: 24px;       --t-h2-lh: 1.16;      --t-h2-ls: -0.015em;      --t-h2-wt: 600;
+  --t-h3-size: 18px;       --t-h3-lh: 1.25;      --t-h3-ls: -0.01em;       --t-h3-wt: 600;
+  --t-body-size: 15px;     --t-body-lh: 1.55;    --t-body-ls: 0;           --t-body-wt: 400;
+  --t-small-size: 13px;    --t-small-lh: 1.5;    --t-small-ls: 0;          --t-small-wt: 400;
+  --t-caption-size: 11px;  --t-caption-lh: 1.4;  --t-caption-ls: 0.04em;   --t-caption-wt: 500;
+  --t-mono-size: 13px;     --t-mono-lh: 1.5;     --t-mono-ls: 0;
+  --t-overline-size: 11px; --t-overline-lh: 1.3; --t-overline-ls: 0.16em;  --t-overline-wt: 600;
+}
+
+/* ============================================================================
+   Base element styling — apply these classes or use the vars directly.
+   ============================================================================ */
+
+.ri-display {
+  font-family: var(--font-display);
+  font-size: var(--t-display-size); line-height: var(--t-display-lh);
+  letter-spacing: var(--t-display-ls); font-weight: var(--t-display-wt);
+  color: var(--fg);
+}
+.ri-h1 {
+  font-family: var(--font-display);
+  font-size: var(--t-h1-size); line-height: var(--t-h1-lh);
+  letter-spacing: var(--t-h1-ls); font-weight: var(--t-h1-wt); color: var(--fg);
+}
+.ri-h2 {
+  font-family: var(--font-display);
+  font-size: var(--t-h2-size); line-height: var(--t-h2-lh);
+  letter-spacing: var(--t-h2-ls); font-weight: var(--t-h2-wt); color: var(--fg);
+}
+.ri-h3 {
+  font-family: var(--font-sans);
+  font-size: var(--t-h3-size); line-height: var(--t-h3-lh);
+  letter-spacing: var(--t-h3-ls); font-weight: var(--t-h3-wt); color: var(--fg);
+}
+.ri-body {
+  font-family: var(--font-sans);
+  font-size: var(--t-body-size); line-height: var(--t-body-lh);
+  font-weight: var(--t-body-wt); color: var(--fg);
+}
+.ri-small {
+  font-family: var(--font-sans);
+  font-size: var(--t-small-size); line-height: var(--t-small-lh);
+  color: var(--fg-muted);
+}
+.ri-caption {
+  font-family: var(--font-sans);
+  font-size: var(--t-caption-size); line-height: var(--t-caption-lh);
+  letter-spacing: var(--t-caption-ls); font-weight: var(--t-caption-wt);
+  color: var(--fg-subtle);
+}
+/* Overline — small, all-caps, wide-tracked. The brand's signature label style.
+   Used for section eyebrows, evidence labels, status chips. */
+.ri-overline {
+  font-family: var(--font-sans);
+  font-size: var(--t-overline-size); line-height: var(--t-overline-lh);
+  letter-spacing: var(--t-overline-ls); font-weight: var(--t-overline-wt);
+  text-transform: uppercase; color: var(--fg-subtle);
+}
+/* Mono / data — every dose, biomarker, weight, macro, ID. Tabular by default. */
+.ri-mono {
+  font-family: var(--font-mono);
+  font-size: var(--t-mono-size); line-height: var(--t-mono-lh);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+.ri-data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+/* ----------------------------------------------------------------------------
+   FONT SUBSTITUTION NOTE
+   The source product shipped with system-ui only (no brand typeface). These
+   three families were chosen to give RecompIQ an "instrument-grade research"
+   voice. They are loaded from Google Fonts in each HTML file:
+
+   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+   To self-host, drop the .woff2 files into fonts/ and replace the @import with
+   @font-face rules. Flag to the brand owner if a licensed display face is
+   preferred over Space Grotesk.
+   ---------------------------------------------------------------------------- */

@@ -1,0 +1,14 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RecompIQ mark">
+  <defs>
+    <linearGradient id="riPulse" x1="15" y1="35" x2="51" y2="21" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1FC2CE"></stop>
+      <stop offset="1" stop-color="#2FDB92"></stop>
+    </linearGradient>
+  </defs>
+  
+  <path d="M32 10 L51 21 V43 L32 54 L13 43 V21 Z" stroke="#3E939A" stroke-width="2.6" stroke-linejoin="round"></path>
+  
+  <path d="M15 35 H24 L27 35 L30 25 L33 43 L36 33 L40 33 L51 21" stroke="url(#riPulse)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>
+  
+  <circle cx="51" cy="21" r="3.6" fill="#2FDB92"></circle>
+</svg>

@@ -1,38 +1,52 @@
 @import "tailwindcss";
+@import "./recompiq-tokens.css";
 
-@theme {
-  --color-background: oklch(0.18 0.01 250);
-  --color-foreground: oklch(0.96 0.005 250);
-  --color-muted: oklch(0.28 0.01 250);
-  --color-muted-foreground: oklch(0.65 0.01 250);
-  --color-card: oklch(0.22 0.01 250);
-  --color-card-foreground: oklch(0.96 0.005 250);
-  --color-border: oklch(0.32 0.01 250);
-  --color-input: oklch(0.28 0.01 250);
-  --color-primary: oklch(0.72 0.16 195);
-  --color-primary-foreground: oklch(0.14 0.01 250);
-  --color-accent: oklch(0.78 0.18 145);
-  --color-accent-foreground: oklch(0.14 0.01 250);
-  --color-destructive: oklch(0.65 0.22 25);
-  --color-destructive-foreground: oklch(0.98 0.005 25);
-  --color-ring: oklch(0.72 0.16 195);
+/* Expose the RecompIQ design tokens (recompiq-tokens.css, the single source of
+   truth — light + dark via light-dark()) to Tailwind v4 utilities. The :root
+   token definitions live in that file; these just alias them so utilities like
+   `bg-card border-border text-primary` theme correctly. For one-off tints use
+   the raw vars, e.g. bg-[var(--primary-wash)] border-[var(--primary-line)]. */
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--surface-1);
+  --color-card-foreground: var(--fg);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--fg-muted);
+  --color-border: var(--border);
+  --color-input: var(--surface-2);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--positive);
+  --color-accent-foreground: var(--positive-foreground);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--danger-foreground);
+  --color-ring: var(--primary);
 
-  --radius: 0.75rem;
+  --radius: var(--r-lg);
 
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
+}
+
+/* Point the token font families at the next/font variables (set in layout.tsx),
+   falling back to the literal faces then system fonts. */
+:root {
+  --font-display: var(--font-display-src), "Space Grotesk", system-ui, sans-serif;
+  --font-sans: var(--font-sans-src), "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-src), "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 html,
 body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--bg);
+  color: var(--fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 * {
-  border-color: var(--color-border);
+  border-color: var(--border);
 }

@@ -1,0 +1,19 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RecompIQ app icon">
+  <defs>
+    <linearGradient id="riTileBg" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2A2E37"></stop>
+      <stop offset="1" stop-color="#181B21"></stop>
+    </linearGradient>
+    <linearGradient id="riTilePulse" x1="23" y1="52" x2="76" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1FC2CE"></stop>
+      <stop offset="1" stop-color="#2FDB92"></stop>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="96" height="96" rx="22" fill="url(#riTileBg)"></rect>
+  <rect x="0.75" y="0.75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#474C55" stroke-width="1.5"></rect>
+  
+  <path d="M48 16 L76 32 V64 L48 80 L20 64 V32 Z" stroke="#3E939A" stroke-width="3.4" stroke-linejoin="round"></path>
+  
+  <path d="M23 52 H36 L40 52 L44 38 L49 64 L54 49 L60 49 L76 32" stroke="url(#riTilePulse)" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"></path>
+  <circle cx="76" cy="32" r="5" fill="#2FDB92"></circle>
+</svg>
