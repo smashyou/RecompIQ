@@ -154,7 +154,7 @@ function OverviewTab({ detail }: { detail: CompoundDetail }) {
       )}
 
       {detail.synergies.length > 0 && (
-        <Card title="Commonly combined with">
+        <Card title="Commonly Stacked With">
           <p className="mb-3 text-xs text-[var(--color-muted-foreground)]">
             Educational pharmacologic rationale only — not a recommended protocol. Review any
             combination with a clinician and against your contraindications.

@@ -17,7 +17,7 @@
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
-    "supabase": "node_modules/.pnpm/supabase@2.98.2/node_modules/supabase/bin/supabase",
+    "supabase": "node_modules/.bin/supabase",
     "db:link": "pnpm supabase link --project-ref bvsroawvscgksehmjjnl",
     "db:push": "pnpm supabase db push",
     "db:reset": "pnpm supabase db reset",
@@ -39,5 +39,18 @@
     "tsx": "^4.22.0",
     "turbo": "^2.5.0",
     "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "msgpackr-extract",
+      "sharp",
+      "supabase",
+      "unrs-resolver"
+    ],
+    "overrides": {
+      "react": "19.1.0",
+      "react-dom": "19.1.0"
+    }
   }
 }

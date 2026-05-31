@@ -39,8 +39,14 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <footer className="border-t border-[var(--color-border)] px-6 py-6 text-center text-xs text-[var(--color-muted-foreground)]">
-        © {new Date().getFullYear()} Peptide Agent · Not a substitute for medical care.
+      <footer className="space-y-2 border-t border-[var(--color-border)] px-6 py-6 text-center text-xs text-[var(--color-muted-foreground)]">
+        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <a href="/legal/medical-disclaimer" className="hover:text-[var(--color-foreground)]">Medical Disclaimer</a>
+          <a href="/legal/research-use" className="hover:text-[var(--color-foreground)]">Research-Use</a>
+          <a href="/legal/terms" className="hover:text-[var(--color-foreground)]">Terms</a>
+          <a href="/legal/privacy" className="hover:text-[var(--color-foreground)]">Privacy</a>
+        </nav>
+        <p>© {new Date().getFullYear()} RecompIQ · Educational &amp; research tracking only. Not a substitute for medical care.</p>
       </footer>
     </div>
   );

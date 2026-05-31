@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "RecompIQ",
+    "slug": "recompiq",
+    "scheme": "recompiq",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.recompiq.mobile",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "RecompIQ reads weight, body composition, steps, heart rate, and sleep from Apple Health so your tracking fills in automatically from your scale and watch.",
+        "NSHealthUpdateUsageDescription": "RecompIQ can write metrics you log back to Apple Health."
+      }
+    },
+    "android": {
+      "package": "app.recompiq.mobile",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "@kingstinct/react-native-healthkit",
+      "react-native-health-connect"
+    ]
+  }
+}

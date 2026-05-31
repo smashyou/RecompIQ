@@ -8,7 +8,8 @@
     "./schemas": "./src/schemas/index.ts",
     "./enums": "./src/enums/index.ts",
     "./errors": "./src/errors.ts",
-    "./logger": "./src/logger.ts"
+    "./logger": "./src/logger.ts",
+    "./legal": "./src/legal/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

@@ -112,7 +112,11 @@ export default function SignupPage() {
             <strong className="text-[var(--color-foreground)]">educational and research tool</strong>,
             not a medical service. The AI coach and compound catalog summarize published research
             and community practice — they do not prescribe doses or provide medical advice.
-            I will discuss any protocol with a licensed clinician.
+            I will discuss any protocol with a licensed clinician. I agree to the{" "}
+            <a href="/legal/terms" target="_blank" className="underline">Terms of Use</a>,{" "}
+            <a href="/legal/privacy" target="_blank" className="underline">Privacy Policy</a>,{" "}
+            <a href="/legal/medical-disclaimer" target="_blank" className="underline">Medical Disclaimer</a>, and{" "}
+            <a href="/legal/research-use" target="_blank" className="underline">Research-Use Statement</a>.
           </span>
         </label>
         {errors.consent && (
