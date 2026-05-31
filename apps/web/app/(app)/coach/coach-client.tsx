@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Send } from "lucide-react";
+import { Activity, Check, Plus, Send, Shield } from "lucide-react";
+import type { EvidenceLevel } from "@peptide/shared";
 import { Button } from "@/components/ui/button";
 import { useFireToast } from "@/components/ui/toast";
+import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { DoseAnnotatedText } from "@/components/peptides/dose-disclaimer";
 
 interface Citation {
@@ -30,6 +32,34 @@ interface Conversation {
   id: string;
   title: string | null;
   updated_at: string;
+}
+
+const SLASH_HINTS = ["/log", "/explain", "/labs"] as const;
+
+const TODAY_PLAN: [label: string, done: boolean][] = [
+  ["Weigh-in", true],
+  ["Protein ≥ 175 g", false],
+  ["Zone-2 walk 35 min", false],
+  ["Log evening dose", false],
+];
+
+const CLINICIAN_POINTS = [
+  "Resting HR +9 bpm vs baseline",
+  "Protein adherence dipping",
+  "Request A1c + lipid panel",
+];
+
+function relativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const diffMs = Date.now() - then;
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  return `${days}d ago`;
 }
 
 export function CoachClient({ conversations }: { conversations: Conversation[] }) {
@@ -69,7 +99,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, sending]);
 
-  async function newThread() {
+  function newThread() {
     setActiveId(null);
     setMessages([]);
     setInput("");
@@ -135,153 +165,294 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
   }
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 md:flex-row">
-      {/* Thread list */}
-      <aside className="hidden w-56 shrink-0 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3 md:block">
-        <Button onClick={newThread} variant="outline" size="sm" className="w-full">
-          <Plus className="h-3 w-3" /> New thread
+    <div className="flex max-w-[1180px] gap-4 lg:h-[calc(100vh-108px)] flex-col lg:flex-row">
+      {/* Thread rail */}
+      <aside className="flex w-full shrink-0 flex-col gap-2 lg:w-[196px]">
+        <Button
+          onClick={newThread}
+          variant="outline"
+          size="sm"
+          className="w-full justify-start"
+        >
+          <Plus size={15} /> New thread
         </Button>
-        <ul className="mt-3 space-y-1">
-          {threadList.map((t) => {
-            const active = t.id === activeId;
-            return (
-              <li key={t.id}>
-                <button
-                  type="button"
-                  onClick={() => setActiveId(t.id)}
-                  className={`w-full truncate rounded-md px-2 py-2 text-left text-xs transition-colors ${
-                    active
-                      ? "bg-[var(--color-muted)] text-[var(--color-foreground)]"
-                      : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
-                  }`}
-                >
-                  {t.title ?? "(untitled)"}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        {threadList.map((t) => {
+          const active = t.id === activeId;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setActiveId(t.id)}
+              className="rounded-[var(--r-md)] px-3 py-[10px] text-left transition-colors"
+              style={{
+                background: active ? "var(--surface-1)" : "transparent",
+                border: active ? "1px solid var(--border)" : "1px solid transparent",
+              }}
+            >
+              <div
+                className="truncate font-[family-name:var(--font-sans)] text-[12.5px]"
+                style={{
+                  fontWeight: active ? 600 : 500,
+                  color: active ? "var(--fg)" : "var(--fg-muted)",
+                }}
+              >
+                {t.title ?? "(untitled)"}
+              </div>
+              <div className="mt-[2px] font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-faint)]">
+                {relativeTime(t.updated_at)}
+              </div>
+            </button>
+          );
+        })}
       </aside>
 
-      {/* Chat panel */}
-      <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
-        <header className="border-b border-[var(--color-border)] px-5 py-3">
-          <h1 className="text-sm font-semibold">Coach</h1>
-          <p className="text-[10px] text-[var(--color-muted-foreground)]">
-            Educational research assistant. Not medical advice.
-          </p>
-        </header>
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+      {/* Chat column */}
+      <section className="flex min-w-[340px] flex-1 flex-col rounded-[var(--r-lg)] border border-border bg-[var(--surface-1)]">
+        <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-[22px]">
           {loadingThread ? (
-            <p className="text-sm text-[var(--color-muted-foreground)]">Loading…</p>
+            <p className="font-[family-name:var(--font-sans)] text-[13.5px] text-[var(--fg-muted)]">
+              Loading…
+            </p>
           ) : messages.length === 0 ? (
             <EmptyState />
           ) : (
-            messages.map((m) => <MessageBubble key={m.id} message={m} />)
+            messages.map((m) =>
+              m.role === "user" ? (
+                <UserBubble key={m.id} content={m.content} />
+              ) : (
+                <AssistantBubble key={m.id} message={m} />
+              ),
+            )
           )}
           {sending && (
-            <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
-              <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-primary)]" />
+            <div className="flex items-center gap-2 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-faint)]">
+              <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-[var(--primary)]" />
               Thinking…
             </div>
           )}
           <div ref={endRef} />
         </div>
+
+        {/* Composer */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             send();
           }}
-          className="flex gap-2 border-t border-[var(--color-border)] p-3"
+          className="border-t border-border p-[14px]"
         >
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            placeholder="Ask about a compound, your trend, lab markers…"
-            rows={2}
-            className="flex-1 resize-none rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-          />
-          <Button type="submit" disabled={sending || !input.trim()} size="icon">
-            <Send className="h-4 w-4" />
-          </Button>
+          <div className="mb-[10px] flex gap-[7px]">
+            {SLASH_HINTS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setInput((v) => (v ? `${v} ${s}` : `${s} `))}
+                className="rounded-[var(--r-sm)] border border-border bg-[var(--surface-2)] px-2 py-[3px] font-[family-name:var(--font-mono)] text-[11px] text-[var(--primary)] transition-colors hover:bg-[var(--surface-1)]"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-end gap-[10px] rounded-[var(--r-md)] border border-border bg-[var(--surface-2)] py-2 pl-[14px] pr-2">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              rows={1}
+              placeholder="Ask the coach, or type / for a command…"
+              className="h-[30px] max-h-[120px] flex-1 resize-none bg-transparent font-[family-name:var(--font-sans)] text-[13.5px] text-[var(--fg)] outline-none placeholder:text-[var(--fg-faint)]"
+            />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={sending || !input.trim()}
+              className="w-9 p-0"
+            >
+              <Send size={15} />
+            </Button>
+          </div>
+          <p className="mt-2 text-center font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-faint)]">
+            The coach educates, tracks, and warns &mdash; it never prescribes. Not medical advice.
+          </p>
         </form>
       </section>
+
+      {/* Right rail */}
+      <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-[212px]">
+        <RailCard title="Today's plan">
+          <ul className="flex list-none flex-col gap-[9px]">
+            {TODAY_PLAN.map(([label, done]) => (
+              <li key={label} className="flex items-center gap-[9px]">
+                <span
+                  className="grid h-4 w-4 flex-none place-items-center rounded-[5px]"
+                  style={{
+                    border: `1.5px solid ${done ? "var(--positive)" : "var(--border-strong)"}`,
+                    background: done ? "var(--positive)" : "transparent",
+                    color: "var(--positive-foreground)",
+                  }}
+                >
+                  {done && <Check size={11} strokeWidth={2.6} />}
+                </span>
+                <span
+                  className="font-[family-name:var(--font-sans)] text-[12.5px]"
+                  style={{
+                    color: done ? "var(--fg-subtle)" : "var(--fg)",
+                    textDecoration: done ? "line-through" : "none",
+                  }}
+                >
+                  {label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </RailCard>
+        <RailCard title="For your clinician">
+          <ul className="flex list-none flex-col gap-2">
+            {CLINICIAN_POINTS.map((t) => (
+              <li
+                key={t}
+                className="flex gap-2 font-[family-name:var(--font-sans)] text-[12px] leading-[1.45] text-[var(--fg-muted)]"
+              >
+                <span className="flex-none text-[var(--primary)]">&bull;</span>
+                {t}
+              </li>
+            ))}
+          </ul>
+        </RailCard>
+      </aside>
     </div>
+  );
+}
+
+function RailCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-[var(--r-lg)] border border-border bg-[var(--surface-1)] p-[14px]">
+      <h2 className="mb-3 font-[family-name:var(--font-sans)] text-[13px] font-medium text-foreground">
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="space-y-2 text-sm text-[var(--color-muted-foreground)]">
-      <p>Hi. Some things I can help with:</p>
-      <ul className="space-y-1 pl-4">
-        <li>• Summarize evidence for any compound in your catalog (mechanism, monitoring, contras).</li>
-        <li>• Translate a clinical paper or lab result into plain language.</li>
-        <li>• Explain how a peptide interacts with your current conditions / meds.</li>
-        <li>• Suggest labs to ask your clinician for before starting a protocol.</li>
-      </ul>
-      <p className="pt-2 text-[10px]">
-        Dose values I mention are educational summaries — not medical advice. Always discuss with a
-        licensed clinician.
+    <div className="flex max-w-[86%] gap-[11px] self-start">
+      <CoachAvatar />
+      <div className="min-w-0">
+        <p className="font-[family-name:var(--font-sans)] text-[13.5px] leading-[1.6] text-[var(--fg)]">
+          Hi. I summarize evidence, track what you log, and surface discussion points for your
+          clinician &mdash; I won&apos;t prescribe a protocol. A few things I can help with:
+        </p>
+        <ul className="mt-3 flex list-none flex-col gap-2">
+          {[
+            "Summarize the evidence for any compound in your catalog — mechanism, monitoring, contraindications.",
+            "Translate a clinical paper or lab result into plain language.",
+            "Explain how a peptide interacts with your conditions and medications.",
+            "Suggest labs to ask your clinician for before starting a protocol.",
+          ].map((t) => (
+            <li
+              key={t}
+              className="flex gap-2 font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.5] text-[var(--fg-muted)]"
+            >
+              <span className="flex-none text-[var(--primary)]">&bull;</span>
+              {t}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function CoachAvatar() {
+  return (
+    <span
+      className="grid h-[30px] w-[30px] flex-none place-items-center rounded-[9px] text-[var(--primary-foreground)]"
+      style={{ background: "linear-gradient(150deg,var(--primary),var(--positive))" }}
+    >
+      <Activity size={16} />
+    </span>
+  );
+}
+
+function UserBubble({ content }: { content: string }) {
+  return (
+    <div
+      className="max-w-[78%] self-end px-[14px] py-[11px]"
+      style={{
+        background: "var(--primary-wash)",
+        border: "1px solid var(--primary-line)",
+        borderRadius: "14px 14px 4px 14px",
+      }}
+    >
+      <p className="whitespace-pre-wrap font-[family-name:var(--font-sans)] text-[13.5px] leading-[1.55] text-[var(--fg)]">
+        {content}
       </p>
     </div>
   );
 }
 
-function MessageBubble({ message }: { message: Message }) {
-  const isUser = message.role === "user";
+function AssistantBubble({ message }: { message: Message }) {
+  const hasCitations = message.citations && message.citations.length > 0;
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-          isUser
-            ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-            : "bg-[var(--color-muted)] text-[var(--color-foreground)]"
-        }`}
-      >
-        {isUser ? (
-          <span className="whitespace-pre-wrap">{message.content}</span>
-        ) : (
-          <>
-            <DoseAnnotatedText text={message.content} />
-            {message.citations && message.citations.length > 0 && (
-              <div className="mt-3 space-y-1 border-t border-[var(--color-border)] pt-2 text-[10px] text-[var(--color-muted-foreground)]">
-                <p className="font-medium uppercase tracking-wider">Sources</p>
-                {message.citations.map((c) => (
-                  <p key={c.n}>
-                    [{c.n}] <span className="font-medium">{c.title}</span> ·{" "}
-                    <span className="uppercase">{c.evidence_level}</span>
-                    {c.source_url && (
-                      <>
-                        {" · "}
-                        <a
-                          href={c.source_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline-offset-2 hover:underline"
-                        >
-                          source
-                        </a>
-                      </>
-                    )}
-                  </p>
-                ))}
-              </div>
-            )}
-            {message.model_string && (
-              <p className="mt-2 text-[9px] text-[var(--color-muted-foreground)]">
-                {message.model_string}
-              </p>
-            )}
-          </>
+    <div className="flex max-w-[86%] gap-[11px] self-start">
+      <CoachAvatar />
+      <div className="min-w-0">
+        {/* DoseAnnotatedText renders [edu]…[/edu] dose quarantine + the
+            educational-summary-only footer when a dose is present. */}
+        <div className="font-[family-name:var(--font-sans)] text-[13.5px] leading-[1.6] text-[var(--fg)]">
+          <DoseAnnotatedText text={message.content} />
+        </div>
+
+        {hasCitations && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {message.citations.map((c) => (
+              <CitationChip key={c.n} citation={c} />
+            ))}
+          </div>
+        )}
+
+        {message.model_string && (
+          <p className="mt-2 font-[family-name:var(--font-mono)] text-[9px] text-[var(--fg-faint)]">
+            {message.model_string}
+          </p>
         )}
       </div>
     </div>
   );
+}
+
+function CitationChip({ citation }: { citation: Citation }) {
+  const chip = (
+    <span
+      className="inline-flex items-center gap-[7px] rounded-[var(--r-sm)] border border-border bg-[var(--surface-2)] px-[9px] py-[5px]"
+    >
+      <span className="font-[family-name:var(--font-mono)] text-[10px] font-semibold text-[var(--primary)]">
+        [{citation.n}]
+      </span>
+      <span className="max-w-[200px] truncate font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-muted)]">
+        {citation.title}
+      </span>
+      <EvidenceBadge level={citation.evidence_level as EvidenceLevel} />
+    </span>
+  );
+  if (citation.source_url) {
+    return (
+      <a
+        href={citation.source_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="transition-[filter] hover:brightness-110"
+      >
+        {chip}
+      </a>
+    );
+  }
+  return chip;
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ChevronRight, FlaskRound, Shield } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
@@ -180,57 +180,78 @@ export default async function CompoundDetailPage({
     frequency: freq,
   };
 
+  // Header stat boxes — Route / Dose range / Frequency / Evidence (mirrors the
+  // reference's Route / Half-life / Cadence trio, wired to real data).
   const stats = [
     { label: "Route", value: routeLabel(compound.typical_route) },
     { label: "Dose range", value: repRange },
     { label: "Frequency", value: freq },
     { label: "Evidence", value: compound.evidence_level.replace(/_/g, " ").toLowerCase() },
-    { label: "FDA", value: compound.fda_approved ? "approved" : "not approved" },
   ];
 
+  const subtitle = [categoryLabel(compound.category), ...(compound.aliases?.slice(0, 4) ?? [])]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-[860px]">
       <Link
         href="/peptides/library"
-        className="inline-flex items-center gap-1 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+        className="mb-[18px] inline-flex items-center gap-1.5 font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)] hover:text-[var(--fg)]"
       >
-        <ArrowLeft className="h-4 w-4" /> All compounds
+        <ChevronRight className="h-[15px] w-[15px] rotate-180" /> All compounds
       </Link>
 
-      {/* Header card */}
-      <header className="rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-card)] to-[var(--color-muted)] p-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-[var(--color-primary)] px-2.5 py-0.5 text-xs font-semibold text-[var(--color-primary-foreground)]">
-            {categoryLabel(compound.category)}
-          </span>
-          {compound.typical_route && (
-            <span className="rounded-full border border-[var(--color-border)] px-2.5 py-0.5 text-xs uppercase text-[var(--color-muted-foreground)]">
-              {compound.typical_route}
-            </span>
+      {/* header — icon + display-font name + evidence badge + category/aka */}
+      <div className="mb-[18px] flex items-start gap-4">
+        <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] text-[var(--primary)]">
+          <FlaskRound size={26} />
+        </span>
+        <div className="flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-[family-name:var(--font-display)] text-[28px] font-semibold tracking-[-0.02em] text-[var(--fg)]">
+              {compound.name}
+            </h1>
+            <EvidenceBadge
+              level={compound.evidence_level as EvidenceLevel}
+              fdaApproved={compound.fda_approved}
+            />
+          </div>
+          {subtitle && (
+            <p className="mt-1 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+              {subtitle}
+            </p>
           )}
-          <EvidenceBadge level={compound.evidence_level as EvidenceLevel} fdaApproved={compound.fda_approved} />
-        </div>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">{compound.name}</h1>
-        {compound.aliases?.length > 0 && (
-          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            {compound.aliases.slice(0, 4).join(" · ")}
-          </p>
-        )}
-        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {stats.map((s) => (
-            <div key={s.label} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/60 p-3 text-center">
-              <div className="text-sm font-semibold capitalize tabular-nums">{s.value}</div>
-              <div className="mt-0.5 text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]">
-                {s.label}
+          {/* stat boxes — Route / Dose range / Frequency / Evidence */}
+          <div className="mt-4 flex flex-wrap gap-[18px]">
+            {stats.map((s) => (
+              <div key={s.label}>
+                <span className="font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
+                  {s.label}
+                </span>
+                <div className="mt-1 font-[family-name:var(--font-mono)] text-[15px] capitalize tabular-nums text-[var(--fg)]">
+                  {s.value}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </header>
+      </div>
+
+      {/* clinician prompt strip */}
+      <div className="mb-[18px] flex items-center gap-3 rounded-[var(--r-md)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-4 py-3">
+        <Shield size={18} className="shrink-0 text-[var(--primary)]" />
+        <span className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]">
+          Discuss this compound and any protocol with a licensed clinician before starting or
+          changing.
+        </span>
+      </div>
 
       <CompoundTabs detail={detail} />
 
-      <SafetyDisclaimer />
+      <div className="mt-[14px]">
+        <SafetyDisclaimer />
+      </div>
     </div>
   );
 }
