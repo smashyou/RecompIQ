@@ -1,26 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
+import {
+  reconstitutePlan,
+  syringeModel,
+  SYRINGE_BARRELS,
+  SYRINGE_CALIBRATIONS,
+} from "@peptide/peptides/reconstitution";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Content } from "@/components/ui/Content";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Segmented } from "@/components/ui/Segmented";
+import { Syringe } from "@/components/peptides/Syringe";
 import { supabase } from "@/lib/supabase";
+import { addRegimenItem, patchRegimenItem } from "@/lib/regimen";
 import { useSession } from "@/lib/session";
 
 interface CatalogCompound {
   id: string;
   name: string;
-}
-interface ItemDraft {
-  compound_id: string;
-  name: string;
-  dose_value: string;
-  dose_unit: string;
-  route: string;
-  frequency: string;
+  typical_route: string | null;
+  typical_vial_mg: number | null;
 }
 
 const UNITS = [
@@ -36,65 +38,143 @@ const ROUTES = [
   { value: "nasal", label: "Nasal" },
   { value: "other", label: "Other" },
 ] as const;
+const INJECTABLE = new Set(["sc", "im"]);
+const todayStr = () => new Date().toISOString().slice(0, 10);
 
-export default function NewStack() {
+export default function RegimenItemScreen() {
   const router = useRouter();
   const { session } = useSession();
   const uid = session?.user.id;
+  const { itemId } = useLocalSearchParams<{ itemId?: string }>();
+  const isEdit = Boolean(itemId);
+
   const [catalog, setCatalog] = useState<CatalogCompound[]>([]);
-  const [name, setName] = useState("");
-  const [phase, setPhase] = useState("P1");
-  const [items, setItems] = useState<ItemDraft[]>([]);
   const [query, setQuery] = useState("");
+  const [compoundId, setCompoundId] = useState<string | null>(null);
+  const [compoundName, setCompoundName] = useState("");
+
+  const [dose, setDose] = useState("");
+  const [doseUnit, setDoseUnit] = useState("mg");
+  const [route, setRoute] = useState("sc");
+  const [frequency, setFrequency] = useState("daily");
+
+  const [vialMg, setVialMg] = useState("");
+  const [bacMl, setBacMl] = useState("2");
+  const [unitsPerMl, setUnitsPerMl] = useState(100);
+  const [barrel, setBarrel] = useState(100);
+  const [attachMix, setAttachMix] = useState(true);
+
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    supabase.from("compounds").select("id, name").order("name").then(({ data }) => setCatalog((data ?? []) as CatalogCompound[]));
+    supabase
+      .from("compounds")
+      .select("id, name, typical_route, typical_vial_mg")
+      .order("name")
+      .then(({ data }) => setCatalog((data ?? []) as CatalogCompound[]));
   }, []);
+
+  // Edit mode → load the existing item.
+  useEffect(() => {
+    if (!isEdit || !itemId) return;
+    supabase
+      .from("regimen_items")
+      .select("compound_id, dose_value, dose_unit, route, frequency, compounds ( name )")
+      .eq("id", itemId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        const d = data as any;
+        setCompoundId(d.compound_id);
+        const c = Array.isArray(d.compounds) ? d.compounds[0] : d.compounds;
+        setCompoundName(c?.name ?? "");
+        if (d.dose_value !== null) setDose(String(d.dose_value));
+        if (d.dose_unit) setDoseUnit(d.dose_unit);
+        if (d.route) setRoute(d.route);
+        if (d.frequency) setFrequency(d.frequency);
+      });
+  }, [isEdit, itemId]);
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    const chosen = new Set(items.map((i) => i.compound_id));
-    return catalog.filter((c) => c.name.toLowerCase().includes(q) && !chosen.has(c.id)).slice(0, 6);
-  }, [query, catalog, items]);
+    return catalog.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 6);
+  }, [query, catalog]);
 
-  function addItem(c: CatalogCompound) {
-    setItems((prev) => [...prev, { compound_id: c.id, name: c.name, dose_value: "", dose_unit: "mg", route: "sc", frequency: "daily" }]);
+  function pick(c: CatalogCompound) {
+    setCompoundId(c.id);
+    setCompoundName(c.name);
     setQuery("");
+    if (c.typical_route) setRoute(c.typical_route);
+    if (c.typical_vial_mg) setVialMg(String(c.typical_vial_mg));
   }
-  function updateItem(idx: number, patch: Partial<ItemDraft>) {
-    setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
-  }
-  function removeItem(idx: number) {
-    setItems((prev) => prev.filter((_, i) => i !== idx));
-  }
+
+  const desiredDoseMg = useMemo(() => {
+    const v = Number(dose);
+    if (!v || v <= 0) return null;
+    if (doseUnit === "mg") return v;
+    if (doseUnit === "mcg") return v / 1000;
+    return null;
+  }, [dose, doseUnit]);
+
+  const reconReady =
+    INJECTABLE.has(route) && desiredDoseMg !== null && Number(vialMg) > 0 && Number(bacMl) > 0;
+
+  const plan = useMemo(() => {
+    if (!reconReady) return null;
+    try {
+      return reconstitutePlan({
+        vialMg: Number(vialMg),
+        bacWaterMl: Number(bacMl),
+        desiredDoseMg: desiredDoseMg as number,
+        syringeUnitsPerMl: unitsPerMl,
+      });
+    } catch {
+      return null;
+    }
+  }, [reconReady, vialMg, bacMl, desiredDoseMg, unitsPerMl]);
+
+  const syr = useMemo(() => {
+    if (!plan || plan.insulinUnits === null) return null;
+    return syringeModel({ syringeUnitsPerMl: unitsPerMl, barrelCapacityUnits: barrel, fillUnits: plan.insulinUnits });
+  }, [plan, unitsPerMl, barrel]);
 
   async function save() {
     if (!uid) return;
-    if (!name.trim()) return Alert.alert("Name required", "Give the stack a name.");
-    const valid = items.filter((i) => Number(i.dose_value) > 0);
-    if (valid.length === 0) return Alert.alert("Add a compound", "Add at least one compound with a dose.");
+    if (!compoundId) return Alert.alert("Pick a compound", "Choose a compound first.");
     setSaving(true);
+    const reconstitution =
+      attachMix && plan
+        ? {
+            vial_mg: Number(vialMg),
+            bac_water_ml: Number(bacMl),
+            concentration_mg_per_ml: plan.concentrationMgPerMl,
+            desired_dose_mg: desiredDoseMg,
+            syringe_units_per_ml: unitsPerMl,
+            draw_ml: plan.drawMl,
+            insulin_units: plan.insulinUnits,
+          }
+        : null;
+    const doseFields = {
+      dose_value: dose ? Number(dose) : null,
+      dose_unit: dose ? doseUnit : null,
+      route,
+      frequency: frequency.trim() || null,
+    };
     try {
-      const { data: stack, error: sErr } = await supabase
-        .from("peptide_stacks")
-        .insert({ user_id: uid, name: name.trim(), phase, is_active: true })
-        .select("id")
-        .single();
-      if (sErr) throw sErr;
-      const rows = valid.map((i) => ({
-        stack_id: stack.id,
-        user_id: uid,
-        compound_id: i.compound_id,
-        dose_value: Number(i.dose_value),
-        dose_unit: i.dose_unit,
-        route: i.route,
-        frequency: i.frequency || "daily",
-      }));
-      const { error: iErr } = await supabase.from("peptide_stack_items").insert(rows);
-      if (iErr) throw iErr;
-      Alert.alert("Stack created", `${name.trim()} saved.`);
+      if (isEdit && itemId) {
+        await patchRegimenItem(uid, itemId, { ...doseFields, reconstitution: reconstitution ?? undefined });
+        Alert.alert("Updated", `${compoundName} updated.`);
+      } else {
+        await addRegimenItem(uid, {
+          compound_id: compoundId,
+          ...doseFields,
+          starts_on: todayStr(),
+          notes: null,
+          reconstitution,
+        });
+        Alert.alert("Added", `${compoundName} added to your regimen.`);
+      }
       router.back();
     } catch (e) {
       Alert.alert("Could not save", e instanceof Error ? e.message : "Unknown error");
@@ -105,64 +185,113 @@ export default function NewStack() {
 
   return (
     <Content className="gap-4">
-      <Card className="gap-4">
-        <Field label="Stack name">
-          <Input value={name} onChangeText={setName} placeholder="e.g. Phase 1 fat loss" />
-        </Field>
-        <Field label="Phase">
-          <Segmented
-            options={[
-              { value: "P1", label: "P1" },
-              { value: "P2", label: "P2" },
-              { value: "P3", label: "P3" },
-            ]}
-            value={phase}
-            onChange={setPhase}
-          />
-        </Field>
-      </Card>
-
-      <Card className="gap-3">
-        <Field label="Add compound">
-          <Input value={query} onChangeText={setQuery} placeholder="Search catalog…" autoCapitalize="none" />
-        </Field>
-        {matches.map((c) => (
-          <Pressable key={c.id} onPress={() => addItem(c)} className="rounded-lg border border-border bg-muted p-3 active:opacity-70">
-            <Text className="text-sm text-foreground">+ {c.name}</Text>
-          </Pressable>
-        ))}
-      </Card>
-
-      {items.map((it, idx) => (
-        <Card key={it.compound_id} className="gap-3">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-base font-semibold text-foreground">{it.name}</Text>
-            <Pressable onPress={() => removeItem(idx)}>
-              <Text className="text-sm text-destructive">Remove</Text>
+      {!compoundId ? (
+        <Card className="gap-3">
+          <Field label="Add compound">
+            <Input value={query} onChangeText={setQuery} placeholder="Search catalog…" autoCapitalize="none" />
+          </Field>
+          {matches.map((c) => (
+            <Pressable key={c.id} onPress={() => pick(c)} className="rounded-lg border border-border bg-muted p-3 active:opacity-70">
+              <Text className="text-sm text-foreground">+ {c.name}</Text>
             </Pressable>
-          </View>
-          <View className="flex-row gap-3">
-            <View className="flex-1">
-              <Field label="Dose">
-                <Input value={it.dose_value} onChangeText={(v) => updateItem(idx, { dose_value: v })} keyboardType="decimal-pad" placeholder="0" />
-              </Field>
-            </View>
-            <View className="flex-[1.4]">
-              <Field label="Unit">
-                <Segmented options={UNITS} value={it.dose_unit} onChange={(v) => updateItem(idx, { dose_unit: v })} />
-              </Field>
-            </View>
-          </View>
-          <Field label="Route">
-            <Segmented options={ROUTES} value={it.route} onChange={(v) => updateItem(idx, { route: v })} />
-          </Field>
-          <Field label="Frequency">
-            <Input value={it.frequency} onChangeText={(v) => updateItem(idx, { frequency: v })} placeholder="daily, EOD, 2x/week…" />
-          </Field>
+          ))}
         </Card>
-      ))}
+      ) : (
+        <>
+          <Card className="gap-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-base font-semibold text-foreground">{compoundName}</Text>
+              {!isEdit ? (
+                <Pressable onPress={() => setCompoundId(null)}>
+                  <Text className="text-sm text-primary">change</Text>
+                </Pressable>
+              ) : null}
+            </View>
+            <View className="flex-row gap-3">
+              <View className="flex-1">
+                <Field label="Dose">
+                  <Input value={dose} onChangeText={setDose} keyboardType="decimal-pad" placeholder="—" />
+                </Field>
+              </View>
+              <View className="flex-[1.4]">
+                <Field label="Unit">
+                  <Segmented options={UNITS} value={doseUnit} onChange={setDoseUnit} />
+                </Field>
+              </View>
+            </View>
+            <Field label="Route">
+              <Segmented options={ROUTES} value={route} onChange={setRoute} />
+            </Field>
+            <Field label="Frequency">
+              <Input value={frequency} onChangeText={setFrequency} placeholder="daily, EOD, 2x/week…" />
+            </Field>
+            <Text className="text-xs text-muted-foreground">
+              You or your clinician decide the dose. RecompIQ does not prescribe.
+            </Text>
+          </Card>
 
-      <Button title="Create stack" onPress={save} loading={saving} />
+          {INJECTABLE.has(route) ? (
+            <Card className="gap-3">
+              <Text className="text-sm font-semibold text-foreground">Reconstitution</Text>
+              {desiredDoseMg === null ? (
+                <Text className="text-xs text-muted-foreground">Enter a dose in mg or mcg to compute the draw.</Text>
+              ) : (
+                <>
+                  <View className="flex-row gap-3">
+                    <View className="flex-1">
+                      <Field label="Vial (mg)">
+                        <Input value={vialMg} onChangeText={setVialMg} keyboardType="decimal-pad" placeholder="0" />
+                      </Field>
+                    </View>
+                    <View className="flex-1">
+                      <Field label="BAC water (mL)">
+                        <Input value={bacMl} onChangeText={setBacMl} keyboardType="decimal-pad" placeholder="0" />
+                      </Field>
+                    </View>
+                  </View>
+                  <Field label="Syringe">
+                    <Segmented
+                      options={SYRINGE_CALIBRATIONS.map((s) => ({ value: String(s.unitsPerMl), label: `U-${s.unitsPerMl}` }))}
+                      value={String(unitsPerMl)}
+                      onChange={(v) => setUnitsPerMl(Number(v))}
+                    />
+                  </Field>
+                  <Field label="Barrel">
+                    <Segmented
+                      options={SYRINGE_BARRELS.map((b) => ({ value: String(b.capacityUnits), label: `${b.capacityUnits}u` }))}
+                      value={String(barrel)}
+                      onChange={(v) => setBarrel(Number(v))}
+                    />
+                  </Field>
+                  {plan ? (
+                    <View className="gap-2">
+                      <View className="flex-row justify-between">
+                        <Text className="text-xs text-muted-foreground">Concentration</Text>
+                        <Text className="text-xs text-foreground">{plan.concentrationMgPerMl.toFixed(2)} mg/mL</Text>
+                      </View>
+                      <View className="flex-row justify-between">
+                        <Text className="text-xs text-muted-foreground">Draw</Text>
+                        <Text className="text-xs text-foreground">
+                          {plan.insulinUnits !== null
+                            ? `${plan.insulinUnits.toFixed(1)} units (${plan.drawMl.toFixed(3)} mL)`
+                            : `${plan.drawMl.toFixed(3)} mL`}
+                        </Text>
+                      </View>
+                      {syr ? <Syringe model={syr} /> : null}
+                      <Pressable onPress={() => setAttachMix((v) => !v)} className="flex-row items-center gap-2">
+                        <View className={`h-4 w-4 rounded border ${attachMix ? "border-primary bg-primary" : "border-border"}`} />
+                        <Text className="text-xs text-muted-foreground">Attach this mix to the item</Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
+                </>
+              )}
+            </Card>
+          ) : null}
+
+          <Button title={isEdit ? "Save changes" : "Add to regimen"} onPress={save} loading={saving} />
+        </>
+      )}
     </Content>
   );
 }

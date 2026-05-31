@@ -9,6 +9,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Segmented } from "@/components/ui/Segmented";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
+import { loadActiveRegimen } from "@/lib/regimen";
 import { useSession } from "@/lib/session";
 
 interface Item {
@@ -49,11 +50,8 @@ export default function DoseLog() {
   const load = useCallback(async () => {
     if (!uid) return;
     const since = new Date(Date.now() - 14 * 86400000).toISOString();
-    const [{ data: stacks }, { data: doses }] = await Promise.all([
-      supabase
-        .from("peptide_stacks")
-        .select("is_active, peptide_stack_items ( id, compound_id, dose_value, dose_unit, route, compounds ( name ) )")
-        .eq("is_active", true),
+    const [regimen, { data: doses }] = await Promise.all([
+      loadActiveRegimen(uid),
       supabase
         .from("peptide_doses")
         .select("id, taken_at, dose_value, dose_unit, adherence, compounds ( name )")
@@ -61,19 +59,17 @@ export default function DoseLog() {
         .order("taken_at", { ascending: false })
         .limit(60),
     ]);
-    const flat: Item[] = [];
-    for (const s of (stacks ?? []) as any[]) {
-      for (const it of s.peptide_stack_items ?? []) {
-        flat.push({
-          id: it.id,
-          compound_id: it.compound_id,
-          dose_value: it.dose_value,
-          dose_unit: it.dose_unit,
-          route: it.route,
-          compoundName: it.compounds?.name ?? "—",
-        });
-      }
-    }
+    // Loggable items = current regimen items with a decided dose + route.
+    const flat: Item[] = (regimen?.currentItems ?? [])
+      .filter((it) => it.compound && it.dose_value !== null && it.dose_unit && it.route)
+      .map((it) => ({
+        id: it.id,
+        compound_id: it.compound_id,
+        dose_value: it.dose_value as number,
+        dose_unit: it.dose_unit as string,
+        route: it.route as string,
+        compoundName: it.compound!.name,
+      }));
     setItems(flat);
     if (flat.length && !selected) setSelected(flat[0].id);
     setRecent((doses ?? []) as unknown as Dose[]);
@@ -89,7 +85,7 @@ export default function DoseLog() {
     try {
       const { error } = await supabase.from("peptide_doses").insert({
         user_id: uid,
-        stack_item_id: item.id,
+        regimen_item_id: item.id,
         compound_id: item.compound_id,
         dose_value: item.dose_value,
         dose_unit: item.dose_unit,
@@ -115,7 +111,7 @@ export default function DoseLog() {
   return (
     <Content className="gap-4">
       {items.length === 0 ? (
-        <EmptyState title="No active stack" hint="Create a stack first to log doses against it." />
+        <EmptyState title="No loggable compounds" hint="Add a compound with a set dose to your regimen first." />
       ) : (
         <Card className="gap-4">
           <Field label="Compound">

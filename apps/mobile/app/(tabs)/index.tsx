@@ -59,8 +59,10 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
       supabase.from("sleep_logs").select("duration_min").eq("user_id", uid).eq("night_of", today).maybeSingle(),
       supabase.from("food_logs").select("calories_kcal,protein_g,carbs_g,fat_g").eq("user_id", uid).gte("logged_at", today),
       supabase
-        .from("peptide_stacks")
-        .select("phase, peptide_stack_items ( compounds ( slug, name, category, evidence_level ) )")
+        .from("regimens")
+        .select(
+          "regimen_phases ( ordinal, name, legacy_phase, ends_on, regimen_items ( ends_on, compounds ( slug, name, category, evidence_level ) ) )",
+        )
         .eq("user_id", uid)
         .eq("is_active", true)
         .order("created_at", { ascending: false })
@@ -96,9 +98,16 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
     weekDelta = latestWeight - ref.value_lb;
   }
 
-  const stack = stacksRes.data as any;
-  const protocol: ProtocolItem[] = ((stack?.peptide_stack_items ?? []) as any[])
-    .map((it) => it.compounds)
+  // Regimen: current = items in still-open phases that haven't ended.
+  const reg = stacksRes.data as any;
+  const openPhases = ((reg?.regimen_phases ?? []) as any[])
+    .filter((p) => p.ends_on === null)
+    .sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0));
+  const currentPhase = openPhases.length ? openPhases[openPhases.length - 1] : null;
+  const protocol: ProtocolItem[] = openPhases
+    .flatMap((p) => (p.regimen_items ?? []) as any[])
+    .filter((i) => i.ends_on === null)
+    .map((i) => (Array.isArray(i.compounds) ? i.compounds[0] : i.compounds))
     .filter(Boolean)
     .map((c: any) => ({ slug: c.slug, name: c.name, category: c.category, evidence_level: c.evidence_level }));
 
@@ -120,7 +129,7 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
     sleepMin: (sleepRes.data as any)?.duration_min ?? null,
     macros,
     recentDoses: (dosesRes.data ?? []) as any[],
-    activePhase: stack?.phase ?? null,
+    activePhase: currentPhase?.legacy_phase ?? currentPhase?.name ?? null,
     protocol,
     bodyShot: { lastCapturedAt: lastCap, frequencyDays: freqDays, overdue },
   };
