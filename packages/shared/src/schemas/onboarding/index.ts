@@ -6,6 +6,7 @@ export * from "./injury";
 export * from "./vision";
 
 export const ONBOARDING_STEPS = [
+  "consent",
   "welcome",
   "profile",
   "goal",

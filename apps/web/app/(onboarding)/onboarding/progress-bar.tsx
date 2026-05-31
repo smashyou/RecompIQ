@@ -3,6 +3,7 @@
 import { ONBOARDING_STEPS, type OnboardingStep } from "@peptide/shared";
 
 const labels: Record<OnboardingStep, string> = {
+  consent: "Consent",
   welcome: "Start",
   profile: "About you",
   goal: "Your goal",

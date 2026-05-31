@@ -1,19 +1,32 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
+import { radius } from "@/lib/theme";
 
 export function Loading() {
+  const { colors } = useTheme();
   return (
-    <View className="flex-1 items-center justify-center bg-background py-16">
+    <View className="flex-1 items-center justify-center py-16" style={{ backgroundColor: colors.background }}>
       <ActivityIndicator color={colors.primary} />
     </View>
   );
 }
 
 export function ErrorState({ message }: { message: string }) {
+  const { colors } = useTheme();
   return (
-    <View className="rounded-lg border border-destructive bg-card p-4">
-      <Text className="text-sm text-destructive">{message}</Text>
+    <View
+      className="p-4"
+      style={{
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.dangerLine,
+        backgroundColor: colors.dangerWash,
+      }}
+    >
+      <Text className="text-sm" style={{ color: colors.danger }}>
+        {message}
+      </Text>
     </View>
   );
 }
@@ -27,10 +40,25 @@ export function EmptyState({
   hint?: string;
   children?: ReactNode;
 }) {
+  const { colors } = useTheme();
   return (
-    <View className="items-center gap-2 rounded-xl border border-border bg-card p-8">
-      <Text className="text-base font-medium text-foreground">{title}</Text>
-      {hint ? <Text className="text-center text-sm text-muted-foreground">{hint}</Text> : null}
+    <View
+      className="items-center gap-2 p-8"
+      style={{
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.surface1,
+      }}
+    >
+      <Text className="text-base font-medium" style={{ color: colors.foreground }}>
+        {title}
+      </Text>
+      {hint ? (
+        <Text className="text-center text-sm" style={{ color: colors.mutedForeground }}>
+          {hint}
+        </Text>
+      ) : null}
       {children}
     </View>
   );

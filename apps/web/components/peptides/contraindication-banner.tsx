@@ -14,7 +14,7 @@ export function ContraindicationBanner({
     <div className="space-y-3">
       {absolute.length > 0 && (
         <Block
-          icon={<AlertCircle className="h-4 w-4 text-[var(--color-destructive)]" />}
+          icon={<AlertCircle size={16} className="text-[var(--danger)]" />}
           tone="destructive"
           title={`Absolute contraindication${absolute.length > 1 ? "s" : ""}`}
           findings={absolute}
@@ -22,7 +22,7 @@ export function ContraindicationBanner({
       )}
       {relative.length > 0 && (
         <Block
-          icon={<AlertTriangle className="h-4 w-4" style={{ color: "oklch(0.78 0.18 70)" }} />}
+          icon={<AlertTriangle size={16} className="text-[var(--warn)]" />}
           tone="warn"
           title={`Relative contraindication${relative.length > 1 ? "s" : ""} — discuss with your clinician`}
           findings={relative}
@@ -45,27 +45,27 @@ function Block({
 }) {
   return (
     <div
-      className={`rounded-lg border p-4 ${
+      className={`rounded-[var(--r-md)] border p-4 font-[family-name:var(--font-sans)] ${
         tone === "destructive"
-          ? "border-[var(--color-destructive)] bg-[var(--color-destructive)]/5"
-          : "border-[var(--color-border)] bg-[var(--color-muted)]"
+          ? "border-[var(--danger-line)] bg-[var(--danger-wash)]"
+          : "border-[var(--warn-line)] bg-[var(--warn-wash)]"
       }`}
     >
       <div className="flex items-center gap-2">
-        {icon}
+        <span className="shrink-0">{icon}</span>
         <p
-          className={`text-sm font-medium ${
-            tone === "destructive" ? "text-[var(--color-destructive)]" : ""
+          className={`text-[13.5px] font-semibold ${
+            tone === "destructive" ? "text-[var(--danger-bright)]" : "text-[var(--fg)]"
           }`}
         >
           {title}
         </p>
       </div>
-      <ul className="mt-2 space-y-1 text-xs text-[var(--color-muted-foreground)]">
+      <ul className="mt-2 space-y-1 text-[12.5px] leading-[1.5] text-[var(--fg-muted)]">
         {findings.map((f, i) => (
           <li key={i}>
-            <span className="font-medium text-[var(--color-foreground)]">{f.compoundName}</span>{" "}
-            — {f.reason} <span className="opacity-70">(matched: {f.matchedAgainst})</span>
+            <span className="font-semibold text-[var(--fg)]">{f.compoundName}</span> — {f.reason}{" "}
+            <span className="opacity-70">(matched: {f.matchedAgainst})</span>
           </li>
         ))}
       </ul>

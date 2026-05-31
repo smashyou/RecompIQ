@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Wordmark } from "@/components/wordmark";
 
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between px-6 py-4">
-        <Link href="/" className="font-semibold tracking-tight">
-          Peptide Agent
+        <Link href="/" aria-label="RecompIQ home">
+          <Wordmark size={22} />
         </Link>
         <nav className="flex items-center gap-2">
+          <ThemeToggle compact />
           <Button asChild variant="ghost" size="sm">
             <Link href="/signin">Sign in</Link>
           </Button>

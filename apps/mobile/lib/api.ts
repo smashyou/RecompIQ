@@ -11,7 +11,7 @@
 // scaffolding, not a working call path.
 import { supabase } from "./supabase";
 
-const BASE = process.env.EXPO_PUBLIC_API_URL ?? "https://recompiq.vercel.app";
+const BASE = process.env.EXPO_PUBLIC_API_URL ?? "https://recompiq.com";
 
 interface ApiEnvelope<T> {
   data: T | null;

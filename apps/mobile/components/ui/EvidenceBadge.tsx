@@ -1,36 +1,46 @@
 import { Text, View } from "react-native";
 import type { EvidenceLevel } from "@peptide/shared";
-import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
+import { radius } from "@/lib/theme";
 
-// Mirrors apps/web/components/peptides/evidence-badge.tsx — same labels + tones.
+// Mirrors apps/web/components/peptides/evidence-badge.tsx + the handoff
+// Primitives EvidenceBadge: a pill with a leading dot, per-grade evidence color.
 const LABEL: Record<EvidenceLevel, string> = {
   FDA_APPROVED: "FDA approved",
   HUMAN_RCT: "Human RCT",
-  HUMAN_OBS: "Human observational",
+  HUMAN_OBS: "Human obs.",
   ANIMAL: "Animal only",
   MECHANISTIC: "Mechanistic",
   ANECDOTAL: "Anecdotal",
 };
 
-const TONE: Record<EvidenceLevel, string> = {
-  FDA_APPROVED: colors.accent,
-  HUMAN_RCT: colors.accent,
-  HUMAN_OBS: colors.primary,
-  ANIMAL: colors.mutedForeground,
-  MECHANISTIC: colors.mutedForeground,
-  ANECDOTAL: colors.destructive,
-};
-
 export function EvidenceBadge({ level }: { level: EvidenceLevel }) {
-  const tone = TONE[level];
+  const { colors } = useTheme();
+  const tone: Record<EvidenceLevel, string> = {
+    FDA_APPROVED: colors.evFda,
+    HUMAN_RCT: colors.evRct,
+    HUMAN_OBS: colors.evObs,
+    ANIMAL: colors.evAnimal,
+    MECHANISTIC: colors.evMech,
+    ANECDOTAL: colors.evAnecdotal,
+  };
+  const c = tone[level];
   return (
     <View
-      className="shrink-0 self-start rounded-full border px-2 py-0.5"
-      style={{ borderColor: tone }}
+      className="shrink-0 flex-row items-center self-start"
+      style={{
+        gap: 6,
+        paddingHorizontal: 9,
+        paddingVertical: 3,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: c,
+      }}
     >
+      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c }} />
       <Text
-        className="text-[10px] font-medium uppercase"
-        style={{ color: tone, letterSpacing: 0.6 }}
+        className="text-[10px] font-semibold uppercase"
+        style={{ color: c, letterSpacing: 0.7 }}
       >
         {LABEL[level]}
       </Text>

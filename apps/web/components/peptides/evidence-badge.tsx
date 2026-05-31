@@ -10,13 +10,13 @@ const LABEL: Record<EvidenceLevel, string> = {
   ANECDOTAL: "Anecdotal",
 };
 
-const TONE: Record<EvidenceLevel, string> = {
-  FDA_APPROVED: "border-[var(--color-accent)] text-[var(--color-accent)]",
-  HUMAN_RCT: "border-[var(--color-accent)] text-[var(--color-accent)]",
-  HUMAN_OBS: "border-[var(--color-primary)] text-[var(--color-primary)]",
-  ANIMAL: "border-[var(--color-muted-foreground)] text-[var(--color-muted-foreground)]",
-  MECHANISTIC: "border-[var(--color-muted-foreground)] text-[var(--color-muted-foreground)]",
-  ANECDOTAL: "border-[var(--color-destructive)] text-[var(--color-destructive)]",
+const EV_COLOR: Record<EvidenceLevel, string> = {
+  FDA_APPROVED: "var(--ev-fda)",
+  HUMAN_RCT: "var(--ev-rct)",
+  HUMAN_OBS: "var(--ev-obs)",
+  ANIMAL: "var(--ev-animal)",
+  MECHANISTIC: "var(--ev-mech)",
+  ANECDOTAL: "var(--ev-anecdotal)",
 };
 
 export function EvidenceBadge({
@@ -29,14 +29,16 @@ export function EvidenceBadge({
   className?: string;
 }) {
   const display = fdaApproved && level === "FDA_APPROVED" ? "FDA approved" : LABEL[level];
+  const color = EV_COLOR[level];
   return (
     <span
+      style={{ borderColor: color, color }}
       className={cn(
-        "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider",
-        TONE[level],
+        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[var(--r-pill)] border px-[9px] py-[3px] font-[family-name:var(--font-sans)] text-[10px] font-semibold uppercase tracking-[0.07em]",
         className,
       )}
     >
+      <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
       {display}
     </span>
   );

@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { cn } from "@/lib/cn";
-import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
+import { radius } from "@/lib/theme";
 
 export interface TileOption<T extends string> {
   value: T;
@@ -24,6 +24,7 @@ export function TileSelect<T extends string>({
   onChange: (v: T) => void;
   columns?: 3 | 4;
 }) {
+  const { colors } = useTheme();
   const cellWidth = `${100 / columns}%` as `${number}%`;
   return (
     <View className="flex-row flex-wrap">
@@ -33,15 +34,19 @@ export function TileSelect<T extends string>({
           <View key={t.value} style={{ width: cellWidth }} className="p-1">
             <Pressable
               onPress={() => onChange(t.value)}
-              className={cn(
-                "items-center gap-1.5 rounded-xl border py-3.5 active:opacity-80",
-                active ? "border-primary bg-muted" : "border-border bg-card",
-              )}
+              className="items-center gap-1.5 py-3.5 active:opacity-80"
+              style={{
+                borderRadius: radius.lg,
+                borderWidth: 1,
+                borderColor: active ? colors.primary : colors.border,
+                backgroundColor: active ? colors.primaryWash : colors.surface1,
+              }}
             >
               <Ionicons name={t.icon} size={22} color={active ? colors.primary : colors.mutedForeground} />
               <Text
                 numberOfLines={1}
-                className={cn("text-xs font-medium", active ? "text-primary" : "text-muted-foreground")}
+                className="text-xs font-medium"
+                style={{ color: active ? colors.primary : colors.mutedForeground }}
               >
                 {t.label}
               </Text>

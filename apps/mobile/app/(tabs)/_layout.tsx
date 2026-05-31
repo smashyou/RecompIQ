@@ -1,15 +1,59 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
+import { Pressable, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
+
+// Bottom tab bar matching the handoff MTabBar: Home · Coach · center FAB(+) ·
+// Peptides · More(Profile). The center FAB is an elevated circular button that
+// opens the Log screen (the quick-log surface).
+// TODO(quick-log sheet): the handoff opens a camera-first bottom sheet from the
+// FAB (weight/glucose/dose/vitals tiles + "Snap a meal photo"). For now the FAB
+// routes to the full Log screen, which covers the same actions.
+function CenterFab() {
+  const { colors } = useTheme();
+  const router = useRouter();
+  return (
+    <View style={{ width: 56, alignItems: "center" }}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Quick log"
+        onPress={() => router.navigate("/(tabs)/log")}
+        style={{
+          width: 50,
+          height: 50,
+          marginTop: -18,
+          borderRadius: 25,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: colors.primary,
+          borderWidth: 3,
+          borderColor: colors.background,
+          shadowColor: colors.primary,
+          shadowOpacity: 0.5,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 8,
+        }}
+      >
+        <Ionicons name="add" size={26} color={colors.primaryForeground} />
+      </Pressable>
+    </View>
+  );
+}
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
+        tabBarInactiveTintColor: colors.fgSubtle,
+        tabBarStyle: {
+          backgroundColor: colors.surface1,
+          borderTopColor: colors.border,
+        },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: "600" },
         sceneStyle: { backgroundColor: colors.background },
       }}
     >
@@ -21,19 +65,19 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="log"
-        options={{
-          title: "Log",
-          tabBarIcon: ({ color, size }) => <Ionicons name="add-circle-outline" color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
         name="coach"
         options={{
           title: "Coach",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubble-ellipses-outline" color={color} size={size} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="log"
+        options={{
+          title: "",
+          tabBarButton: () => <CenterFab />,
         }}
       />
       <Tabs.Screen

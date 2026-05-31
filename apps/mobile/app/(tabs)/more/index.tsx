@@ -4,6 +4,8 @@ import { Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Content } from "@/components/ui/Content";
 import { ListRow } from "@/components/ui/ListRow";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Wordmark } from "@/components/ui/Wordmark";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
 
@@ -29,6 +31,10 @@ export default function More() {
 
   return (
     <Content className="gap-2">
+      <View className="mb-2 flex-row items-center justify-between">
+        <Wordmark size={20} />
+        <ThemeToggle compact />
+      </View>
       <Text className="mb-1 text-sm font-semibold text-foreground">Tracking</Text>
       <ListRow title="Food" subtitle="Meals, search, photo logging" icon="restaurant-outline" onPress={() => router.push("/(tabs)/more/food")} />
       <ListRow title="Workouts" subtitle="Sessions + templates" icon="barbell-outline" onPress={() => router.push("/(tabs)/more/workouts")} />

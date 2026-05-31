@@ -6,21 +6,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--r-md)] font-[family-name:var(--font-sans)] font-semibold transition-[filter,background-color,border-color,box-shadow] duration-150 focus-visible:outline-none focus-visible:border-[var(--primary)] focus-visible:ring-[3px] focus-visible:ring-[var(--primary-wash)] disabled:pointer-events-none disabled:opacity-[0.45]",
   {
     variants: {
       variant: {
-        default: "bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:opacity-90",
+        default:
+          "border border-transparent bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-bright)]",
         outline:
-          "border border-[var(--color-border)] bg-transparent text-[var(--color-foreground)] hover:bg-[var(--color-muted)]",
-        ghost: "bg-transparent hover:bg-[var(--color-muted)]",
+          "border border-[var(--border-strong)] bg-transparent text-[var(--fg)] hover:bg-[var(--surface-2)]",
+        ghost:
+          "border border-transparent bg-transparent text-[var(--fg-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--fg)]",
         destructive:
-          "bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] hover:opacity-90",
+          "border border-transparent bg-[var(--danger)] text-[var(--danger-foreground)] hover:brightness-110",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-8 px-3 text-xs",
-        lg: "h-11 px-6 text-base",
+        default: "h-10 px-[18px] text-[14px]",
+        sm: "h-[34px] rounded-[var(--r-sm)] px-3 text-[13px]",
+        lg: "h-12 px-6 text-[15px]",
         icon: "h-10 w-10",
       },
     },

@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ONBOARDING_STEPS, type OnboardingStep } from "@peptide/shared";
+import { BrandSplash } from "@/components/brand-splash";
 import { ProgressBar } from "./progress-bar";
+import { ConsentStep } from "./steps/consent";
 import { WelcomeStep } from "./steps/welcome";
 import { ProfileStepForm } from "./steps/profile";
 import { GoalStepForm } from "./steps/goal";
@@ -13,6 +15,7 @@ import { DoneStep } from "./steps/done";
 
 export interface OnboardingState {
   onboarding_done: boolean;
+  educational_consent_at: string | null;
   profile: Record<string, unknown> | null;
   goal: Record<string, unknown> | null;
   conditions: Record<string, unknown>[];
@@ -23,7 +26,7 @@ export interface OnboardingState {
 
 export function OnboardingFlow() {
   const router = useRouter();
-  const [step, setStep] = useState<OnboardingStep>("welcome");
+  const [step, setStep] = useState<OnboardingStep>("consent");
   const [state, setState] = useState<OnboardingState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -43,8 +46,10 @@ export function OnboardingFlow() {
           router.replace("/dashboard");
           return;
         }
-        // Resume at the first incomplete step.
-        if (!body.data.profile?.display_name) setStep("profile");
+        // Resume at the first incomplete step. The consent + 18+ gate must be
+        // cleared before anything else.
+        if (!body.data.educational_consent_at) setStep("consent");
+        else if (!body.data.profile?.display_name) setStep("profile");
         else if (!body.data.goal) setStep("goal");
         else setStep("welcome");
       } catch {
@@ -72,12 +77,21 @@ export function OnboardingFlow() {
     return <p className="text-center text-sm text-[var(--color-destructive)]">{loadError}</p>;
   }
   if (!state) {
-    return <p className="text-center text-sm text-[var(--color-muted-foreground)]">Loading…</p>;
+    // Branded launch screen while we resolve where to resume.
+    return <BrandSplash />;
   }
 
   return (
     <div className="space-y-8">
-      <ProgressBar current={step} />
+      {step !== "consent" && <ProgressBar current={step} />}
+      {step === "consent" && (
+        <ConsentStep
+          onAccepted={() => {
+            setState((s) => (s ? { ...s, educational_consent_at: new Date().toISOString() } : s));
+            next();
+          }}
+        />
+      )}
       {step === "welcome" && <WelcomeStep onNext={next} />}
       {step === "profile" && (
         <ProfileStepForm initial={state.profile} onSaved={next} onBack={back} />

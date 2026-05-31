@@ -19,6 +19,7 @@ export async function GET() {
 
     return jsonOk({
       onboarding_done: profile.data?.onboarding_done ?? false,
+      educational_consent_at: profile.data?.educational_consent_at ?? null,
       profile: profile.data ?? null,
       goal: goal.data ?? null,
       conditions: conditions.data ?? [],

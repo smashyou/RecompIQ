@@ -1,9 +1,10 @@
 import { Suspense } from "react";
+import { BrandSplash } from "@/components/brand-splash";
 import { OnboardingFlow } from "./flow";
 
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={<div className="text-center text-sm">Loading…</div>}>
+    <Suspense fallback={<BrandSplash />}>
       <OnboardingFlow />
     </Suspense>
   );

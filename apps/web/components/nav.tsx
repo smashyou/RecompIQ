@@ -25,6 +25,7 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  badge?: number;
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -58,7 +59,7 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const activeHref = activeHrefFor(pathname);
   return (
-    <nav className="space-y-1 p-3 text-sm">
+    <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3">
       {NAV_ITEMS.map((item) => {
         const Icon = item.icon;
         const active = item.href === activeHref;
@@ -67,15 +68,27 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             key={item.href}
             href={item.href}
             onClick={onNavigate}
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 transition-colors",
+              "group relative flex items-center gap-3 rounded-[var(--r-md)] px-3 py-[9px] text-[13.5px] transition-colors",
               active
-                ? "bg-[var(--color-muted)] text-[var(--color-foreground)]"
-                : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]",
+                ? "bg-[var(--primary-wash)] font-semibold text-[var(--primary-bright)]"
+                : "font-medium text-[var(--fg-muted)] hover:bg-[var(--surface-1)] hover:text-[var(--fg)]",
             )}
           >
-            <Icon className="h-4 w-4 shrink-0" />
-            {item.label}
+            {active && (
+              <span
+                aria-hidden
+                className="absolute inset-y-2 left-0 w-[3px] rounded-[3px] bg-[var(--primary)]"
+              />
+            )}
+            <Icon size={18} strokeWidth={active ? 2 : 1.75} className="shrink-0" />
+            <span className="flex-1">{item.label}</span>
+            {item.badge ? (
+              <span className="min-w-4 rounded-[var(--r-pill)] bg-[var(--danger)] px-1.5 py-px text-center font-[family-name:var(--font-mono)] text-[10px] font-semibold text-[var(--danger-foreground)]">
+                {item.badge}
+              </span>
+            ) : null}
           </Link>
         );
       })}
