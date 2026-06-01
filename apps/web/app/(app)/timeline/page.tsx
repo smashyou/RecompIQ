@@ -30,6 +30,8 @@ export default async function TimelinePage({
 }) {
   const user = await requireUser();
   const { range: rangeKey = "90d" } = await searchParams;
+  // Unknown ?range= values fall through to 90d data; highlight the matching pill.
+  const effectiveKey = PRESETS.some((p) => p.key === rangeKey) ? rangeKey : "90d";
   const range = rangeFor(rangeKey);
   const data = await loadTimeline(user.id, range);
 
@@ -44,7 +46,7 @@ export default async function TimelinePage({
 
       <div className="mb-4 flex flex-wrap gap-2">
         {PRESETS.map((p) => {
-          const active = p.key === rangeKey || (rangeKey === "90d" && p.key === "90d");
+          const active = p.key === effectiveKey;
           return (
             <a
               key={p.key}
