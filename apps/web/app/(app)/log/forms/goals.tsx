@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { metricsForGoals, type GoalKey, type MetricDef } from "@peptide/shared";
+import { metricsForGoals, METRIC_BY_KEY, type GoalKey, type MetricDef } from "@peptide/shared";
 import { Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,23 @@ import { useFireToast } from "@/components/ui/toast";
 import { Card } from "@/components/kit";
 import { CognitionTest } from "@/components/cognition-test";
 
-export function GoalMetricsForm() {
+// Nearest anchor label for the current slider value (helper text for self-checks).
+function nearestAnchor(m: MetricDef, value: number): string | null {
+  if (!m.anchors?.length) return null;
+  let best = m.anchors[0]!;
+  for (const a of m.anchors) {
+    if (Math.abs(a.value - value) < Math.abs(best.value - value)) best = a;
+  }
+  return best.label;
+}
+
+export function GoalMetricsForm({
+  showNeuro = false,
+  showNausea = false,
+}: {
+  showNeuro?: boolean;
+  showNausea?: boolean;
+} = {}) {
   const router = useRouter();
   const toast = useFireToast();
   const [goalKeys, setGoalKeys] = useState<GoalKey[]>([]);
@@ -28,10 +44,21 @@ export function GoalMetricsForm() {
       .finally(() => setLoaded(true));
   }, []);
 
-  const metrics = useMemo<MetricDef[]>(
-    () => metricsForGoals(goalKeys).filter((m) => m.kind !== "objective"),
-    [goalKeys],
-  );
+  // Safety self-checks: surfaced when the user has a neuro-related condition
+  // (nerve symptoms) or any active regimen compound (nausea). These are ordinary
+  // goal_metrics rows the safety engine reads — never free-text symptom entry.
+  const selfChecks = useMemo<MetricDef[]>(() => {
+    const out: MetricDef[] = [];
+    if (showNeuro && METRIC_BY_KEY.neuro_severity) out.push(METRIC_BY_KEY.neuro_severity);
+    if (showNausea && METRIC_BY_KEY.nausea_severity) out.push(METRIC_BY_KEY.nausea_severity);
+    return out;
+  }, [showNeuro, showNausea]);
+
+  const metrics = useMemo<MetricDef[]>(() => {
+    const goalMetrics = metricsForGoals(goalKeys).filter((m) => m.kind !== "objective");
+    const seen = new Set(goalMetrics.map((m) => m.key));
+    return [...goalMetrics, ...selfChecks.filter((m) => !seen.has(m.key))];
+  }, [goalKeys, selfChecks]);
   const showCognition = goalKeys.includes("cognition" as GoalKey);
   const [cognitionOpen, setCognitionOpen] = useState(false);
 
@@ -98,15 +125,30 @@ export function GoalMetricsForm() {
               </span>
             </div>
             {m.kind === "rating" ? (
-              <input
-                type="range"
-                min={m.min}
-                max={m.max}
-                step={1}
-                value={values[m.key] ?? String(Math.round((m.min + m.max) / 2))}
-                onChange={(e) => set(m.key, e.target.value)}
-                className="w-full accent-[var(--primary)]"
-              />
+              <>
+                <input
+                  type="range"
+                  min={m.min}
+                  max={m.max}
+                  step={1}
+                  value={values[m.key] ?? String(Math.round((m.min + m.max) / 2))}
+                  onChange={(e) => set(m.key, e.target.value)}
+                  className="w-full accent-[var(--primary)]"
+                />
+                {m.anchors?.length
+                  ? (() => {
+                      const cur = Number(
+                        values[m.key] ?? String(Math.round((m.min + m.max) / 2)),
+                      );
+                      const anchor = nearestAnchor(m, cur);
+                      return anchor ? (
+                        <p className="font-[family-name:var(--font-sans)] text-2xs leading-snug text-[var(--fg-subtle)]">
+                          {anchor}
+                        </p>
+                      ) : null;
+                    })()
+                  : null}
+              </>
             ) : (
               <Input
                 type="number"

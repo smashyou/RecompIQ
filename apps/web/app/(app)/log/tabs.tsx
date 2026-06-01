@@ -22,7 +22,13 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
-export function LogTabs() {
+export function LogTabs({
+  showNeuro = false,
+  showNausea = false,
+}: {
+  showNeuro?: boolean;
+  showNausea?: boolean;
+}) {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -65,7 +71,11 @@ export function LogTabs() {
           );
         })}
       </div>
-      <ActiveForm />
+      {active === "goals" ? (
+        <GoalMetricsForm showNeuro={showNeuro} showNausea={showNausea} />
+      ) : (
+        <ActiveForm />
+      )}
     </div>
   );
 }
