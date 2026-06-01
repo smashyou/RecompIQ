@@ -13,6 +13,7 @@ export const ONBOARDING_STEPS = [
   "conditions",
   "medications",
   "injuries",
+  "goals",
   "vision",
   "done",
 ] as const;

@@ -10,6 +10,7 @@ const labels: Record<OnboardingStep, string> = {
   conditions: "Conditions",
   medications: "Medications",
   injuries: "Injuries",
+  goals: "Goals",
   vision: "AI settings",
   done: "Done",
 };

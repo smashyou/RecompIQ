@@ -10,6 +10,7 @@ import { WelcomeStep } from "./steps/welcome";
 import { ProfileStepForm } from "./steps/profile";
 import { GoalStepForm } from "./steps/goal";
 import { ListStepForm } from "./steps/list-step";
+import { GoalsStepForm } from "./steps/goals";
 import { VisionStepForm } from "./steps/vision";
 import { DoneStep } from "./steps/done";
 
@@ -139,6 +140,7 @@ export function OnboardingFlow() {
           onBack={back}
         />
       )}
+      {step === "goals" && <GoalsStepForm onSaved={next} onBack={back} />}
       {step === "vision" && (
         <VisionStepForm initial={state.settings} onSaved={next} onBack={back} />
       )}
