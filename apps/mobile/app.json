@@ -7,6 +7,12 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#04080b"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.recompiq.mobile",
@@ -17,11 +23,16 @@
     },
     "android": {
       "package": "app.recompiq.mobile",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#04080b"
+      }
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/icon.png"
     },
     "plugins": [
       "expo-router",

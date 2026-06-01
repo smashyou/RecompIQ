@@ -490,7 +490,7 @@ function Ring({ pct, colors }: { pct: number; colors: Tokens }) {
   // SVG donut — RN can't do conic-gradient. Stroke-dashoffset arc.
   const size = 70, stroke = 9, r = (size - stroke) / 2, c = 2 * Math.PI * r;
   return (
-    <View style={{ alignItems: "center" }}>
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
       <Svg width={size} height={size}>
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.surface3} strokeWidth={stroke} fill="none" />
         <Circle
@@ -506,9 +506,12 @@ function Ring({ pct, colors }: { pct: number; colors: Tokens }) {
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </Svg>
-      <Text style={{ position: "absolute", top: 0, bottom: 0, textAlignVertical: "center", fontVariant: ["tabular-nums"], fontSize: 14, color: colors.foreground }}>
-        {pct}%
-      </Text>
+      {/* Absolute overlay centered on both axes (textAlignVertical is Android-only). */}
+      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
+        <Text style={{ fontVariant: ["tabular-nums"], fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+          {pct}%
+        </Text>
+      </View>
     </View>
   );
 }
