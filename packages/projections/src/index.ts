@@ -278,3 +278,5 @@ export interface ProjectionInput {
 export function projectWeight(_: ProjectionInput) {
   throw new Error("projectWeight is deprecated — use buildProjection(...) instead");
 }
+
+export * from "./metric";
