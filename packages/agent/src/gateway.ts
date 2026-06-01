@@ -109,7 +109,7 @@ export async function chat(
     try {
       const result = await exec(req, model, apiKey);
       const latency_ms = Date.now() - t0;
-      void deps.logCall({
+      await deps.logCall({
         user_id: req.userId ?? null,
         feature: req.feature,
         model_id: model.id,
@@ -132,7 +132,7 @@ export async function chat(
       const latency_ms = Date.now() - t0;
       const message = err instanceof Error ? err.message : String(err);
       lastError = err instanceof Error ? err : new Error(message);
-      void deps.logCall({
+      await deps.logCall({
         user_id: req.userId ?? null,
         feature: req.feature,
         model_id: model.id,
@@ -183,7 +183,7 @@ export async function embed(
     try {
       const result = await exec(req, model, apiKey);
       const latency_ms = Date.now() - t0;
-      void deps.logCall({
+      await deps.logCall({
         user_id: req.userId ?? null,
         feature: "embeddings",
         model_id: model.id,
@@ -201,7 +201,7 @@ export async function embed(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       lastError = err instanceof Error ? err : new Error(message);
-      void deps.logCall({
+      await deps.logCall({
         user_id: req.userId ?? null,
         feature: "embeddings",
         model_id: model.id,
