@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -40,37 +41,42 @@ export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
         <Menu className="h-5 w-5" />
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          {/* backdrop */}
-          <button
-            type="button"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-black/50"
-          />
-          {/* drawer */}
-          <div className="absolute inset-y-0 left-0 flex w-64 max-w-[80%] flex-col overflow-hidden border-r border-border bg-[var(--bg)]">
-            <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-border px-[18px]">
-              <Link href={BRAND.href} aria-label={BRAND.label} onClick={() => setOpen(false)}>
-                <Wordmark size={19} />
-              </Link>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close menu"
-                className="flex h-8 w-8 items-center justify-center rounded-[var(--r-md)] text-[var(--fg-muted)] transition-colors hover:bg-[var(--surface-1)] hover:text-[var(--fg)]"
-              >
-                <X className="h-5 w-5" />
-              </button>
+      {/* The overlay is portaled to <body> so it escapes the topbar's
+          backdrop-filter, which would otherwise become the containing block for
+          this `fixed` element and clip the drawer to the 60px header. */}
+      {open &&
+        createPortal(
+          <div className="fixed inset-0 z-50 md:hidden">
+            {/* backdrop */}
+            <button
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setOpen(false)}
+              className="absolute inset-0 bg-black/50"
+            />
+            {/* drawer */}
+            <div className="absolute inset-y-0 left-0 flex w-64 max-w-[80%] flex-col overflow-hidden border-r border-border bg-[var(--bg)]">
+              <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-border px-[18px]">
+                <Link href={BRAND.href} aria-label={BRAND.label} onClick={() => setOpen(false)}>
+                  <Wordmark size={19} />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close menu"
+                  className="flex h-8 w-8 items-center justify-center rounded-[var(--r-md)] text-[var(--fg-muted)] transition-colors hover:bg-[var(--surface-1)] hover:text-[var(--fg)]"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <NavLinks onNavigate={() => setOpen(false)} isAdmin={isAdmin} />
+              <div className="shrink-0 border-t border-border p-3">
+                <SafetyDisclaimer variant="compact" />
+              </div>
             </div>
-            <NavLinks onNavigate={() => setOpen(false)} isAdmin={isAdmin} />
-            <div className="shrink-0 border-t border-border p-3">
-              <SafetyDisclaimer variant="compact" />
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
