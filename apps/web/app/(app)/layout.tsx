@@ -27,8 +27,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <Sidebar isAdmin={isAdmin} />
         <div className="flex flex-1 flex-col">
           <Topbar email={user.email ?? ""} isAdmin={isAdmin} />
-          <main className="flex-1 px-6 py-6">
-            <div className="mx-auto w-full max-w-[1120px]">{children}</div>
+          <main
+            className="flex-1"
+            style={{ paddingInline: "var(--space-page)", paddingBlock: "var(--space-pagey)" }}
+          >
+            <div className="mx-auto w-full max-w-app">{children}</div>
           </main>
         </div>
       </div>

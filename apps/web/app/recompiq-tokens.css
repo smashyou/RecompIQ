@@ -100,6 +100,16 @@
   --r-xl: 20px;   /* hero panels, sheets               */
   --r-pill: 999px;
 
+  /* ---- Fluid spacing (clamp: phone→desktop) ---------------------------- */
+  /* Used via arbitrary values, e.g. px-[var(--space-page)] gap-[var(--space-grid)].
+     The shared layout primitives (components/ui/layout.tsx) read these so every
+     screen gets responsive padding/gaps without per-screen breakpoints. */
+  --space-page:  clamp(1rem, 4vw, 2rem);       /* page horizontal padding   */
+  --space-pagey: clamp(1rem, 3vw, 1.5rem);     /* page vertical padding     */
+  --space-grid:  clamp(0.75rem, 2vw, 1.125rem);/* card-grid gap             */
+  --space-card:  clamp(0.875rem, 2.5vw, 1.25rem); /* card inner padding     */
+  --space-section: clamp(1.25rem, 3.5vw, 2rem);/* between major sections    */
+
   /* ---- Elevation — soft; darker translucency on light, near-black on dark */
   --shadow-sm:  light-dark(0 1px 2px oklch(0.45 0.03 240 / 0.10),  0 1px 2px oklch(0 0 0 / 0.30));
   --shadow-md:  light-dark(0 4px 16px -4px oklch(0.45 0.03 240 / 0.14), 0 4px 16px -4px oklch(0 0 0 / 0.45));

@@ -264,9 +264,9 @@ export default function Dashboard() {
           ) : null}
 
           {/* Vitals + Macros row */}
-          <View style={{ flexDirection: "row", gap: 12 }}>
+          <View style={{ flexDirection: "row", gap: 12, alignItems: "stretch" }}>
             <Pressable style={{ flex: 1 }} onPress={() => router.push("/(tabs)/log")}>
-              <MCard title="Vitals" hint="Latest" colors={colors}>
+              <MCard title="Vitals" hint="Latest" colors={colors} fill>
                 <Text style={{ fontVariant: ["tabular-nums"], fontWeight: "500", fontSize: 24, color: colors.foreground }}>
                   {snap.vital?.bp_systolic != null && snap.vital?.bp_diastolic != null ? `${snap.vital.bp_systolic}/${snap.vital.bp_diastolic}` : "—"}
                 </Text>
@@ -277,7 +277,7 @@ export default function Dashboard() {
               </MCard>
             </Pressable>
             <Pressable style={{ flex: 1 }} onPress={() => router.push("/(tabs)/more/food")}>
-              <MCard title="Protein" hint="Today" colors={colors}>
+              <MCard title="Protein" hint="Today" colors={colors} fill>
                 <Ring pct={proteinPct} colors={colors} />
                 <Text style={{ textAlign: "center", fontVariant: ["tabular-nums"], fontSize: 12, color: colors.mutedForeground, marginTop: 10 }}>
                   {Math.round(snap.macros.protein_g)}{proteinMax ? ` / ${proteinMax}g` : "g"}
@@ -287,9 +287,9 @@ export default function Dashboard() {
           </View>
 
           {/* Activity + Adherence row */}
-          <View style={{ flexDirection: "row", gap: 12 }}>
+          <View style={{ flexDirection: "row", gap: 12, alignItems: "stretch" }}>
             <Pressable style={{ flex: 1 }} onPress={() => router.push("/(tabs)/log")}>
-              <MCard title="Activity" hint="Today" colors={colors}>
+              <MCard title="Activity" hint="Today" colors={colors} fill>
                 <Text style={{ fontVariant: ["tabular-nums"], fontWeight: "500", fontSize: 24, color: colors.foreground }}>
                   {snap.steps ?? "—"}
                   <Text style={{ fontSize: 12, color: colors.fgSubtle }}> steps</Text>
@@ -300,7 +300,7 @@ export default function Dashboard() {
               </MCard>
             </Pressable>
             <Pressable style={{ flex: 1 }} onPress={() => router.push("/(tabs)/peptides/dose-log")}>
-              <MCard title="Adherence" hint="14d" colors={colors}>
+              <MCard title="Adherence" hint="14d" colors={colors} fill>
                 <AdherenceGrid doses={snap.recentDoses} colors={colors} />
               </MCard>
             </Pressable>
@@ -433,9 +433,9 @@ export default function Dashboard() {
 
 type Tokens = ReturnType<typeof useTheme>["colors"];
 
-function MCard({ title, hint, children, colors }: { title?: string; hint?: string; children: React.ReactNode; colors: Tokens }) {
+function MCard({ title, hint, children, colors, fill }: { title?: string; hint?: string; children: React.ReactNode; colors: Tokens; fill?: boolean }) {
   return (
-    <Card>
+    <Card style={fill ? { flex: 1 } : undefined}>
       {title || hint ? (
         <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
           {title ? <Text style={{ fontWeight: "600", fontSize: 13.5, color: colors.foreground }}>{title}</Text> : <View />}

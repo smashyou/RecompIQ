@@ -14,7 +14,7 @@ export function Overline({ children, style }: { children: ReactNode; style?: CSS
       style={{
         fontFamily: "var(--font-sans)",
         fontWeight: 600,
-        fontSize: 11,
+        fontSize: "var(--text-2xs)",
         letterSpacing: "0.16em",
         textTransform: "uppercase",
         color: "var(--fg-subtle)",
@@ -26,18 +26,20 @@ export function Overline({ children, style }: { children: ReactNode; style?: CSS
   );
 }
 
-/** Border-led card — the primary container. */
+/** Border-led card — the primary container. Fills its grid cell (height:100%)
+ *  so cards in an AutoGrid row are equal height. Padding defaults to the fluid
+ *  --space-card token; pass a number to override. */
 export function Card({
   title,
   hint,
   children,
-  pad = 18,
+  pad = "var(--space-card)",
   style,
 }: {
   title?: ReactNode;
   hint?: ReactNode;
   children: ReactNode;
-  pad?: number;
+  pad?: number | string;
   style?: CSSProperties;
 }) {
   return (
@@ -47,6 +49,7 @@ export function Card({
         border: "1px solid var(--border)",
         borderRadius: "var(--r-lg)",
         padding: pad,
+        height: "100%",
         ...style,
       }}
     >
@@ -65,7 +68,7 @@ export function Card({
               style={{
                 fontFamily: "var(--font-sans)",
                 fontWeight: 600,
-                fontSize: 13,
+                fontSize: "var(--text-sm)",
                 color: "var(--fg)",
               }}
             >
@@ -77,7 +80,7 @@ export function Card({
               style={{
                 fontFamily: "var(--font-sans)",
                 fontWeight: 600,
-                fontSize: 9.5,
+                fontSize: "var(--text-2xs)",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
                 color: "var(--fg-subtle)",
@@ -99,12 +102,13 @@ export function Stat({
   unit,
   label,
   tone,
-  size = 28,
+  size,
 }: {
   value: ReactNode;
   unit?: string;
   label?: ReactNode;
   tone?: "pos" | "warn" | "danger";
+  /** Override the value size in px. Omit for the fluid --text-stat scale. */
   size?: number;
 }) {
   const color =
@@ -115,6 +119,8 @@ export function Stat({
         : tone === "danger"
           ? "var(--danger)"
           : "var(--fg)";
+  const valueSize = size ? `${size}px` : "var(--text-stat)";
+  const unitSize = size ? `${size * 0.46}px` : "0.46em";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <span
@@ -122,7 +128,7 @@ export function Stat({
           fontFamily: "var(--font-mono)",
           fontVariantNumeric: "tabular-nums",
           fontWeight: 500,
-          fontSize: size,
+          fontSize: valueSize,
           letterSpacing: "-0.02em",
           color,
           lineHeight: 1,
@@ -130,12 +136,12 @@ export function Stat({
       >
         {value}
         {unit && (
-          <span style={{ fontSize: size * 0.46, color: "var(--fg-subtle)", marginLeft: 3 }}>
+          <span style={{ fontSize: unitSize, color: "var(--fg-subtle)", marginLeft: 3 }}>
             {unit}
           </span>
         )}
       </span>
-      {label && <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>{label}</Overline>}
+      {label && <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em" }}>{label}</Overline>}
     </div>
   );
 }
@@ -162,7 +168,7 @@ export function SectionHeader({
       }}
     >
       {num && (
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--primary)" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-sm)", color: "var(--primary)" }}>
           {num}
         </span>
       )}
@@ -170,7 +176,7 @@ export function SectionHeader({
         style={{
           fontFamily: "var(--font-display)",
           fontWeight: 600,
-          fontSize: 22,
+          fontSize: "var(--text-2xl)",
           letterSpacing: "-0.02em",
           color: "var(--fg)",
         }}
@@ -178,7 +184,7 @@ export function SectionHeader({
         {title}
       </span>
       {note && (
-        <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--fg-subtle)" }}>{note}</span>
+        <span style={{ marginLeft: "auto", fontSize: "var(--text-sm)", color: "var(--fg-subtle)" }}>{note}</span>
       )}
     </div>
   );
@@ -206,7 +212,7 @@ export function Chip({
         borderRadius: "var(--r-pill)",
         fontFamily: "var(--font-sans)",
         fontWeight: 500,
-        fontSize: 12.5,
+        fontSize: "var(--text-xs)",
         cursor: onClick ? "pointer" : "default",
         border: active ? "1px solid var(--primary-line)" : "1px solid var(--border)",
         background: active ? "var(--primary-wash)" : "var(--surface-1)",
@@ -242,13 +248,13 @@ export function MetricBox({
           fontFamily: "var(--font-mono)",
           fontVariantNumeric: "tabular-nums",
           fontWeight: 500,
-          fontSize: 18,
+          fontSize: "var(--text-lg)",
           letterSpacing: "-0.02em",
           color: "var(--fg)",
         }}
       >
         {value}
-        {unit && <span style={{ fontSize: 11, color: "var(--fg-subtle)", marginLeft: 3 }}>{unit}</span>}
+        {unit && <span style={{ fontSize: "var(--text-2xs)", color: "var(--fg-subtle)", marginLeft: 3 }}>{unit}</span>}
       </div>
       <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em", marginTop: 4, display: "block" }}>
         {label}

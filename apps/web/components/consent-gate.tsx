@@ -138,13 +138,14 @@ export function ConsentGate({
   return (
     <div
       style={{
-        minHeight: "100%",
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
         display: "grid",
         placeItems: "center",
-        padding: 32,
+        padding: "clamp(1rem, 4vw, 2rem)",
         background: "var(--bg-deep)",
-        position: "relative",
-        overflow: "hidden",
+        overflowY: "auto",
       }}
     >
       <div
