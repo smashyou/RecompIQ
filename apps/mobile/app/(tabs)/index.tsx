@@ -13,6 +13,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Loading } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
 import { loadSpendSnapshot } from "@/lib/inventory";
+import { loadGoalCards, type GoalCardData } from "@/lib/goal-cards";
 import { useSession } from "@/lib/session";
 import { useTheme } from "@/lib/theme-context";
 import { radius } from "@/lib/theme";
@@ -40,6 +41,7 @@ interface Snap {
   activePhase: string | null;
   protocol: ProtocolItem[];
   spend: { last30Usd: number; allTimeUsd: number };
+  goalCards: GoalCardData[];
   bodyShot: { lastCapturedAt: string | null; frequencyDays: number; overdue: boolean } | null;
 }
 
@@ -118,6 +120,7 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
   const overdue = !lastCap || Date.now() - new Date(lastCap).getTime() > freqDays * 86400000;
 
   const spend = await loadSpendSnapshot(uid);
+  const goalCards = await loadGoalCards(uid);
 
   return {
     name: (profile.data as any)?.display_name ?? email ?? "there",
@@ -136,6 +139,7 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
     activePhase: currentPhase?.legacy_phase ?? currentPhase?.name ?? null,
     protocol,
     spend,
+    goalCards,
     bodyShot: { lastCapturedAt: lastCap, frequencyDays: freqDays, overdue },
   };
 }
@@ -363,6 +367,61 @@ export default function Dashboard() {
                 </View>
               </MCard>
             </Pressable>
+          ) : null}
+
+          {/* Per-goal progress */}
+          {snap.goalCards.length > 0 ? (
+            <View style={{ gap: 8 }}>
+              <Text style={{ fontWeight: "600", fontSize: 15, color: colors.foreground, marginTop: 4 }}>Goal progress</Text>
+              {snap.goalCards.map((c) => {
+                const improving =
+                  c.observedPerWeek === null || c.observedPerWeek === 0
+                    ? null
+                    : c.higherIsBetter
+                      ? c.observedPerWeek > 0
+                      : c.observedPerWeek < 0;
+                return (
+                  <MCard key={c.goalKey} colors={colors}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 9, fontWeight: "700", color: colors.fgSubtle, letterSpacing: 0.5 }}>
+                          {c.goalLabel.toUpperCase()}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: colors.fgSubtle, marginTop: 2 }}>{c.metricLabel}</Text>
+                      </View>
+                      <View style={{ alignItems: "flex-end" }}>
+                        <Text style={{ fontSize: 19, fontWeight: "700", color: colors.foreground }}>
+                          {c.current ?? "—"}
+                          <Text style={{ fontSize: 11, color: colors.fgSubtle }}> {c.unit}</Text>
+                        </Text>
+                        {improving !== null ? (
+                          <Text style={{ fontSize: 11, color: improving ? colors.primary : colors.warn }}>
+                            {c.observedPerWeek! > 0 ? "▲" : "▼"} {Math.abs(c.observedPerWeek!)}
+                            {c.unit.startsWith("/") ? "" : ` ${c.unit}`}/wk
+                          </Text>
+                        ) : (
+                          <Text style={{ fontSize: 11, color: colors.fgSubtle }}>— flat</Text>
+                        )}
+                      </View>
+                    </View>
+                    {c.projection ? (
+                      <View style={{ marginTop: 8, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8, gap: 3 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                          <Text style={{ fontSize: 11.5, color: colors.fgSubtle, flex: 1 }}>
+                            Illustrative: ~{c.projection.targetValue}
+                            {c.unit} by ~{c.projection.weeks} wks
+                          </Text>
+                          <EvidenceBadge level={c.projection.evidenceLevel as any} />
+                        </View>
+                        <Text style={{ fontSize: 10, color: colors.fgSubtle }}>
+                          Not a predicted outcome. {c.projection.caveat} Discuss with your clinician.
+                        </Text>
+                      </View>
+                    ) : null}
+                  </MCard>
+                );
+              })}
+            </View>
           ) : null}
         </View>
       </ScrollView>

@@ -15,6 +15,8 @@ import {
   WeightCard,
 } from "@/components/dashboard/cards";
 import { DashboardAddPeptide } from "@/components/dashboard/add-peptide";
+import { GoalCards } from "@/components/dashboard/goal-cards";
+import { loadGoalCards } from "@/lib/queries/goal-cards";
 import { deriveAlerts, deriveInsight } from "@/components/dashboard/derive";
 
 export const dynamic = "force-dynamic";
@@ -24,10 +26,11 @@ export default async function DashboardPage() {
   const snapshot = await loadDashboard(user.id);
 
   const supabase = await createSupabaseServerClient();
-  const [conditionsRes, medicationsRes, spend] = await Promise.all([
+  const [conditionsRes, medicationsRes, spend, goalCards] = await Promise.all([
     supabase.from("conditions").select("name").eq("user_id", user.id).eq("active", true),
     supabase.from("medications").select("name").eq("user_id", user.id).eq("active", true),
     loadSpendSnapshot(user.id),
+    loadGoalCards(user.id),
   ]);
   const conditions = (conditionsRes.data ?? []).map((c) => c.name as string);
   const medications = (medicationsRes.data ?? []).map((m) => m.name as string);
@@ -86,6 +89,8 @@ export default async function DashboardPage() {
         <AdherenceCard snapshot={snapshot} />
         <CoachInsightCard insight={insight} />
       </div>
+
+      <GoalCards cards={goalCards} />
 
       {spend.allTimeUsd > 0 && (
         <Link
