@@ -14,6 +14,7 @@
     "./goals/metrics": "./src/goals/metrics.ts",
     "./labs": "./src/labs/catalog.ts",
     "./labs/shape": "./src/labs/shape.ts",
+    "./alerts": "./src/alerts/index.ts",
     "./timeline": "./src/timeline/index.ts"
   },
   "scripts": {
