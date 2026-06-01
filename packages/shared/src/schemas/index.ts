@@ -11,6 +11,7 @@ export * from "./peptide/index";
 export * from "./workout/index";
 export * from "./settings/index";
 export * from "./labs/index";
+export * from "./alerts";
 
 export const profileSchema = z.object({
   id: z.string().uuid().optional(),
