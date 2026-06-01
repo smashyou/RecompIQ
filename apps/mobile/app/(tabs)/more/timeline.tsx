@@ -6,6 +6,7 @@ import { buildTimelineModel, loadTimeline, type TimelineRange } from "@/lib/time
 import type { TimelineInput } from "@peptide/shared/timeline";
 import { Content } from "@/components/ui/Content";
 import { Card } from "@/components/ui/Card";
+import { SafetyDisclaimer } from "@/components/ui/SafetyDisclaimer";
 import { Loading, ErrorState, EmptyState } from "@/components/ui/States";
 import { colors } from "@/lib/theme";
 import { useSession } from "@/lib/session";
@@ -172,6 +173,10 @@ export default function Timeline() {
           </Card>
         </>
       )}
+
+      <View style={{ marginTop: 12 }}>
+        <SafetyDisclaimer variant="compact" />
+      </View>
     </Content>
   );
 }
