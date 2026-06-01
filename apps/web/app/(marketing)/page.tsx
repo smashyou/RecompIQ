@@ -61,7 +61,7 @@ export default function LandingPage() {
 
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-16 pt-10 text-center">
         <span
-          className="mb-7 inline-flex items-center gap-2 rounded-[var(--r-pill)] border px-[13px] py-1.5"
+          className="mb-7 inline-flex max-w-full items-center gap-2 rounded-[var(--r-pill)] border px-[13px] py-1.5"
           style={{
             borderColor: "var(--primary-line)",
             background: "var(--primary-wash)",
@@ -81,22 +81,20 @@ export default function LandingPage() {
 
         <h1
           className="font-[family-name:var(--font-display)] text-display font-semibold leading-[1.02] tracking-[-0.025em]"
-          style={{ color: "var(--fg)", maxWidth: 880, textWrap: "balance" }}
+          style={{ color: "var(--fg)", maxWidth: "min(880px, 100%)", textWrap: "balance" }}
         >
-          A coach for your body
-          <br />
-          recomposition <span style={{ color: "var(--primary)" }}>data.</span>
+          A coach for your body recomposition <span style={{ color: "var(--primary)" }}>data.</span>
         </h1>
 
         <p
           className="mt-6 font-[family-name:var(--font-sans)] text-lg leading-[1.55]"
-          style={{ color: "var(--fg-muted)", maxWidth: 560 }}
+          style={{ color: "var(--fg-muted)", maxWidth: "min(560px, 100%)" }}
         >
           Track peptide protocols, nutrition, biomarkers, and workouts. Get evidence-graded
           insights. Have sharper conversations with your clinician.
         </p>
 
-        <div className="mt-9 flex gap-3">
+        <div className="mt-9 flex flex-wrap justify-center gap-3">
           <Button asChild size="lg">
             <Link href="/signup">
               Create account
@@ -108,7 +106,7 @@ export default function LandingPage() {
           </Button>
         </div>
 
-        <div className="mt-16 flex max-w-[940px] flex-wrap justify-center gap-3.5">
+        <div className="mt-16 flex w-full max-w-[940px] flex-wrap justify-center gap-3.5">
           {FEATURES.map(({ Icon, title, desc }) => (
             <div
               key={title}
