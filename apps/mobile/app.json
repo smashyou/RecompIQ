@@ -8,11 +8,6 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#04080b"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.recompiq.mobile",
@@ -36,6 +31,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 168,
+          "resizeMode": "contain",
+          "backgroundColor": "#04080b"
+        }
+      ],
       "@kingstinct/react-native-healthkit",
       "react-native-health-connect"
     ]
