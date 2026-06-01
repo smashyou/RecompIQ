@@ -137,35 +137,41 @@ export default function PeptidesHub() {
             const isCurrent = p.ends_on === null;
             return (
               <Card key={p.id} className="gap-2">
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-2">
-                    <Text className="text-base font-semibold text-foreground">{p.name}</Text>
-                    {p.legacy_phase ? <Pill label={p.legacy_phase} /> : null}
-                  </View>
+                <View className="flex-row items-center gap-2">
+                  <Text
+                    numberOfLines={1}
+                    className="flex-1 text-base font-semibold text-foreground"
+                  >
+                    {p.name}
+                  </Text>
+                  {p.legacy_phase ? <Pill label={p.legacy_phase} /> : null}
                   {isCurrent ? <Pill label="current" tone="primary" /> : null}
                 </View>
                 {p.items.length === 0 ? (
                   <Text className="text-xs text-muted-foreground">No compounds in this phase.</Text>
                 ) : (
                   p.items.map((it) => (
-                    <View key={it.id} className="flex-row items-center gap-2 border-t border-border pt-2">
-                      <View className="flex-1">
-                        <View className="flex-row items-center gap-2">
-                          <Text className="text-sm font-medium text-foreground">
-                            {it.compound?.name ?? "—"}
-                          </Text>
+                    <View key={it.id} className="flex-row items-start gap-2 border-t border-border pt-2">
+                      <View className="flex-1 gap-1">
+                        <Text
+                          numberOfLines={1}
+                          className="text-sm font-medium text-foreground"
+                        >
+                          {it.compound?.name ?? "—"}
+                        </Text>
+                        <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
                           {it.compound ? (
                             <EvidenceBadge level={it.compound.evidence_level as never} />
                           ) : null}
+                          <Text className="text-xs text-muted-foreground">
+                            {it.dose_value !== null
+                              ? `${it.dose_value} ${it.dose_unit ?? ""} · ${it.route ?? ""} · ${it.frequency ?? ""}`
+                              : "dose not set"}
+                          </Text>
                         </View>
-                        <Text className="text-xs text-muted-foreground">
-                          {it.dose_value !== null
-                            ? `${it.dose_value} ${it.dose_unit ?? ""} · ${it.route ?? ""} · ${it.frequency ?? ""}`
-                            : "dose not set"}
-                        </Text>
                       </View>
                       {isCurrent ? (
-                        <>
+                        <View className="flex-row items-center gap-3 pt-0.5">
                           <Pressable
                             onPress={() =>
                               router.push({
@@ -180,7 +186,7 @@ export default function PeptidesHub() {
                           <Pressable onPress={() => onStop(it)} hitSlop={8}>
                             <Ionicons name="stop-circle-outline" size={18} color="#9aa" />
                           </Pressable>
-                        </>
+                        </View>
                       ) : null}
                     </View>
                   ))
