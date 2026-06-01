@@ -219,7 +219,7 @@ async function seedLogs(uid) {
   };
 
   const weights = [], vitals = [], symptoms = [], sleep = [], steps = [], foods = [];
-  for (let dAgo = 0; dAgo <= 13; dAgo++) {
+  for (let dAgo = 0; dAgo <= 83; dAgo++) {
     const d = new Date(today);
     d.setDate(today.getDate() - dAgo);
 
@@ -301,7 +301,7 @@ async function seedLogs(uid) {
   await insert("steps_logs", steps);
   await insert("food_logs", foods);
   console.log(
-    `✓ 14 days × 6 log types (${weights.length + vitals.length + symptoms.length + sleep.length + steps.length + foods.length} rows)`,
+    `✓ 84 days × 6 log types (${weights.length + vitals.length + symptoms.length + sleep.length + steps.length + foods.length} rows)`,
   );
 }
 
@@ -329,7 +329,7 @@ async function seedRegimen(uid) {
     }
   }
 
-  const startedOn = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
+  const startedOn = new Date(Date.now() - 84 * 86_400_000).toISOString().slice(0, 10);
 
   // 2. Clear prior demo data. Regimen delete cascades phases/items/changes.
   //    Also clear any legacy demo stacks left from the pre-redesign seed.
@@ -405,10 +405,10 @@ async function seedRegimen(uid) {
     })),
   );
 
-  // 6. 14 days of dose history with ~90% adherence, linked to regimen items.
+  // 6. 84 days of dose history with ~90% adherence, linked to regimen items.
   const doses = [];
   const today = new Date();
-  for (let dAgo = 0; dAgo <= 13; dAgo++) {
+  for (let dAgo = 0; dAgo <= 83; dAgo++) {
     const d = new Date(today);
     d.setDate(today.getDate() - dAgo);
     for (const it of itemRows) {
@@ -465,11 +465,11 @@ async function seedGoals(uid) {
 async function seedGoalMetrics(uid) {
   await del("goal_metrics", `user_id=eq.${uid}&is_demo=eq.true`);
   const rows = [];
-  for (let dAgo = 21; dAgo >= 0; dAgo -= 3) {
+  for (let dAgo = 84; dAgo >= 0; dAgo -= 7) {
     const t = (frac) => frac; // readability
     const at = new Date(Date.now() - dAgo * 86_400_000);
     at.setHours(8, 0, 0, 0);
-    const p = (21 - dAgo) / 21; // 0 → 1 progress
+    const p = (84 - dAgo) / 84; // 0 → 1 progress
     const push = (metric_key, value, unit) =>
       rows.push({ user_id: uid, metric_key, value, unit, logged_at: at.toISOString(), is_demo: true });
     push("waist_cm", Math.round((112 - 6 * p) * 10) / 10, "cm"); // 112 → 106 cm
@@ -501,7 +501,7 @@ async function seedPurchases(uid) {
 }
 
 // ---------------------------------------------------------------------------
-// Demo labs — two blood draws (baseline ~120d ago + recent ~14d ago) showing
+// Demo labs — two blood draws (baseline ~80d ago + recent ~14d ago) showing
 // realistic improvement on GLP-1 + fat loss for a T2D/HTN profile. Ref ranges
 // mirror the shared LAB_MARKER catalog so highlighting works. Educational demo
 // data — tagged is_demo, never a real protocol or diagnosis.
@@ -521,7 +521,7 @@ const DEMO_LABS = [
   ["vitamin_d", "Vitamin D (25-OH)", "vitamins", "ng/mL", 30, 100, [24, 31]],
   ["hs_crp", "hs-CRP", "inflammation", "mg/L", 0, 3.0, [4.2, 2.1]],
 ];
-const LAB_DRAW_DAYS = [120, 14]; // baseline, recent
+const LAB_DRAW_DAYS = [80, 14]; // baseline, recent (both within the 90d timeline view)
 
 async function seedLabs(uid) {
   await del("lab_results", `user_id=eq.${uid}&is_demo=eq.true`);
