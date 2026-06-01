@@ -16,6 +16,7 @@ import {
   MessageCircle,
   Settings,
   Syringe,
+  Target,
   Utensils,
   Wallet,
   type LucideIcon,
@@ -31,6 +32,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/goals", label: "Goals", icon: Target },
   { href: "/coach", label: "Coach", icon: MessageCircle },
   { href: "/log", label: "Quick log", icon: ClipboardList },
   { href: "/food", label: "Food", icon: Utensils },

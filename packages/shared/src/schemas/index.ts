@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SEX, UNIT_LENGTH, UNIT_WEIGHT, GOAL_PHASE } from "../enums/index";
+import { GOAL_KEYS, GOAL_STATUS } from "../goals/taxonomy";
 
 export * from "./onboarding/index";
 export * from "./logging/index";
@@ -34,6 +35,22 @@ export const goalSchema = z.object({
   protein_target_g_max: z.number().int().min(20).max(400),
 });
 export type Goal = z.infer<typeof goalSchema>;
+
+// Goal-driven model (REGIMEN_GOALS_PRD §4.3). One row per chosen goal.
+export const userGoalInput = z.object({
+  goal_key: z.enum(GOAL_KEYS),
+  priority: z.number().int().min(1).max(20).default(1),
+  status: z.enum(GOAL_STATUS).default("active"),
+  target: z.record(z.unknown()).default({}),
+  notes: z.string().max(1000).nullable().optional(),
+});
+export type UserGoalInput = z.infer<typeof userGoalInput>;
+
+// Replace the user's whole goal set (the multi-select picker save).
+export const userGoalsReplaceInput = z.object({
+  goals: z.array(userGoalInput).max(20),
+});
+export type UserGoalsReplaceInput = z.infer<typeof userGoalsReplaceInput>;
 
 export const weightLogSchema = z.object({
   value: z.number().min(50).max(800),

@@ -36,6 +36,7 @@ export default function More() {
         <ThemeToggle compact />
       </View>
       <Text className="mb-1 text-sm font-semibold text-foreground">Tracking</Text>
+      <ListRow title="Your Goals" subtitle="What we track, suggest & project" icon="flag-outline" onPress={() => router.push("/(tabs)/more/goals")} />
       <ListRow title="Food" subtitle="Meals, search, photo logging" icon="restaurant-outline" onPress={() => router.push("/(tabs)/more/food")} />
       <ListRow title="Workouts" subtitle="Sessions + templates" icon="barbell-outline" onPress={() => router.push("/(tabs)/more/workouts")} />
       <ListRow title="Body Shots" subtitle="Progress photos" icon="camera-outline" onPress={() => router.push("/(tabs)/more/body-shots")} />

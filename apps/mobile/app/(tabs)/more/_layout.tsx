@@ -5,6 +5,7 @@ export default function MoreLayout() {
   return (
     <Stack screenOptions={stackScreenOptions}>
       <Stack.Screen name="index" options={{ title: "More" }} />
+      <Stack.Screen name="goals" options={{ title: "Your Goals" }} />
       <Stack.Screen name="health" options={{ title: "Watch & Scale Sync" }} />
       <Stack.Screen name="food/index" options={{ title: "Food" }} />
       <Stack.Screen name="food/log" options={{ title: "Add Food" }} />

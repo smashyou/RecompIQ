@@ -445,6 +445,22 @@ const DEMO_PURCHASES = [
   { slug: "tb-500", vial_mg: 10, vial_count: 1, price_usd: 55, vendor: "Demo Vendor B", daysAgo: 12 },
 ];
 
+// Demo goals (fat loss primary, then tissue repair + skin — matches the stack).
+const DEMO_GOALS = [
+  { goal_key: "fat_loss", priority: 1, target: { goal_weight_lb: 195 } },
+  { goal_key: "injury_recovery", priority: 2, target: {} },
+  { goal_key: "skin_quality", priority: 3, target: {} },
+];
+
+async function seedGoals(uid) {
+  await del("user_goals", `user_id=eq.${uid}&is_demo=eq.true`);
+  await insert(
+    "user_goals",
+    DEMO_GOALS.map((g) => ({ user_id: uid, ...g, status: "active", is_demo: true })),
+  );
+  console.log(`✓ ${DEMO_GOALS.length} goals`);
+}
+
 async function seedPurchases(uid) {
   const compoundsRes = await api(`/rest/v1/compounds?select=id,slug`);
   const slugToId = new Map(compoundsRes.map((c) => [c.slug, c.id]));
@@ -537,6 +553,7 @@ try {
   await seedLogs(uid);
   await seedRegimen(uid);
   await seedPurchases(uid);
+  await seedGoals(uid);
   await seedWorkouts(uid);
   console.log("");
   console.log("=== Demo User A ready ===");
