@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { buildTimelineModel, type TimelineLoad } from "@/lib/queries/timeline";
+// Import the model + type from the client-safe shared package — NOT from the
+// server-only loader (importing a value from a "server-only" module into this
+// client component breaks the build).
+import { buildTimelineModel, type TimelineInput } from "@peptide/shared/timeline";
 import { TimelineLanes } from "@/components/timeline/timeline-lanes";
 import { Card } from "@/components/kit";
 
@@ -17,7 +20,7 @@ function readHidden(): Set<string> {
   }
 }
 
-export function TimelineClient({ data }: { data: TimelineLoad }) {
+export function TimelineClient({ data }: { data: TimelineInput }) {
   const model = useMemo(() => buildTimelineModel(data), [data]);
   const [hidden, setHidden] = useState<Set<string>>(readHidden);
   const [scrubFrac, setScrubFrac] = useState<number | null>(null);

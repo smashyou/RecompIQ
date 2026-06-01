@@ -1,11 +1,7 @@
 import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadActiveRegimen } from "@/lib/queries/regimen";
-import {
-  buildTimelineModel,
-  type TimelineInput,
-  type RegimenLike,
-} from "@peptide/shared/timeline";
+import { type TimelineInput, type RegimenLike } from "@peptide/shared/timeline";
 
 export interface TimelineRange {
   from: string; // YYYY-MM-DD inclusive
@@ -118,5 +114,3 @@ export async function loadTimeline(userId: string, range: TimelineRange): Promis
     regimen: regimenLike,
   };
 }
-
-export { buildTimelineModel };
