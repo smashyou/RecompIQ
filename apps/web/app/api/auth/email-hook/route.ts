@@ -49,7 +49,10 @@ export async function POST(req: Request) {
     supabaseUrl: serverEnv.NEXT_PUBLIC_SUPABASE_URL,
   });
   // Unknown action type → ack so Supabase doesn't retry; nothing to send.
-  if (!plan) return new Response(null, { status: 204 });
+  // NOTE: GoTrue parses the hook RESPONSE as JSON and rejects a missing
+  // Content-Type header ("Invalid Content-Type") — so every success must return
+  // a JSON body, not an empty/204 response, or signup/auth-email flows fail.
+  if (!plan) return Response.json({});
 
   try {
     await sendAuthEmail(recipientFor(payload), plan);
@@ -57,5 +60,5 @@ export async function POST(req: Request) {
     console.error("[auth-email-hook] send failed", err);
     return fail(500, "Failed to send auth email.");
   }
-  return new Response(null, { status: 200 });
+  return Response.json({});
 }
