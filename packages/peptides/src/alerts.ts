@@ -226,3 +226,33 @@ function evalSelfCheck(
     out.push({ kind: kind as AlertFinding["kind"], severity: "warn", title: rule.title, message: interp(rule.messageWarn, latest), evidence: { latest, avgBase: Math.round(avgBase), rose }, evidenceLevel: rule.evidenceLevel, citation: rule.citation, fingerprint: fingerprintOf(kind, "rise") });
   }
 }
+
+export interface ExistingAlertRow {
+  id: string;
+  fingerprint: string;
+  status: "open" | "acknowledged" | "resolved";
+}
+export interface ReconcilePlan {
+  toInsert: AlertFinding[];          // new fingerprints → insert as 'open'
+  toBump: ExistingAlertRow[];        // still-present open/ack → bump last_detected_at
+  toResolve: ExistingAlertRow[];     // previously-open, no longer found → 'resolved'
+}
+
+/** Pure diff of fresh findings vs stored alert rows. `now` reserved for callers. */
+export function reconcileAlerts(
+  findings: AlertFinding[],
+  existing: ExistingAlertRow[],
+  _now: string,
+): ReconcilePlan {
+  const byFp = new Map(existing.map((r) => [r.fingerprint, r]));
+  const foundFps = new Set(findings.map((f) => f.fingerprint));
+  const toInsert: AlertFinding[] = [];
+  const toBump: ExistingAlertRow[] = [];
+  for (const f of findings) {
+    const row = byFp.get(f.fingerprint);
+    if (!row) toInsert.push(f);
+    else if (row.status !== "resolved") toBump.push(row); // open or acknowledged → bump (no re-nag of acked)
+  }
+  const toResolve = existing.filter((r) => r.status === "open" && !foundFps.has(r.fingerprint));
+  return { toInsert, toBump, toResolve };
+}
