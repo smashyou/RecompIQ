@@ -153,6 +153,21 @@ it("labs lane: marker per draw day, readAt flags out-of-range for clinician", ()
   const read = lane.readAt("2026-05-04");
   assert.match(read, /A1c/);
   assert.match(read, /clinician/i); // framed for discussion, never interpreted
+  assert.ok(!/vary by sex/i.test(read)); // report-supplied ranges → no catalog/sex caveat
+});
+
+it("labs lane: flagged sex-specific marker on catalog range adds a vary-by-sex caveat", () => {
+  const lane = shapeLabsLane(
+    [
+      // No report range → falls back to the catalog hemoglobin range (12–17, sexSpecific).
+      // Value 19 is above the catalog high → flagged.
+      { collected_on: "2026-05-04", marker: "Hemoglobin", marker_key: "hemoglobin", value: 19, unit: "g/dL", ref_low: null, ref_high: null },
+    ],
+    scale,
+  );
+  const read = lane.readAt("2026-05-04");
+  assert.match(read, /clinician/i);
+  assert.match(read, /vary by sex/i);
 });
 
 it("spend lane: tick per purchase, summary = running total", () => {

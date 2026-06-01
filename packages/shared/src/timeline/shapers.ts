@@ -1,5 +1,5 @@
 import { METRIC_BY_KEY } from "../goals/metrics";
-import { effectiveRange, rangeStatus } from "../labs/catalog";
+import { LAB_MARKER_BY_KEY, effectiveRange, rangeStatus } from "../labs/catalog";
 import { buildTimeScale, toMs, type TimeScale } from "./scale";
 import type {
   BarPoint,
@@ -297,12 +297,23 @@ export function shapeLabsLane(rows: LabRow[], scale: TimeScale): TimelineLane {
         const arrow = st === "high" ? "↑" : st === "low" ? "↓" : "";
         return `${r.marker} ${num(Number(r.value), 1)}${arrow}`;
       });
-      const anyFlag = draw.some((r) => {
+      let anyFlag = false;
+      let anySexCatalog = false;
+      for (const r of draw) {
         const range = effectiveRange(r.marker_key, r.ref_low, r.ref_high);
         const st = rangeStatus(r.value, range.low, range.high);
-        return st === "low" || st === "high";
-      });
-      return `${parts.join(", ")}${anyFlag ? " — discuss flags with a clinician" : ""}`;
+        if (st !== "low" && st !== "high") continue;
+        anyFlag = true;
+        // A flagged marker that fell back to a catalog range whose range varies
+        // by sex could mislead a user whose sex differs from the catalog midpoint.
+        if (range.source === "catalog" && LAB_MARKER_BY_KEY[r.marker_key ?? ""]?.sexSpecific) {
+          anySexCatalog = true;
+        }
+      }
+      const note = anyFlag
+        ? ` — discuss flags with a clinician${anySexCatalog ? " (some ranges are catalog defaults that vary by sex)" : ""}`
+        : "";
+      return `${parts.join(", ")}${note}`;
     },
   };
 }

@@ -1033,14 +1033,22 @@ export async function loadTimeline(userId: string, range: TimelineRange): Promis
     regimen: regimenLike,
   };
 }
-
-export { buildTimelineModel };
 ```
+
+> **Do NOT re-export `buildTimelineModel` from this `server-only` loader.** The
+> client component must import `buildTimelineModel` (and the `TimelineInput`
+> type) directly from `@peptide/shared/timeline`. Re-exporting it here and
+> importing that value from a client component pulls the `server-only` module
+> into the client bundle and fails the Next.js build.
 
 - [ ] **Step 2: Typecheck**
 
 Run: `pnpm turbo run typecheck`
 Expected: 16/16. (If `@peptide/shared/timeline` is unresolved in web, confirm Task 1 Step 7 added the export.)
+
+> NOTE: typecheck does NOT catch the `server-only`-in-client-bundle error — that
+> only surfaces in `next build` (i.e. on Vercel). Keep this loader free of any
+> value the client imports.
 
 - [ ] **Step 3: Commit**
 
@@ -1335,13 +1343,16 @@ Create `apps/web/app/(app)/timeline/timeline-client.tsx`:
 "use client";
 
 import { useMemo, useState } from "react";
-import { buildTimelineModel, type TimelineLoad } from "@/lib/queries/timeline";
+// Import the model + type from the client-safe shared package — NOT from the
+// server-only loader (importing a value from a "server-only" module into a
+// client component breaks the Next.js build).
+import { buildTimelineModel, type TimelineInput } from "@peptide/shared/timeline";
 import { TimelineLanes } from "@/components/timeline/timeline-lanes";
 import { Card } from "@/components/kit";
 
 const STORE_KEY = "timeline:hidden";
 
-export function TimelineClient({ data }: { data: TimelineLoad }) {
+export function TimelineClient({ data }: { data: TimelineInput }) {
   const model = useMemo(() => buildTimelineModel(data), [data]);
   const [hidden, setHidden] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
