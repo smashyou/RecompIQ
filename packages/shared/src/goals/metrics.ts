@@ -17,6 +17,8 @@ export interface MetricDef {
   /** Higher value = better outcome (true) vs lower = better (false, e.g. pain). */
   higherIsBetter: boolean;
   hint?: string;
+  /** Optional 0–10 anchor example sentences for self-checks (value → relatable text). */
+  anchors?: { value: number; label: string }[];
 }
 
 export const METRIC_DEFS: MetricDef[] = [
@@ -32,6 +34,20 @@ export const METRIC_DEFS: MetricDef[] = [
   { key: "hair_density", label: "Hair density", kind: "rating", unit: "rating", min: 1, max: 10, higherIsBetter: true },
   { key: "waist_cm", label: "Waist", kind: "circumference", unit: "cm", min: 30, max: 200, higherIsBetter: false },
   { key: "arm_cm", label: "Arm", kind: "circumference", unit: "cm", min: 15, max: 80, higherIsBetter: true },
+  { key: "neuro_severity", label: "Nerve symptoms", kind: "rating", unit: "rating", min: 0, max: 10, higherIsBetter: false,
+    anchors: [
+      { value: 0, label: "No numbness or weakness." },
+      { value: 3, label: "Mild tingling on long walks (my usual)." },
+      { value: 6, label: "Numb most of the day; foot feels heavy." },
+      { value: 9, label: "Can't feel my foot, or it gives out / new weakness." },
+    ] },
+  { key: "nausea_severity", label: "Nausea", kind: "rating", unit: "rating", min: 0, max: 10, higherIsBetter: false,
+    anchors: [
+      { value: 0, label: "No nausea." },
+      { value: 3, label: "Slight queasiness." },
+      { value: 6, label: "Nauseous much of the day; eating is hard." },
+      { value: 9, label: "Vomiting or can't keep fluids down." },
+    ] },
   // Objective cognition-test outputs (written by the mini-test, not a slider).
   { key: "cognition_reaction_ms", label: "Reaction time", kind: "objective", unit: "ms", min: 100, max: 1500, higherIsBetter: false },
   { key: "cognition_memory_score", label: "Memory span", kind: "objective", unit: "score", min: 0, max: 12, higherIsBetter: true },
