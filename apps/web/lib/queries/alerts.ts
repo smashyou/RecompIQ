@@ -81,16 +81,15 @@ export async function loadAlerts(userId: string): Promise<AlertsView> {
     .order("last_detected_at", { ascending: false });
   const all = (fresh ?? []) as AlertRow[];
   const sevRank = { critical: 0, warn: 1, info: 2 } as Record<string, number>;
-  const visible = all.filter(
-    (a) => a.status !== "resolved" && (!a.snoozed_until || a.snoozed_until <= nowIso),
-  );
-  visible.sort((a, b) => sevRank[a.severity]! - sevRank[b.severity]!);
-  const active = visible;
-  const history = all.filter(
-    (a) => a.status === "resolved" || (a.snoozed_until !== null && a.snoozed_until > nowIso),
-  );
+  // Acknowledged + snoozed-into-the-future alerts are "handled" → history, so the
+  // optimistic client removal persists across reloads. Only OPEN, unsnoozed are active.
+  const isFutureSnoozed = (a: AlertRow) => a.snoozed_until !== null && a.snoozed_until > nowIso;
+  const active = all
+    .filter((a) => a.status === "open" && !isFutureSnoozed(a))
+    .sort((a, b) => sevRank[a.severity]! - sevRank[b.severity]!);
+  const history = all.filter((a) => a.status !== "open" || isFutureSnoozed(a));
   const openCount = active.filter(
-    (a) => a.status === "open" && (a.severity === "critical" || a.severity === "warn"),
+    (a) => a.severity === "critical" || a.severity === "warn",
   ).length;
   return { active, history, openCount };
 }
