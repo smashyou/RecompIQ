@@ -18,6 +18,7 @@ import { DashboardAddPeptide } from "@/components/dashboard/add-peptide";
 import { GoalCards } from "@/components/dashboard/goal-cards";
 import { loadGoalCards } from "@/lib/queries/goal-cards";
 import { deriveAlerts, deriveInsight } from "@/components/dashboard/derive";
+import { AutoGrid } from "@/components/ui/layout";
 
 export const dynamic = "force-dynamic";
 
@@ -43,12 +44,12 @@ export default async function DashboardPage() {
   const insight = deriveInsight(snapshot);
 
   return (
-    <div className="flex w-full flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[var(--space-grid)]">
       <header>
-        <h1 className="font-[family-name:var(--font-display)] text-[26px] font-semibold tracking-[-0.02em] text-foreground">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-[-0.02em] text-foreground">
           Welcome back, {firstName}
         </h1>
-        <p className="mt-1 font-[family-name:var(--font-sans)] text-[13.5px] text-[var(--fg-subtle)]">
+        <p className="mt-1 font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
           {snapshot.profile?.is_demo
             ? "Viewing the demo profile — values are illustrative."
             : "Educational tracking. Not medical advice."}
@@ -70,10 +71,10 @@ export default async function DashboardPage() {
             style={{ color: "var(--warn)" }}
           />
           <div className="flex-1">
-            <span className="font-[family-name:var(--font-sans)] text-[13px] font-semibold" style={{ color: "var(--warn)" }}>
+            <span className="font-[family-name:var(--font-sans)] text-sm font-semibold" style={{ color: "var(--warn)" }}>
               {alerts.length} alert{alerts.length === 1 ? "" : "s"} need review
             </span>
-            <span className="ml-2 font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+            <span className="ml-2 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
               {alerts.map((a) => a.detail).join(" · ")}
             </span>
           </div>
@@ -81,14 +82,14 @@ export default async function DashboardPage() {
         </Link>
       )}
 
-      <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2 lg:grid-cols-3">
+      <AutoGrid min="260px">
         <WeightCard snapshot={snapshot} />
         <ProjectionCard snapshot={snapshot} />
         <VitalsCard snapshot={snapshot} />
         <MacrosCard snapshot={snapshot} />
         <AdherenceCard snapshot={snapshot} />
         <CoachInsightCard insight={insight} />
-      </div>
+      </AutoGrid>
 
       <GoalCards cards={goalCards} />
 
@@ -99,10 +100,10 @@ export default async function DashboardPage() {
         >
           <Wallet size={18} className="text-[var(--primary)]" />
           <div className="flex-1">
-            <span className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--fg)]">
+            <span className="font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">
               {usd(spend.last30Usd)} spent in the last 30 days
             </span>
-            <span className="ml-2 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+            <span className="ml-2 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
               {usd(spend.allTimeUsd)} all-time{spend.topCompound ? ` · most on ${spend.topCompound}` : ""}
             </span>
           </div>
@@ -111,7 +112,7 @@ export default async function DashboardPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <h2 className="font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+        <h2 className="font-[family-name:var(--font-display)] text-base font-semibold tracking-[-0.01em] text-[var(--fg)]">
           Active regimen
         </h2>
         <DashboardAddPeptide conditions={conditions} medications={medications} />

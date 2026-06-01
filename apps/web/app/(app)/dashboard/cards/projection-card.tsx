@@ -46,14 +46,14 @@ export function ProjectionCard({ snapshot }: { snapshot: DashboardSnapshot }) {
     <Card title="Projection" hint={`Target ${target.lbsPerWeek} lb/wk`}>
       <div className="space-y-3">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-3xl font-semibold tabular-nums">
+          <p className="text-stat font-semibold tabular-nums">
             {target.etaWeeks !== null ? `~${target.etaWeeks}` : "—"}
             <span className="ml-1 text-sm font-normal text-[var(--color-muted-foreground)]">
               wk to target
             </span>
           </p>
           <span
-            className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+            className={`shrink-0 rounded-full border px-2 py-0.5 text-2xs font-medium ${
               adherence.tone === "good"
                 ? "border-[var(--color-accent)] text-[var(--color-accent)]"
                 : adherence.tone === "warn"

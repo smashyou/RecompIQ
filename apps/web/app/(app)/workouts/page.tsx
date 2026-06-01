@@ -31,7 +31,7 @@ export default async function WorkoutsPage() {
   const workouts = (data ?? []) as unknown as WorkoutRow[];
 
   return (
-    <div className="flex w-full flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[var(--space-grid)]">
       <SectionHeader
         num="09"
         title="Workouts"
@@ -64,7 +64,7 @@ export default async function WorkoutsPage() {
           }}
         >
           <Dumbbell size={28} style={{ color: "var(--fg-subtle)" }} />
-          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
             No sessions yet. Start from a template or log freeform.
           </p>
         </Card>
@@ -75,14 +75,14 @@ export default async function WorkoutsPage() {
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-[family-name:var(--font-sans)] text-[13.5px] font-semibold text-[var(--fg)]">
+                    <span className="font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">
                       {w.name ?? w.template_slug ?? `${w.session_type} session`}
                     </span>
                     <Chip>{w.session_type}</Chip>
                     {w.phase && <Chip>{w.phase}</Chip>}
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                    <span className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                       {new Date(w.date).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",
@@ -112,11 +112,11 @@ export default async function WorkoutsPage() {
 function Metric({ value, unit, label }: { value: number | string; unit?: string; label?: string }) {
   return (
     <span className="inline-flex items-baseline gap-1">
-      {label && <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>{label}</Overline>}
-      <span className="font-[family-name:var(--font-mono)] text-[12px] tabular-nums text-[var(--fg)]">
+      {label && <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em" }}>{label}</Overline>}
+      <span className="font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg)]">
         {value}
       </span>
-      {unit && <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--fg-subtle)]">{unit}</span>}
+      {unit && <span className="font-[family-name:var(--font-mono)] text-2xs text-[var(--fg-subtle)]">{unit}</span>}
     </span>
   );
 }

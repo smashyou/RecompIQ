@@ -45,7 +45,7 @@ const FEATURE_INFO: Record<string, { label: string; description: string; modalit
 };
 
 const SELECT_CLASS =
-  "flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
+  "flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
 
 export function AdminClient({
   providers,
@@ -173,7 +173,7 @@ export function AdminClient({
       </div>
 
       {section === "features" && (
-        <div className="flex flex-col gap-[14px]">
+        <div className="flex flex-col gap-[var(--space-grid)]">
           {Object.entries(FEATURE_INFO).map(([feature, info]) => {
             const cfg = configState.find((c) => c.feature === feature);
             const available = modelsForFeature(feature);
@@ -181,12 +181,12 @@ export function AdminClient({
             const fallbacks = cfg?.fallback_ids ?? [];
             return (
               <Card key={feature} title={info.label} hint={info.modality}>
-                <p className="-mt-2 mb-4 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                <p className="-mt-2 mb-4 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                   {info.description}
                 </p>
 
                 <div className="space-y-2">
-                  <Overline style={{ fontSize: 10 }}>Primary model</Overline>
+                  <Overline style={{ fontSize: "var(--text-2xs)" }}>Primary model</Overline>
                   <select
                     value={primary}
                     onChange={(e) => {
@@ -208,7 +208,7 @@ export function AdminClient({
                 </div>
 
                 <div className="mt-4 space-y-2">
-                  <Overline style={{ fontSize: 10 }}>Fallback chain ({fallbacks.length})</Overline>
+                  <Overline style={{ fontSize: "var(--text-2xs)" }}>Fallback chain ({fallbacks.length})</Overline>
                   {fallbacks.map((fbId, idx) => {
                     const fbModel = available.find((m) => m.id === fbId);
                     return (
@@ -242,7 +242,7 @@ export function AdminClient({
                               ),
                             );
                           }}
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border)] text-[12px] text-[var(--fg-muted)] hover:text-[var(--fg)]"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border)] text-xs text-[var(--fg-muted)] hover:text-[var(--fg)]"
                           aria-label="Remove fallback"
                         >
                           ✕
@@ -281,7 +281,7 @@ export function AdminClient({
                         ),
                       );
                     }}
-                    className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)] hover:text-[var(--fg)]"
+                    className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)] hover:text-[var(--fg)]"
                   >
                     + Add fallback
                   </button>
@@ -306,7 +306,7 @@ export function AdminClient({
                 </div>
                 {testResults[primary] && (
                   <p
-                    className="mt-2 font-mono text-[12px]"
+                    className="mt-2 font-mono text-xs"
                     style={{
                       color: testResults[primary]!.ok ? "var(--positive)" : "var(--danger)",
                     }}
@@ -321,18 +321,18 @@ export function AdminClient({
       )}
 
       {section === "catalog" && (
-        <div className="flex flex-col gap-[14px]">
+        <div className="flex flex-col gap-[var(--space-grid)]">
           {providers.map((p) => {
             const providerModels = models.filter((m) => m.ai_providers.slug === p.slug);
             return (
               <Card key={p.id} title={p.name}>
                 <div className="-mt-2 mb-3 flex flex-wrap items-center gap-2">
                   {p.configured ? (
-                    <span className="inline-flex items-center gap-1 rounded-[var(--r-pill)] border border-[var(--positive-line)] bg-[var(--positive-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10.5px] font-semibold uppercase tracking-wide text-[var(--positive)]">
+                    <span className="inline-flex items-center gap-1 rounded-[var(--r-pill)] border border-[var(--positive-line)] bg-[var(--positive-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-wide text-[var(--positive)]">
                       <CheckCircle2 size={12} /> Configured
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10.5px] font-semibold uppercase tracking-wide text-[var(--fg-subtle)]">
+                    <span className="inline-flex items-center gap-1 rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-wide text-[var(--fg-subtle)]">
                       <XCircle size={12} /> Not configured
                     </span>
                   )}
@@ -341,7 +341,7 @@ export function AdminClient({
                   <button
                     onClick={() => testProvider(p.slug)}
                     disabled={!p.configured || testingProvider === p.slug}
-                    className="ml-auto inline-flex items-center gap-1 rounded-[var(--r-md)] border border-[var(--border)] px-2.5 py-1 font-[family-name:var(--font-sans)] text-[11.5px] font-medium text-[var(--fg-muted)] hover:border-[var(--primary-line)] hover:text-[var(--fg)] disabled:opacity-50"
+                    className="ml-auto inline-flex items-center gap-1 rounded-[var(--r-md)] border border-[var(--border)] px-2.5 py-1 font-[family-name:var(--font-sans)] text-xs font-medium text-[var(--fg-muted)] hover:border-[var(--primary-line)] hover:text-[var(--fg)] disabled:opacity-50"
                     title={p.configured ? "Make a live test call" : `Set ${p.env_key_var} to enable`}
                   >
                     {testingProvider === p.slug ? (
@@ -354,7 +354,7 @@ export function AdminClient({
                 </div>
                 {providerTests[p.slug] && (
                   <div
-                    className={`-mt-1 mb-3 font-[family-name:var(--font-sans)] text-[11.5px] ${
+                    className={`-mt-1 mb-3 font-[family-name:var(--font-sans)] text-xs ${
                       providerTests[p.slug]!.ok ? "text-[var(--positive)]" : "text-[var(--danger-bright)]"
                     }`}
                   >
@@ -363,44 +363,46 @@ export function AdminClient({
                   </div>
                 )}
                 {!p.configured && (
-                  <p className="-mt-1 mb-3 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                  <p className="-mt-1 mb-3 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                     Set <code className="font-[family-name:var(--font-mono)]">{p.env_key_var}</code> in the
                     server environment (Vercel → Settings → Environment Variables) to enable this provider.
                   </p>
                 )}
                 {p.notes && (
-                  <p className="mb-3 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                  <p className="mb-3 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                     {p.notes}
                   </p>
                 )}
-                <table className="w-full font-[family-name:var(--font-sans)] text-[12px]">
-                  <thead>
-                    <tr className="text-left">
-                      <th className="pb-2 pr-3"><Overline style={{ fontSize: 9.5 }}>Model</Overline></th>
-                      <th className="pb-2 pr-3"><Overline style={{ fontSize: 9.5 }}>Modality</Overline></th>
-                      <th className="pb-2 pr-3 text-right"><Overline style={{ fontSize: 9.5 }}>Context</Overline></th>
-                      <th className="pb-2 pr-3 text-right"><Overline style={{ fontSize: 9.5 }}>In $/1M</Overline></th>
-                      <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Out $/1M</Overline></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {providerModels.map((m) => (
-                      <tr key={m.id} className="border-t border-[var(--border)]">
-                        <td className="py-2 pr-3 text-[var(--fg)]">{m.display_name}</td>
-                        <td className="py-2 pr-3 text-[var(--fg-muted)]">{m.modality}</td>
-                        <td className="py-2 pr-3 text-right font-mono tabular-nums text-[var(--fg)]">
-                          {m.context_window ? m.context_window.toLocaleString() : "—"}
-                        </td>
-                        <td className="py-2 pr-3 text-right font-mono tabular-nums text-[var(--fg)]">
-                          {m.input_cost_per_1m !== null ? `$${m.input_cost_per_1m}` : "—"}
-                        </td>
-                        <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
-                          {m.output_cost_per_1m !== null ? `$${m.output_cost_per_1m}` : "—"}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full font-[family-name:var(--font-sans)] text-xs">
+                    <thead>
+                      <tr className="text-left">
+                        <th className="pb-2 pr-3"><Overline style={{ fontSize: "var(--text-2xs)" }}>Model</Overline></th>
+                        <th className="pb-2 pr-3"><Overline style={{ fontSize: "var(--text-2xs)" }}>Modality</Overline></th>
+                        <th className="pb-2 pr-3 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>Context</Overline></th>
+                        <th className="pb-2 pr-3 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>In $/1M</Overline></th>
+                        <th className="pb-2 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>Out $/1M</Overline></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {providerModels.map((m) => (
+                        <tr key={m.id} className="border-t border-[var(--border)]">
+                          <td className="py-2 pr-3 text-[var(--fg)]">{m.display_name}</td>
+                          <td className="py-2 pr-3 text-[var(--fg-muted)]">{m.modality}</td>
+                          <td className="py-2 pr-3 text-right font-mono tabular-nums text-[var(--fg)]">
+                            {m.context_window ? m.context_window.toLocaleString() : "—"}
+                          </td>
+                          <td className="py-2 pr-3 text-right font-mono tabular-nums text-[var(--fg)]">
+                            {m.input_cost_per_1m !== null ? `$${m.input_cost_per_1m}` : "—"}
+                          </td>
+                          <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
+                            {m.output_cost_per_1m !== null ? `$${m.output_cost_per_1m}` : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </Card>
             );
           })}
@@ -439,7 +441,7 @@ function UsageSection() {
   }
 
   return (
-    <div className="flex flex-col gap-[14px]">
+    <div className="flex flex-col gap-[var(--space-grid)]">
       <div>
         <Button onClick={load} disabled={loading} variant="outline">
           {loading ? "Loading…" : data ? "Refresh" : "Load 7-day usage"}
@@ -460,59 +462,63 @@ function UsageSection() {
           </div>
 
           <Card title="By feature">
-            <table className="w-full font-[family-name:var(--font-sans)] text-[12px]">
-              <thead>
-                <tr className="text-left">
-                  <th className="pb-2"><Overline style={{ fontSize: 9.5 }}>Feature</Overline></th>
-                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Calls</Overline></th>
-                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Cost</Overline></th>
-                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Err</Overline></th>
-                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>FB</Overline></th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.by_feature.map((r) => (
-                  <tr key={r.feature} className="border-t border-[var(--border)]">
-                    <td className="py-2 text-[var(--fg)]">{r.feature}</td>
-                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.calls}</td>
-                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
-                      ${r.cost_usd.toFixed(4)}
-                    </td>
-                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.errors}</td>
-                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.fallbacks}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full font-[family-name:var(--font-sans)] text-xs">
+                <thead>
+                  <tr className="text-left">
+                    <th className="pb-2"><Overline style={{ fontSize: "var(--text-2xs)" }}>Feature</Overline></th>
+                    <th className="pb-2 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>Calls</Overline></th>
+                    <th className="pb-2 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>Cost</Overline></th>
+                    <th className="pb-2 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>Err</Overline></th>
+                    <th className="pb-2 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>FB</Overline></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.by_feature.map((r) => (
+                    <tr key={r.feature} className="border-t border-[var(--border)]">
+                      <td className="py-2 text-[var(--fg)]">{r.feature}</td>
+                      <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.calls}</td>
+                      <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
+                        ${r.cost_usd.toFixed(4)}
+                      </td>
+                      <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.errors}</td>
+                      <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.fallbacks}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
 
           <Card title="By model">
-            <table className="w-full font-[family-name:var(--font-sans)] text-[12px]">
-              <thead>
-                <tr className="text-left">
-                  <th className="pb-2"><Overline style={{ fontSize: 9.5 }}>Model</Overline></th>
-                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Calls</Overline></th>
-                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Cost</Overline></th>
-                  <th className="pb-2 text-right"><Overline style={{ fontSize: 9.5 }}>Avg ms</Overline></th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.by_model.map((r) => (
-                  <tr key={r.model_string} className="border-t border-[var(--border)]">
-                    <td className="py-2 font-mono text-[11px] text-[var(--fg)]">
-                      {r.provider_slug}/{r.model_string}
-                    </td>
-                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.calls}</td>
-                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
-                      ${r.cost_usd.toFixed(4)}
-                    </td>
-                    <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
-                      {r.avg_latency_ms}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full font-[family-name:var(--font-sans)] text-xs">
+                <thead>
+                  <tr className="text-left">
+                    <th className="pb-2"><Overline style={{ fontSize: "var(--text-2xs)" }}>Model</Overline></th>
+                    <th className="pb-2 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>Calls</Overline></th>
+                    <th className="pb-2 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>Cost</Overline></th>
+                    <th className="pb-2 text-right"><Overline style={{ fontSize: "var(--text-2xs)" }}>Avg ms</Overline></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.by_model.map((r) => (
+                    <tr key={r.model_string} className="border-t border-[var(--border)]">
+                      <td className="py-2 font-mono text-2xs text-[var(--fg)]">
+                        {r.provider_slug}/{r.model_string}
+                      </td>
+                      <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">{r.calls}</td>
+                      <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
+                        ${r.cost_usd.toFixed(4)}
+                      </td>
+                      <td className="py-2 text-right font-mono tabular-nums text-[var(--fg)]">
+                        {r.avg_latency_ms}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </>
       )}

@@ -24,7 +24,7 @@ export function WeightCard({ snapshot }: { snapshot: DashboardSnapshot }) {
   if (!latestWeight) {
     return (
       <Card title="Weight">
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           Log your first weigh-in to start tracking.
         </p>
       </Card>
@@ -52,7 +52,7 @@ export function WeightCard({ snapshot }: { snapshot: DashboardSnapshot }) {
       <div className="flex items-baseline justify-between">
         <Stat value={latestWeight.value_lb.toFixed(1)} unit="lb" />
         <span
-          className="font-[family-name:var(--font-mono)] text-[11.5px] tabular-nums"
+          className="font-[family-name:var(--font-mono)] text-xs tabular-nums"
           style={{
             color: recentChange > 0 ? "var(--positive)" : "var(--fg-subtle)",
           }}
@@ -70,10 +70,10 @@ export function WeightCard({ snapshot }: { snapshot: DashboardSnapshot }) {
           ] as const
         ).map(([k, v]) => (
           <div key={k}>
-            <dt className="font-[family-name:var(--font-sans)] text-[9.5px] uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
+            <dt className="font-[family-name:var(--font-sans)] text-2xs uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
               {k}
             </dt>
-            <dd className="mt-[3px] font-[family-name:var(--font-mono)] text-[13px] tabular-nums text-foreground">
+            <dd className="mt-[3px] font-[family-name:var(--font-mono)] text-sm tabular-nums text-foreground">
               {v}
             </dd>
           </div>
@@ -92,7 +92,7 @@ export function ProjectionCard({ snapshot }: { snapshot: DashboardSnapshot }) {
   if (!goal || !latestWeight) {
     return (
       <Card title="Projection" hint="ETA">
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           Set a goal in onboarding to see ETA.
         </p>
       </Card>
@@ -108,7 +108,7 @@ export function ProjectionCard({ snapshot }: { snapshot: DashboardSnapshot }) {
   if (!projection) {
     return (
       <Card title="Projection" hint="ETA">
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           Log a few weigh-ins to start projecting.
         </p>
       </Card>
@@ -130,7 +130,7 @@ export function ProjectionCard({ snapshot }: { snapshot: DashboardSnapshot }) {
     <Card title="Projection" hint={`${goal.timeline_weeks} weeks`}>
       <div className="flex items-baseline gap-2">
         <Stat value={etaLabel} />
-        <span className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+        <span className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           ETA · target band
         </span>
       </div>
@@ -195,7 +195,7 @@ export function ProjectionCard({ snapshot }: { snapshot: DashboardSnapshot }) {
         ).map(([k, c]) => (
           <span
             key={k}
-            className="flex items-center gap-[5px] font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-subtle)]"
+            className="flex items-center gap-[5px] font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]"
           >
             <span className="h-[2px] w-3" style={{ background: c }} />
             {k}
@@ -286,7 +286,7 @@ export function VitalsCard({ snapshot }: { snapshot: DashboardSnapshot }) {
   if (!v) {
     return (
       <Card title="Vitals">
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           No vitals logged yet.
         </p>
       </Card>
@@ -333,15 +333,15 @@ export function VitalsCard({ snapshot }: { snapshot: DashboardSnapshot }) {
             <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-[8px] bg-[var(--surface-2)] text-[var(--fg-muted)]">
               <Icon size={15} />
             </span>
-            <span className="flex-1 font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+            <span className="flex-1 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
               {k}
             </span>
             <span
-              className="font-[family-name:var(--font-mono)] text-[14px] tabular-nums"
+              className="font-[family-name:var(--font-mono)] text-sm tabular-nums"
               style={{ color: warn ? "var(--warn)" : "var(--fg)" }}
             >
               {val}
-              <span className="ml-[3px] text-[10px] text-[var(--fg-subtle)]">
+              <span className="ml-[3px] text-2xs text-[var(--fg-subtle)]">
                 {u}
               </span>
             </span>
@@ -362,7 +362,7 @@ export function MacrosCard({ snapshot }: { snapshot: DashboardSnapshot }) {
   if (!logged) {
     return (
       <Card title="Today's macros" hint="Protein-first">
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           No food logged today. Add a meal in{" "}
           <Link href="/food" className="underline-offset-2 hover:underline">
             /food
@@ -406,7 +406,7 @@ export function AdherenceCard({ snapshot }: { snapshot: DashboardSnapshot }) {
   if (!hasActiveStack) {
     return (
       <Card title="Peptide adherence" hint="14 days">
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           No active stack. Create one in{" "}
           <Link
             href="/peptides/stacks/new"
@@ -449,7 +449,7 @@ export function AdherenceCard({ snapshot }: { snapshot: DashboardSnapshot }) {
   if (recentDoses.length === 0) {
     return (
       <Card title="Peptide adherence" hint="14 days">
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           No doses logged yet —{" "}
           <Link
             href="/peptides/dose-log"
@@ -492,7 +492,7 @@ export function AdherenceCard({ snapshot }: { snapshot: DashboardSnapshot }) {
           />
         ))}
       </div>
-      <p className="mt-[10px] font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+      <p className="mt-[10px] font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
         {caption}
       </p>
     </Card>
@@ -509,13 +509,13 @@ export function CoachInsightCard({ insight }: { insight: string }) {
         <span className="grid h-7 w-7 flex-none place-items-center rounded-[8px] bg-[linear-gradient(150deg,var(--primary),var(--positive))] text-[var(--primary-foreground)]">
           <Activity size={15} />
         </span>
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.5] text-[var(--fg-muted)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
           {insight}
         </p>
       </div>
       <Link
         href="/coach"
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-[var(--r-sm)] border border-border bg-transparent px-3 py-2 font-[family-name:var(--font-sans)] text-[12.5px] font-medium text-foreground transition-colors hover:bg-[var(--surface-2)]"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-[var(--r-sm)] border border-border bg-transparent px-3 py-2 font-[family-name:var(--font-sans)] text-xs font-medium text-foreground transition-colors hover:bg-[var(--surface-2)]"
       >
         Open coach
         <ChevronRight size={14} />
@@ -536,7 +536,7 @@ export function ActiveProtocolCard({
   if (!stack || stack.items.length === 0) {
     return (
       <Card title="Active protocol">
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           No active stack. Build one from the compounds you and your clinician
           have decided on in{" "}
           <Link href="/peptides" className="underline-offset-2 hover:underline">
@@ -565,11 +565,11 @@ export function ActiveProtocolCard({
               <Syringe size={16} />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="font-[family-name:var(--font-sans)] text-[14px] font-semibold text-foreground">
+              <div className="font-[family-name:var(--font-sans)] text-sm font-semibold text-foreground">
                 {r.name}
               </div>
               {r.descriptor && (
-                <div className="truncate font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                <div className="truncate font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                   {r.descriptor}
                 </div>
               )}

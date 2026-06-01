@@ -18,7 +18,7 @@ export function DashboardAddPeptide({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-[var(--r-md)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] font-medium text-[var(--primary-bright)] transition-colors hover:bg-[var(--primary-line)]"
+        className="inline-flex items-center gap-1.5 rounded-[var(--r-md)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-xs font-medium text-[var(--primary-bright)] transition-colors hover:bg-[var(--primary-line)]"
       >
         <Plus size={14} /> Add peptide
       </button>

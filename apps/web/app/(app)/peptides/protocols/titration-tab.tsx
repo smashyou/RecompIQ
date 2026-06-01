@@ -48,7 +48,7 @@ export function TitrationTab({ schedules }: { schedules: ProtocolSchedule[] }) {
   if (schedules.length === 0) {
     return (
       <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-8 text-center">
-        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
           No titration schedules yet. Build one in the{" "}
           <strong className="text-[var(--fg)]">Protocol Builder</strong> tab.
         </p>
@@ -64,10 +64,10 @@ export function TitrationTab({ schedules }: { schedules: ProtocolSchedule[] }) {
           <div key={s.id} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface-1)] p-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <h3 className="font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+                <h3 className="font-[family-name:var(--font-display)] text-base font-semibold tracking-[-0.01em] text-[var(--fg)]">
                   {s.name}
                 </h3>
-                <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                <p className="mt-0.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                   {s.phase ? `${s.phase} · ` : ""}
                   {byWeek.length} week{byWeek.length === 1 ? "" : "s"}
                   {s.start_on ? ` · starts ${s.start_on}` : ""}
@@ -85,13 +85,13 @@ export function TitrationTab({ schedules }: { schedules: ProtocolSchedule[] }) {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full font-[family-name:var(--font-sans)] text-[13px]">
+              <table className="w-full font-[family-name:var(--font-sans)] text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] text-left">
                     {["Week", "Compound", "Dose", "Frequency", "Route"].map((h) => (
                       <th
                         key={h}
-                        className="py-2 pr-3 font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)] last:pr-0"
+                        className="py-2 pr-3 font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)] last:pr-0"
                       >
                         {h}
                       </th>

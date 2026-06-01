@@ -155,7 +155,7 @@ export function ReconstitutionTab({
             id="picker"
             value={compoundId}
             onChange={(e) => onCompoundChange(e.target.value)}
-            className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
+            className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]"
           >
             <option value="">— choose a peptide (loads its vial + reference dose) —</option>
             {compounds.map((c) => (
@@ -166,7 +166,7 @@ export function ReconstitutionTab({
             ))}
           </select>
           {selected?.ref_dose && (
-            <p className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+            <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
               Reference:{" "}
               <span className="font-medium text-[var(--fg)]">
                 {selected.ref_dose.low}
@@ -176,7 +176,7 @@ export function ReconstitutionTab({
             </p>
           )}
           {selected?.is_blend && selected.component_mg.length > 0 && (
-            <p className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+            <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
               Composition:{" "}
               <span className="text-[var(--fg)]">
                 {selected.component_mg.map((c) => `${c.label}${c.mg !== null ? ` ${c.mg} mg` : ""}`).join(" / ")}
@@ -210,15 +210,15 @@ export function ReconstitutionTab({
         {/* concentration callout */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
           <div>
-            <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>Concentration</Overline>
-            <p className="mt-0.5 font-[family-name:var(--font-mono)] text-[20px] font-medium tabular-nums tracking-[-0.02em] text-[var(--primary-bright)]">
+            <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em" }}>Concentration</Overline>
+            <p className="mt-0.5 font-[family-name:var(--font-mono)] text-xl font-medium tabular-nums tracking-[-0.02em] text-[var(--primary-bright)]">
               {concentration > 0 ? concentration.toFixed(3) : "—"}
-              <span className="ml-1 text-[11px] font-normal text-[var(--fg-subtle)]">mg/mL</span>
+              <span className="ml-1 text-2xs font-normal text-[var(--fg-subtle)]">mg/mL</span>
             </p>
           </div>
           <div className="text-right">
-            <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>Per syringe unit</Overline>
-            <p className="mt-0.5 font-[family-name:var(--font-mono)] text-[14px] font-medium tabular-nums text-[var(--fg)]">
+            <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em" }}>Per syringe unit</Overline>
+            <p className="mt-0.5 font-[family-name:var(--font-mono)] text-sm font-medium tabular-nums text-[var(--fg)]">
               {mgPerUnit > 0 ? (mgPerUnit >= 1 ? `${mgPerUnit.toFixed(3)} mg` : `${(mgPerUnit * 1000).toFixed(1)} mcg`) : "—"}
             </p>
           </div>
@@ -253,7 +253,7 @@ export function ReconstitutionTab({
                 <select
                   value={doseUnit}
                   onChange={(e) => setDoseUnit(e.target.value as "mg" | "mcg")}
-                  className="h-10 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
+                  className="h-10 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]"
                 >
                   <option value="mg">mg</option>
                   <option value="mcg">mcg</option>
@@ -262,7 +262,7 @@ export function ReconstitutionTab({
             </div>
             {quickFills && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                <span className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                   Quick fill:
                 </span>
                 {quickFills.map((v) => (
@@ -273,7 +273,7 @@ export function ReconstitutionTab({
                       setDoseUnit(selected!.ref_dose!.unit as "mg" | "mcg");
                       setDoseValue(Number(v.toFixed(selected!.ref_dose!.unit === "mcg" ? 0 : 3)));
                     }}
-                    className="rounded-[var(--r-sm)] border border-[var(--border)] px-2 py-1 font-[family-name:var(--font-mono)] text-[11.5px] tabular-nums text-[var(--fg-muted)] hover:bg-[var(--surface-2)]"
+                    className="rounded-[var(--r-sm)] border border-[var(--border)] px-2 py-1 font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg-muted)] hover:bg-[var(--surface-2)]"
                   >
                     {Number(v.toFixed(selected!.ref_dose!.unit === "mcg" ? 0 : 3))} {selected!.ref_dose!.unit}
                   </button>
@@ -292,7 +292,7 @@ export function ReconstitutionTab({
               onChange={(e) => setDrawUnits(e.target.valueAsNumber || 0)}
               className="w-40"
             />
-            <p className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+            <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
               Enter what you drew on the syringe — we compute the dose it delivers.
             </p>
           </div>
@@ -311,7 +311,7 @@ export function ReconstitutionTab({
         style={{ borderColor: "var(--primary-line)", background: "var(--primary-wash)" }}
       >
         {!calc ? (
-          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--danger)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--danger)]">
             Enter a vial, water, and dose (all &gt; 0).
           </p>
         ) : (
@@ -340,23 +340,25 @@ export function ReconstitutionTab({
 
             {blendDelivery && blendDelivery.length > 0 && (
               <div className="mt-6 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] p-4">
-                <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em", display: "block", marginBottom: 8 }}>
+                <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em", display: "block", marginBottom: 8 }}>
                   Per-component delivered at {calc.drawMl.toFixed(3)} mL
                 </Overline>
-                <table className="w-full font-[family-name:var(--font-sans)] text-[13px]">
-                  <tbody>
-                    {blendDelivery.map((c) => (
-                      <tr key={c.label} className="border-b border-[var(--border)] last:border-0">
-                        <td className="py-1.5 text-[var(--fg)]">{c.label}</td>
-                        <td className="py-1.5 text-right text-[11.5px] text-[var(--fg-subtle)]">{c.mg} mg in vial</td>
-                        <td className="py-1.5 text-right font-[family-name:var(--font-mono)] font-medium tabular-nums text-[var(--fg)]">
-                          {c.deliveredMg >= 1 ? `${c.deliveredMg.toFixed(2)} mg` : `${(c.deliveredMg * 1000).toFixed(0)} mcg`}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p className="mt-2 font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-subtle)]">
+                <div className="overflow-x-auto">
+                  <table className="w-full font-[family-name:var(--font-sans)] text-sm">
+                    <tbody>
+                      {blendDelivery.map((c) => (
+                        <tr key={c.label} className="border-b border-[var(--border)] last:border-0">
+                          <td className="py-1.5 text-[var(--fg)]">{c.label}</td>
+                          <td className="py-1.5 text-right text-xs text-[var(--fg-subtle)]">{c.mg} mg in vial</td>
+                          <td className="py-1.5 text-right font-[family-name:var(--font-mono)] font-medium tabular-nums text-[var(--fg)]">
+                            {c.deliveredMg >= 1 ? `${c.deliveredMg.toFixed(2)} mg` : `${(c.deliveredMg * 1000).toFixed(0)} mcg`}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-2 font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
                   A blend is drawn as one volume; each component is delivered in its fixed ratio. Educational only.
                 </p>
               </div>
@@ -372,16 +374,16 @@ export function ReconstitutionTab({
       </Card>
 
       <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-4">
-        <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>
+        <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em" }}>
           Sterile-technique reminders
         </Overline>
-        <ul className="mt-2 space-y-1 font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.5] text-[var(--fg-muted)]">
+        <ul className="mt-2 space-y-1 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
           <li>Wipe the vial stopper with an alcohol prep before each draw.</li>
           <li>Inject bacteriostatic water down the side of the vial, slowly; swirl, don&apos;t shake.</li>
           <li>Use a new needle for every injection. Refrigerate per guidance.</li>
           <li>If anything looks cloudy, particulate, or off-color — do not use.</li>
         </ul>
-        <p className="mt-2 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+        <p className="mt-2 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           This tool does math on the numbers you enter. It does not recommend doses.
         </p>
       </div>
@@ -392,10 +394,10 @@ export function ReconstitutionTab({
 function Step({ n, title }: { n: number; title: string }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="flex h-[22px] w-[22px] items-center justify-center rounded-[var(--r-sm)] border border-[var(--primary-line)] bg-[var(--primary-wash)] font-[family-name:var(--font-mono)] text-[11px] font-semibold text-[var(--primary-bright)]">
+      <span className="flex h-[22px] w-[22px] items-center justify-center rounded-[var(--r-sm)] border border-[var(--primary-line)] bg-[var(--primary-wash)] font-[family-name:var(--font-mono)] text-2xs font-semibold text-[var(--primary-bright)]">
         {n}
       </span>
-      <h2 className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--fg)]">{title}</h2>
+      <h2 className="font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">{title}</h2>
     </div>
   );
 }
@@ -406,7 +408,7 @@ function ToggleBtn({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-[var(--r-sm)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] font-medium transition-colors",
+        "rounded-[var(--r-sm)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-xs font-medium transition-colors",
         active
           ? "bg-[var(--primary-wash)] text-[var(--primary-bright)]"
           : "text-[var(--fg-muted)] hover:bg-[var(--surface-2)]",
@@ -469,7 +471,7 @@ function SelectField<T extends number>({
       <select
         value={value}
         onChange={(e) => onChange(Number(e.target.value) as T)}
-        className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
+        className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -484,18 +486,18 @@ function SelectField<T extends number>({
 function BigStat({ label, value, unit, emphasis }: { label: string; value: string; unit: string; emphasis?: boolean }) {
   return (
     <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] p-4">
-      <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>{label}</Overline>
+      <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em" }}>{label}</Overline>
       <p
         className="mt-1 font-[family-name:var(--font-mono)] tabular-nums"
         style={{
-          fontSize: emphasis ? 30 : 24,
+          fontSize: emphasis ? "var(--text-3xl)" : "var(--text-2xl)",
           fontWeight: 500,
           letterSpacing: "-0.02em",
           color: emphasis ? "var(--primary-bright)" : "var(--fg)",
         }}
       >
         {value}
-        <span className="ml-1 text-[12px] font-normal text-[var(--fg-subtle)]">{unit}</span>
+        <span className="ml-1 text-xs font-normal text-[var(--fg-subtle)]">{unit}</span>
       </p>
     </div>
   );

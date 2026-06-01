@@ -13,11 +13,11 @@ export function Card({
   return (
     <section className="rounded-[var(--r-lg)] border border-border bg-card p-5">
       <header className="flex items-baseline justify-between gap-3">
-        <h2 className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-foreground">
+        <h2 className="font-[family-name:var(--font-sans)] text-sm font-medium text-foreground">
           {title}
         </h2>
         {hint && (
-          <span className="font-[family-name:var(--font-sans)] text-[10px] uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
+          <span className="font-[family-name:var(--font-sans)] text-2xs uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
             {hint}
           </span>
         )}
@@ -30,10 +30,10 @@ export function Card({
 // Big mono stat with a subordinate unit, matching the reference Stat treatment.
 export function Stat({ value, unit }: { value: string; unit?: string }) {
   return (
-    <p className="font-[family-name:var(--font-mono)] text-[28px] font-medium leading-none tracking-[-0.02em] tabular-nums text-foreground">
+    <p className="font-[family-name:var(--font-mono)] text-stat font-medium leading-none tracking-[-0.02em] tabular-nums text-foreground">
       {value}
       {unit && (
-        <span className="ml-1 font-[family-name:var(--font-sans)] text-[13px] font-normal text-[var(--fg-subtle)]">
+        <span className="ml-1 font-[family-name:var(--font-sans)] text-sm font-normal text-[var(--fg-subtle)]">
           {unit}
         </span>
       )}
@@ -97,7 +97,7 @@ export function Ring({
           background: `conic-gradient(var(--positive) 0 ${pct}%, var(--surface-3) ${pct}% 100%)`,
         }}
       >
-        <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[var(--surface-1)] font-[family-name:var(--font-mono)] text-[16px] font-medium tabular-nums text-foreground">
+        <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[var(--surface-1)] font-[family-name:var(--font-mono)] text-base font-medium tabular-nums text-foreground">
           {pct}%
         </div>
       </div>
@@ -108,10 +108,10 @@ export function Ring({
               className="h-2 w-2 rounded-[2px]"
               style={{ background: c }}
             />
-            <span className="w-12 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+            <span className="w-12 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
               {k}
             </span>
-            <span className="font-[family-name:var(--font-mono)] text-[12.5px] tabular-nums text-foreground">
+            <span className="font-[family-name:var(--font-mono)] text-xs tabular-nums text-foreground">
               {v}
             </span>
           </div>

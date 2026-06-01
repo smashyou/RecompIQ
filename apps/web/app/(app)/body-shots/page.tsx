@@ -33,7 +33,7 @@ export default async function BodyShotsPage() {
   const sessions = (data ?? []) as Session[];
 
   return (
-    <div className="flex w-full flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[var(--space-grid)]">
       <SectionHeader
         num="12"
         title="Body shots"
@@ -61,7 +61,7 @@ export default async function BodyShotsPage() {
           }}
         >
           <ImageIcon size={28} style={{ color: "var(--fg-subtle)" }} />
-          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
             No sessions yet. Take your first set in even, consistent lighting.
           </p>
         </Card>

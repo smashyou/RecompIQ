@@ -7,6 +7,7 @@ import type { EvidenceLevel } from "@peptide/shared";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { Chip } from "@/components/kit";
 import { categoryLabel } from "@/lib/dose-display";
+import { AutoGrid } from "@/components/ui/layout";
 
 export interface LibraryCard {
   slug: string;
@@ -47,7 +48,7 @@ export function LibraryGrid({ cards }: { cards: LibraryCard[] }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search compounds…"
-            className="h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] pl-9 pr-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
+            className="h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] pl-9 pr-3 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)] placeholder:text-[var(--fg-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -59,11 +60,11 @@ export function LibraryGrid({ cards }: { cards: LibraryCard[] }) {
         </div>
       </div>
 
-      <p className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+      <p className="font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
         {filtered.length} shown
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <AutoGrid min="240px">
         {filtered.map((c) => (
           <Link
             key={c.slug}
@@ -73,20 +74,20 @@ export function LibraryGrid({ cards }: { cards: LibraryCard[] }) {
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-1">
                 {c.is_blend && (
-                  <span className="rounded-[var(--r-pill)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.08em] text-[var(--primary-bright)]">
+                  <span className="rounded-[var(--r-pill)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--primary-bright)]">
                     Blend
                   </span>
                 )}
-                <span className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
+                <span className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
                   {categoryLabel(c.category)}
                 </span>
               </span>
               <EvidenceBadge level={c.evidence_level as EvidenceLevel} fdaApproved={c.fda_approved} />
             </div>
-            <h3 className="mt-2 font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.01em] text-[var(--fg)] group-hover:text-[var(--primary)]">
+            <h3 className="mt-2 font-[family-name:var(--font-display)] text-base font-semibold tracking-[-0.01em] text-[var(--fg)] group-hover:text-[var(--primary)]">
               {c.name}
             </h3>
-            <div className="mt-1 flex flex-wrap items-center gap-x-2.5 font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-subtle)]">
+            <div className="mt-1 flex flex-wrap items-center gap-x-2.5 font-[family-name:var(--font-mono)] text-2xs tabular-nums text-[var(--fg-subtle)]">
               {c.is_blend ? (
                 <span>{c.component_count} peptides</span>
               ) : (
@@ -97,19 +98,19 @@ export function LibraryGrid({ cards }: { cards: LibraryCard[] }) {
                 </>
               )}
             </div>
-            <p className="mt-2 line-clamp-2 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-muted)]">
+            <p className="mt-2 line-clamp-2 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
               {c.blurb}
             </p>
-            <span className="mt-3 inline-flex items-center gap-1 font-[family-name:var(--font-sans)] text-[11px] font-medium text-[var(--fg-subtle)] group-hover:text-[var(--primary)]">
+            <span className="mt-3 inline-flex items-center gap-1 font-[family-name:var(--font-sans)] text-2xs font-medium text-[var(--fg-subtle)] group-hover:text-[var(--primary)]">
               View detail
               <ChevronRight size={13} className="transition-transform group-hover:translate-x-0.5" />
             </span>
           </Link>
         ))}
-      </div>
+      </AutoGrid>
 
       {filtered.length === 0 && (
-        <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--border)] p-8 text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+        <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--border)] p-8 text-center font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
           No compounds match.
         </div>
       )}

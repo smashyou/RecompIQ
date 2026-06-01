@@ -132,7 +132,7 @@ export function GoalStepForm({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-[var(--space-grid)] sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="goal_weight_lb_min">Goal range — low (lb)</Label>
           <Input
@@ -178,20 +178,20 @@ export function GoalStepForm({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label>Protein target (g/day)</Label>
-          <span className="text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
+          <span className="text-2xs uppercase tracking-wider text-[var(--color-muted-foreground)]">
             {proteinMatchesFormula
               ? "Auto · 0.6–0.8 g/lb"
               : "Custom"}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-[var(--space-grid)] sm:grid-cols-2">
           <div className="space-y-1">
             <Input
               id="protein_target_g_min"
               type="number"
               {...register("protein_target_g_min", { valueAsNumber: true })}
             />
-            <p className="text-[10px] text-[var(--color-muted-foreground)]">Low</p>
+            <p className="text-2xs text-[var(--color-muted-foreground)]">Low</p>
             {errors.protein_target_g_min && (
               <p className="text-xs text-[var(--color-destructive)]">
                 {errors.protein_target_g_min.message}
@@ -204,7 +204,7 @@ export function GoalStepForm({
               type="number"
               {...register("protein_target_g_max", { valueAsNumber: true })}
             />
-            <p className="text-[10px] text-[var(--color-muted-foreground)]">High</p>
+            <p className="text-2xs text-[var(--color-muted-foreground)]">High</p>
             {errors.protein_target_g_max && (
               <p className="text-xs text-[var(--color-destructive)]">
                 {errors.protein_target_g_max.message}
@@ -212,7 +212,7 @@ export function GoalStepForm({
             )}
           </div>
         </div>
-        <p className="text-[11px] text-[var(--color-muted-foreground)]">
+        <p className="text-2xs text-[var(--color-muted-foreground)]">
           Auto-calculated from starting weight (0.6–0.8 g/lb body weight). Edit if your clinician
           recommends a different target.
         </p>

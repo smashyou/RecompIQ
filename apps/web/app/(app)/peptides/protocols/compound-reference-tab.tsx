@@ -69,7 +69,7 @@ export function CompoundReferenceTab({
 
   return (
     <div className="space-y-4">
-      <p className="font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Literature dose ranges are <strong className="text-[var(--fg)]">educational reference only</strong> —
         graded by evidence quality and cited. They are a starting point for a clinician discussion,
         not a prescription. Pick a row to prefill the calculator, then override with your own numbers.
@@ -89,7 +89,7 @@ export function CompoundReferenceTab({
               className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
             >
               <div className="flex items-center gap-3">
-                <span className="font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+                <span className="font-[family-name:var(--font-display)] text-base font-semibold tracking-[-0.01em] text-[var(--fg)]">
                   {c.name}
                 </span>
                 <EvidenceBadge
@@ -97,7 +97,7 @@ export function CompoundReferenceTab({
                   fdaApproved={c.fda_approved}
                 />
               </div>
-              <span className="font-[family-name:var(--font-mono)] text-[14px] text-[var(--fg-subtle)]">
+              <span className="font-[family-name:var(--font-mono)] text-sm text-[var(--fg-subtle)]">
                 {isOpen ? "−" : "+"}
               </span>
             </button>
@@ -105,13 +105,13 @@ export function CompoundReferenceTab({
             {isOpen && (
               <div className="space-y-4 border-t border-[var(--border)] px-5 py-4">
                 {c.mechanism && (
-                  <p className="font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.5] text-[var(--fg-muted)]">
+                  <p className="font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
                     {c.mechanism}
                   </p>
                 )}
 
                 {c.references.length === 0 ? (
-                  <div className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] p-4 font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+                  <div className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] p-4 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                     No literature ranges loaded for this compound yet. Use the calculator with
                     values from you or your clinician.
                   </div>
@@ -123,36 +123,36 @@ export function CompoundReferenceTab({
                         className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-4"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-[family-name:var(--font-sans)] text-[13px] font-medium capitalize text-[var(--fg)]">
+                          <span className="font-[family-name:var(--font-sans)] text-sm font-medium capitalize text-[var(--fg)]">
                             {ref.context}
                           </span>
                           <div className="flex items-center gap-2">
                             <EvidenceBadge level={ref.evidence_level as EvidenceLevel} />
                             {!ref.is_human_data && (
-                              <span className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-1.5 py-0.5 font-[family-name:var(--font-sans)] text-[9.5px] uppercase tracking-[0.07em] text-[var(--fg-subtle)]">
+                              <span className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-1.5 py-0.5 font-[family-name:var(--font-sans)] text-2xs uppercase tracking-[0.07em] text-[var(--fg-subtle)]">
                                 non-human data
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className="mt-2 font-[family-name:var(--font-mono)] text-[13px] tabular-nums text-[var(--fg)]">
+                        <div className="mt-2 font-[family-name:var(--font-mono)] text-sm tabular-nums text-[var(--fg)]">
                           <DoseAnnotatedText text={ref.range_display} />
                         </div>
 
                         {ref.route && (
-                          <p className="mt-1 font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-[0.06em] text-[var(--fg-subtle)]">
+                          <p className="mt-1 font-[family-name:var(--font-sans)] text-2xs uppercase tracking-[0.06em] text-[var(--fg-subtle)]">
                             route: {ref.route}
                           </p>
                         )}
                         {ref.notes && (
-                          <p className="mt-1 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                          <p className="mt-1 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                             {ref.notes}
                           </p>
                         )}
 
                         {ref.citation.length > 0 && (
-                          <ul className="mt-2 space-y-0.5 font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+                          <ul className="mt-2 space-y-0.5 font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
                             {ref.citation.map((cit, i) => (
                               <li key={i}>
                                 {cit.url ? (
@@ -177,7 +177,7 @@ export function CompoundReferenceTab({
                           <button
                             type="button"
                             onClick={() => onUseInCalculator(c.slug)}
-                            className="mt-3 rounded-[var(--r-sm)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[11.5px] font-medium text-[var(--primary-bright)] transition-colors hover:bg-[var(--primary-line)]"
+                            className="mt-3 rounded-[var(--r-sm)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-xs font-medium text-[var(--primary-bright)] transition-colors hover:bg-[var(--primary-line)]"
                           >
                             Open in calculator
                           </button>
@@ -188,7 +188,7 @@ export function CompoundReferenceTab({
                 )}
 
                 {c.monitoring_notes.length > 0 && (
-                  <div className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-muted)]">
+                  <div className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                     <p className="font-medium text-[var(--fg)]">Monitoring</p>
                     <ul className="mt-1 list-disc space-y-0.5 pl-4">
                       {c.monitoring_notes.map((n, i) => (
@@ -200,10 +200,10 @@ export function CompoundReferenceTab({
 
                 {c.synergies.length > 0 && (
                   <div className="space-y-2">
-                    <p className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+                    <p className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                       Commonly combined with
                     </p>
-                    <p className="font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.5] text-[var(--fg-subtle)]">
+                    <p className="font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-subtle)]">
                       Educational pharmacologic rationale only — not a recommended protocol. Any
                       combination should be reviewed with a clinician and checked against your
                       contraindications.
@@ -215,23 +215,23 @@ export function CompoundReferenceTab({
                           className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-3"
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+                            <span className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                               {s.paired_name}
                             </span>
                             <div className="flex items-center gap-2">
                               <EvidenceBadge level={s.evidence_level as EvidenceLevel} />
                               {!s.is_human_data && (
-                                <span className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-1.5 py-0.5 font-[family-name:var(--font-sans)] text-[9.5px] uppercase tracking-[0.07em] text-[var(--fg-subtle)]">
+                                <span className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-1.5 py-0.5 font-[family-name:var(--font-sans)] text-2xs uppercase tracking-[0.07em] text-[var(--fg-subtle)]">
                                   non-human data
                                 </span>
                               )}
                             </div>
                           </div>
-                          <p className="mt-1 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-muted)]">
+                          <p className="mt-1 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                             {s.rationale}
                           </p>
                           {s.caution_notes && (
-                            <p className="mt-1 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--danger)]">
+                            <p className="mt-1 font-[family-name:var(--font-sans)] text-xs text-[var(--danger)]">
                               Caution: {s.caution_notes}
                             </p>
                           )}

@@ -70,7 +70,7 @@ export function ProfileStepForm({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-[var(--space-grid)] sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="dob">Date of birth</Label>
           <Input id="dob" type="date" {...register("dob")} />
@@ -94,7 +94,7 @@ export function ProfileStepForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-[var(--space-grid)] sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="height_in">Height (in)</Label>
           <Input

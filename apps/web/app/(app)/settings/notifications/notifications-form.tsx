@@ -104,7 +104,7 @@ export function NotificationsForm({ initial }: { initial: NotificationSettings }
     <div className="flex flex-col gap-[18px]">
       {/* Channel */}
       <Card title="Delivery">
-        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+        <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
           How should reminders reach you?
         </p>
         <div
@@ -134,16 +134,16 @@ export function NotificationsForm({ initial }: { initial: NotificationSettings }
           })}
         </div>
         {isOff ? (
-          <p className="mt-3 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+          <p className="mt-3 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
             All reminders are paused. Account emails (welcome, security, data
             exports) still send.
           </p>
         ) : !channelSendsEmail ? (
-          <p className="mt-3 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+          <p className="mt-3 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
             Reminders show in the app only — no reminder emails will be sent.
           </p>
         ) : (
-          <p className="mt-3 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+          <p className="mt-3 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
             Reminders below will be delivered by{" "}
             {settings.notification_channel === "both" ? "in-app and email" : "email"}.
           </p>
@@ -153,7 +153,7 @@ export function NotificationsForm({ initial }: { initial: NotificationSettings }
       {/* Per-type toggles */}
       <Card pad={0}>
         <div className="border-b border-[var(--border)] p-4">
-          <h2 className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--fg)]">
+          <h2 className="font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">
             Which reminders
           </h2>
         </div>
@@ -161,10 +161,10 @@ export function NotificationsForm({ initial }: { initial: NotificationSettings }
           {REMINDERS.map((r) => (
             <li key={r.key} className="flex items-center gap-4 p-4">
               <span className="min-w-0 flex-1">
-                <span className="block font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)]">
+                <span className="block font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                   {r.label}
                 </span>
-                <span className="block font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+                <span className="block font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                   {r.hint}
                 </span>
               </span>

@@ -2,6 +2,7 @@ import { buildProjection } from "@peptide/projections";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Card, MetricBox, Overline, SectionHeader, Stat } from "@/components/kit";
+import { AutoGrid } from "@/components/ui/layout";
 import { ProjectionChart } from "./projection-chart";
 
 export const dynamic = "force-dynamic";
@@ -41,10 +42,10 @@ export default async function ProjectionsPage() {
 
   if (!goal) {
     return (
-      <div className="flex w-full flex-col gap-[18px]">
+      <div className="flex w-full flex-col gap-[var(--space-grid)]">
         <SectionHeader num="06" title="Projections" />
         <Card>
-          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
             Set a goal in onboarding to see your projection.
           </p>
         </Card>
@@ -62,10 +63,10 @@ export default async function ProjectionsPage() {
 
   if (!projection) {
     return (
-      <div className="flex w-full flex-col gap-[18px]">
+      <div className="flex w-full flex-col gap-[var(--space-grid)]">
         <SectionHeader num="06" title="Projections" />
         <Card>
-          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
             Log a weigh-in to start a projection.
           </p>
         </Card>
@@ -82,7 +83,7 @@ export default async function ProjectionsPage() {
         : { fg: "var(--fg-muted)", line: "var(--border)", wash: "var(--surface-1)" };
 
   return (
-    <div className="flex w-full flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[var(--space-grid)]">
       <SectionHeader
         num="06"
         title="Projections"
@@ -92,14 +93,14 @@ export default async function ProjectionsPage() {
       <div className="flex items-center gap-3">
         <Overline>Adherence</Overline>
         <span
-          className="inline-flex items-center rounded-[var(--r-pill)] border px-3 py-1 font-[family-name:var(--font-sans)] text-[12px] font-medium"
+          className="inline-flex items-center rounded-[var(--r-pill)] border px-3 py-1 font-[family-name:var(--font-sans)] text-xs font-medium"
           style={{ borderColor: toneVar.line, background: toneVar.wash, color: toneVar.fg }}
         >
           {adherence.label}
         </span>
       </div>
 
-      <div className="grid gap-[14px] md:grid-cols-3">
+      <AutoGrid min="240px">
         <RateCard
           label="Conservative"
           rate={projection.series.conservative.lbsPerWeek}
@@ -119,7 +120,7 @@ export default async function ProjectionsPage() {
           etaWeeks={projection.series.aggressive.etaWeeks}
           etaDate={projection.series.aggressive.etaDate}
         />
-      </div>
+      </AutoGrid>
 
       <Card title="Trajectory" hint="lb over time" pad={16}>
         <ProjectionChart
@@ -135,7 +136,7 @@ export default async function ProjectionsPage() {
       </Card>
 
       <Card title="How this is built" pad={16}>
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] leading-relaxed text-[var(--fg-muted)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs leading-relaxed text-[var(--fg-muted)]">
           Target rate = (start − target midpoint) ÷ timeline weeks. Conservative ≈ 60% of target.
           Aggressive ≈ 115% of target. Lines are linear; real weight loss decelerates as you
           approach the target. Use this for orientation, not absolute prediction.
@@ -179,7 +180,7 @@ function RateCard({
         />
       </div>
       {etaDate && (
-        <p className="mt-2 font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-subtle)]">
+        <p className="mt-2 font-[family-name:var(--font-mono)] text-2xs tabular-nums text-[var(--fg-subtle)]">
           {new Date(etaDate).toLocaleDateString(undefined, {
             month: "short",
             day: "numeric",

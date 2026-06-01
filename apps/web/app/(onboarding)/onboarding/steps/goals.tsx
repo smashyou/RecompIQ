@@ -33,16 +33,16 @@ export function GoalsStepForm({ onSaved, onBack }: { onSaved: () => void; onBack
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="font-[family-name:var(--font-display)] text-[22px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold tracking-[-0.01em] text-[var(--fg)]">
           What are your goals?
         </h2>
-        <p className="mt-1 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+        <p className="mt-1 font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
           Pick the outcomes you care about — they decide what RecompIQ tracks and projects, and guide
           the AI when it helps you build a regimen. You can change these anytime. (Optional.)
         </p>
       </div>
 
-      <div className="grid gap-2.5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-[var(--space-grid)] sm:grid-cols-2">
         {GOAL_TAXONOMY.map((g) => {
           const on = selected.includes(g.key);
           return (
@@ -57,10 +57,10 @@ export function GoalsStepForm({ onSaved, onBack }: { onSaved: () => void; onBack
               }}
             >
               <div className="min-w-0">
-                <p className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)]">
+                <p className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                   {g.label}
                 </p>
-                <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                <p className="mt-0.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                   {g.blurb}
                 </p>
               </div>

@@ -102,7 +102,7 @@ export function SyringeVisual({ model, unitsLabel }: { model: SyringeModel; unit
           );
         })}
       </svg>
-      <p className="text-center font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+      <p className="text-center font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
         Draw to{" "}
         <span
           className={`font-[family-name:var(--font-mono)] font-semibold tabular-nums ${

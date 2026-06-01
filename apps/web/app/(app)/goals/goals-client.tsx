@@ -10,6 +10,7 @@ import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { ContraindicationBanner } from "@/components/peptides/contraindication-banner";
 import { DoseAnnotatedText, DoseDisclaimerFooter } from "@/components/peptides/dose-disclaimer";
 import { Card, Overline } from "@/components/kit";
+import { AutoGrid } from "@/components/ui/layout";
 
 function prettify(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -121,12 +122,12 @@ export function GoalsClient({
   return (
     <div className="space-y-6">
       {/* multi-select goal cards */}
-      <div className="grid gap-3 sm:grid-cols-2">
+      <AutoGrid min="240px">
         {GOAL_TAXONOMY.map((g) => {
           const on = selected.includes(g.key);
           const rank = selected.indexOf(g.key) + 1;
           return (
-            <button key={g.key} type="button" onClick={() => toggle(g.key)} className="text-left">
+            <button key={g.key} type="button" onClick={() => toggle(g.key)} className="h-full w-full text-left">
               <Card
                 style={{
                   borderColor: on ? "var(--primary-line)" : "var(--border)",
@@ -136,16 +137,16 @@ export function GoalsClient({
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-[family-name:var(--font-display)] text-[14.5px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+                      <h3 className="font-[family-name:var(--font-display)] text-sm font-semibold tracking-[-0.01em] text-[var(--fg)]">
                         {g.label}
                       </h3>
                       {g.hasV1Projection && (
-                        <span className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-px font-[family-name:var(--font-sans)] text-[9px] font-semibold uppercase tracking-[0.06em] text-[var(--fg-muted)]">
+                        <span className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-px font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-[0.06em] text-[var(--fg-muted)]">
                           projected
                         </span>
                       )}
                     </div>
-                    <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                    <p className="mt-0.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                       {g.blurb}
                     </p>
                   </div>
@@ -161,13 +162,13 @@ export function GoalsClient({
                   {g.representativeSlugs.slice(0, 4).map((slug) => (
                     <span
                       key={slug}
-                      className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-subtle)]"
+                      className="rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]"
                     >
                       {compoundNames[slug] ?? prettify(slug)}
                     </span>
                   ))}
                 </div>
-                <p className="mt-2 font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-subtle)]">
+                <p className="mt-2 font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
                   Tracks: {g.signals.join(" · ")}
                   {on && rank > 0 ? `  ·  priority ${rank}` : ""}
                 </p>
@@ -175,7 +176,7 @@ export function GoalsClient({
             </button>
           );
         })}
-      </div>
+      </AutoGrid>
 
       <div className="flex items-center gap-3">
         <Button onClick={saveGoals} disabled={savingGoals} variant="outline">
@@ -187,7 +188,7 @@ export function GoalsClient({
       {/* NL box + AI auto-stacker */}
       <Card title="Ask the AI to assemble a plan">
         <div className="space-y-3">
-          <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
             Describe what you want in plain language (or just use your selected goals). The AI proposes
             an evidence-graded, phased plan — suggestions you accept and edit. It never prescribes.
           </p>
@@ -196,7 +197,7 @@ export function GoalsClient({
             onChange={(e) => setFreeText(e.target.value)}
             placeholder="e.g. I want to drop ~40 lb, then put on muscle, and my skin + sleep could be better."
             rows={3}
-            className="w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
+            className="w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-3 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
           />
           <Button onClick={generate} disabled={generating} className="gap-2">
             <Sparkles size={16} /> {generating ? "Thinking…" : "Generate plan"}
@@ -210,11 +211,11 @@ export function GoalsClient({
           <Overline>Proposed plan · review before applying</Overline>
 
           <Card>
-            <div className="font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg)]">
+            <div className="font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg)]">
               <DoseAnnotatedText text={plan.plan.summary} showFooter={false} />
             </div>
             {plan.plan.phasing_rationale && (
-              <div className="mt-2 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-muted)]">
+              <div className="mt-2 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
                 <DoseAnnotatedText text={plan.plan.phasing_rationale} showFooter={false} />
               </div>
             )}
@@ -226,7 +227,7 @@ export function GoalsClient({
           {plan.plan.warnings.length > 0 && (
             <div className="rounded-[var(--r-md)] border px-4 py-3" style={{ borderColor: "var(--warn-line)", background: "var(--warn-wash)" }}>
               <Overline style={{ color: "var(--warn)" }}>Heads up</Overline>
-              <ul className="mt-1 list-disc space-y-0.5 pl-4 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+              <ul className="mt-1 list-disc space-y-0.5 pl-4 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                 {plan.plan.warnings.map((w, i) => (
                   <li key={i}>{w}</li>
                 ))}
@@ -237,7 +238,7 @@ export function GoalsClient({
           {plan.contraindications.length > 0 ? (
             <ContraindicationBanner findings={plan.contraindications as never} />
           ) : (
-            <p className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+            <p className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
               No contraindications found against your recorded conditions and medications. This is not
               a substitute for clinician review.
             </p>
@@ -247,13 +248,13 @@ export function GoalsClient({
             <Card key={pi} pad={0}>
               <div className="border-b border-[var(--border)] px-[18px] py-3">
                 <div className="flex items-baseline gap-2">
-                  <Overline style={{ fontSize: 9 }}>Phase {pi + 1}</Overline>
-                  <h3 className="font-[family-name:var(--font-display)] text-[15px] font-semibold text-[var(--fg)]">
+                  <Overline style={{ fontSize: "var(--text-2xs)" }}>Phase {pi + 1}</Overline>
+                  <h3 className="font-[family-name:var(--font-display)] text-base font-semibold text-[var(--fg)]">
                     {phase.name}
                   </h3>
                 </div>
                 {phase.rationale && (
-                  <div className="mt-1 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                  <div className="mt-1 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                     <DoseAnnotatedText text={phase.rationale} showFooter={false} />
                   </div>
                 )}
@@ -262,21 +263,21 @@ export function GoalsClient({
                 {phase.items.map((it, ii) => (
                   <li key={ii} className="px-[18px] py-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)]">
+                      <span className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                         {it.name}
                       </span>
                       <EvidenceBadge level={it.evidence_level as never} fdaApproved={false} />
                     </div>
-                    <div className="mt-0.5 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-muted)]">
+                    <div className="mt-0.5 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
                       <DoseAnnotatedText text={it.why} showFooter={false} />
                     </div>
                     {it.literature_dose_text && (
-                      <div className="mt-1 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg)]">
+                      <div className="mt-1 font-[family-name:var(--font-sans)] text-xs text-[var(--fg)]">
                         <DoseAnnotatedText text={it.literature_dose_text} showFooter={false} />
                       </div>
                     )}
                     {it.cautions.length > 0 && (
-                      <p className="mt-1 font-[family-name:var(--font-sans)] text-[11px] text-[var(--warn)]">
+                      <p className="mt-1 font-[family-name:var(--font-sans)] text-2xs text-[var(--warn)]">
                         Caution: {it.cautions.join(" · ")}
                       </p>
                     )}
@@ -288,7 +289,7 @@ export function GoalsClient({
 
           {plan.plan.clinician_points.length > 0 && (
             <Card title="Discuss with your clinician">
-              <ul className="list-disc space-y-1 pl-4 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+              <ul className="list-disc space-y-1 pl-4 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                 {plan.plan.clinician_points.map((c, i) => (
                   <li key={i}>{c}</li>
                 ))}
@@ -304,7 +305,7 @@ export function GoalsClient({
               Discard
             </Button>
           </div>
-          <p className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+          <p className="font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
             Applying adds these as AI-suggested items with <strong>no dose set</strong> — you (or your
             clinician) decide the dose. Educational only, not a prescription.
           </p>

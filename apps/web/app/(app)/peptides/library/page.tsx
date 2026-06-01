@@ -51,10 +51,10 @@ export default async function LibraryPage() {
   });
 
   return (
-    <div className="mx-auto max-w-[980px]">
+    <div>
       <SectionHeader title="Protocol library" note={`${cards.length} compounds`} />
 
-      <p className="mb-6 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="mb-6 font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Evidence-graded reference, sourced from public literature. Educational only, not medical
         advice.
       </p>

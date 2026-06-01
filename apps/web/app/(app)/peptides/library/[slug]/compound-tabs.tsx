@@ -109,12 +109,12 @@ function Card({
       {(title || hint) && (
         <header className="mb-3 flex items-baseline justify-between gap-3">
           {title && (
-            <h2 className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--fg)]">
+            <h2 className="font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">
               {title}
             </h2>
           )}
           {hint && (
-            <span className="font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--fg-subtle)]">
+            <span className="font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-[0.1em] text-[var(--fg-subtle)]">
               {hint}
             </span>
           )}
@@ -128,14 +128,14 @@ function Card({
 // Sec = a Card with a 14px bottom margin (the reference's stacked section rhythm).
 function Sec({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
-    <Card title={title} className="mb-[14px]">
+    <Card title={title} className="mb-[var(--space-grid)]">
       {children}
     </Card>
   );
 }
 
 const bodyText =
-  "font-[family-name:var(--font-sans)] text-[14px] leading-[1.6] text-[var(--fg-muted)] [text-wrap:pretty]";
+  "font-[family-name:var(--font-sans)] text-sm leading-[1.6] text-[var(--fg-muted)] [text-wrap:pretty]";
 
 // Turn the compound's own plain-string contraindications into findings so we can
 // reuse <ContraindicationBanner> verbatim. These are the compound's labelled
@@ -220,7 +220,7 @@ function CompoundTabsInner({ detail }: { detail: CompoundDetail }) {
     <div>
       {/* Always-visible compliance banners (do NOT hide inside a tab) */}
       {findings.length > 0 && (
-        <Card title="Contraindications" hint="this compound" className="mb-[14px]">
+        <Card title="Contraindications" hint="this compound" className="mb-[var(--space-grid)]">
           <ContraindicationBanner findings={findings} />
         </Card>
       )}
@@ -237,7 +237,7 @@ function CompoundTabsInner({ detail }: { detail: CompoundDetail }) {
               onClick={() => go(t.id)}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "inline-flex items-center gap-[7px] rounded-[var(--r-pill)] border px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12.5px] font-medium transition-colors",
+                "inline-flex items-center gap-[7px] rounded-[var(--r-pill)] border px-3 py-1.5 font-[family-name:var(--font-sans)] text-xs font-medium transition-colors",
                 active
                   ? "border-[var(--primary-line)] bg-[var(--primary-wash)] text-[var(--primary-bright)]"
                   : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:bg-[var(--surface-2)]",
@@ -266,10 +266,10 @@ function OverviewTab({ detail }: { detail: CompoundDetail }) {
       {/* blend note (real) — shown before the summary for blends */}
       {detail.is_blend && (
         <Sec>
-          <p className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--fg)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">
             This is a multi-peptide blend
           </p>
-          <p className="mt-1 font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.5] text-[var(--fg-muted)]">
+          <p className="mt-1 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
             Blends are community/vendor combinations, not single compounds, and are not
             FDA-approved. There is no established human dose for the combined product — each
             component has its own evidence and cautions below. Compositions vary by source;
@@ -296,7 +296,7 @@ function OverviewTab({ detail }: { detail: CompoundDetail }) {
       {/* Commonly stacked with (real synergies) */}
       {detail.synergies.length > 0 && (
         <Sec title="Commonly stacked with">
-          <p className="mb-3 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-subtle)]">
+          <p className="mb-3 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-subtle)]">
             Educational pharmacologic rationale only — not a recommended protocol. Review any
             combination with a clinician and against your contraindications.
           </p>
@@ -304,16 +304,16 @@ function OverviewTab({ detail }: { detail: CompoundDetail }) {
             {detail.synergies.map((s) => (
               <li key={s.id} className="rounded-[var(--r-md)] border border-[var(--border)] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+                  <span className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                     {s.paired_name}
                   </span>
                   <EvidenceBadge level={s.evidence_level as EvidenceLevel} />
                 </div>
-                <p className="mt-1 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-muted)]">
+                <p className="mt-1 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
                   {s.rationale}
                 </p>
                 {s.caution_notes && (
-                  <p className="mt-1 font-[family-name:var(--font-sans)] text-[12px] text-[var(--danger)]">
+                  <p className="mt-1 font-[family-name:var(--font-sans)] text-xs text-[var(--danger)]">
                     Caution: {s.caution_notes}
                   </p>
                 )}
@@ -340,7 +340,7 @@ function DosingTab({ detail, calcHref }: { detail: CompoundDetail; calcHref: str
             {detail.common_side_effects.map((s, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.45] text-[var(--fg-muted)]"
+                className="flex items-start gap-2 font-[family-name:var(--font-sans)] text-xs leading-[1.45] text-[var(--fg-muted)]"
               >
                 <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--warn)]" />
                 {s}
@@ -357,7 +357,7 @@ function DosingTab({ detail, calcHref }: { detail: CompoundDetail; calcHref: str
             {detail.serious_adverse_events.map((s, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.45] text-[var(--fg-muted)]"
+                className="flex items-start gap-2 font-[family-name:var(--font-sans)] text-xs leading-[1.45] text-[var(--fg-muted)]"
               >
                 <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--danger)]" />
                 {s}
@@ -374,7 +374,7 @@ function DosingTab({ detail, calcHref }: { detail: CompoundDetail; calcHref: str
             {detail.monitoring_notes.map((t, i) => (
               <li
                 key={i}
-                className="flex gap-2 font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.45] text-[var(--fg-muted)]"
+                className="flex gap-2 font-[family-name:var(--font-sans)] text-xs leading-[1.45] text-[var(--fg-muted)]"
               >
                 <span className="mt-px grid h-4 w-4 shrink-0 place-items-center rounded-[5px] bg-[var(--surface-2)] text-[var(--primary)]">
                   <Check size={11} />
@@ -399,15 +399,15 @@ function ResearchTab({ detail }: { detail: CompoundDetail }) {
             const meta = [c.source, c.year].filter(Boolean).join(" · ");
             const inner = (
               <>
-                <span className="shrink-0 font-[family-name:var(--font-mono)] text-[11px] text-[var(--primary)]">
+                <span className="shrink-0 font-[family-name:var(--font-mono)] text-2xs text-[var(--primary)]">
                   [{i + 1}]
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]">
+                  <div className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]">
                     {c.title ?? c.source ?? "Reference"}
                   </div>
                   {meta && (
-                    <div className="mt-0.5 font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+                    <div className="mt-0.5 font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
                       {meta}
                     </div>
                   )}
@@ -437,7 +437,7 @@ function ResearchTab({ detail }: { detail: CompoundDetail }) {
           })}
         </div>
       ) : (
-        <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
           No catalogued references for this compound yet.
         </p>
       )}
@@ -457,10 +457,10 @@ function DosingSection({
     return (
       <Sec title="Dosing — literature reference">
         <div className="mb-3 rounded-[var(--r-md)] border border-[var(--warn-line)] bg-[var(--warn-wash)] p-3">
-          <p className="font-[family-name:var(--font-sans)] text-[12.5px] font-semibold text-[var(--fg)]">
+          <p className="font-[family-name:var(--font-sans)] text-xs font-semibold text-[var(--fg)]">
             How a blend is dosed
           </p>
-          <p className="mt-1 font-[family-name:var(--font-sans)] text-[12px] leading-[1.5] text-[var(--fg-muted)]">
+          <p className="mt-1 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
             A blend is drawn as a single volume from the reconstituted mixed vial, so the
             &ldquo;dose&rdquo; depends on how it was mixed. There is no validated combined-product
             dose. The per-component reference ranges below are what each ingredient contributes —
@@ -475,7 +475,7 @@ function DosingSection({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Link
                     href={`/peptides/library/${c.slug}`}
-                    className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)] hover:text-[var(--primary)]"
+                    className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)] hover:text-[var(--primary)]"
                   >
                     {c.name}
                   </Link>
@@ -484,7 +484,7 @@ function DosingSection({
                     {!c.is_human_data && <NonHumanPill />}
                   </div>
                 </div>
-                <div className="mt-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]">
+                <div className="mt-2 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]">
                   <DoseAnnotatedText text={c.range_display} />
                 </div>
                 {c.route && <RoutePill route={c.route} />}
@@ -493,7 +493,7 @@ function DosingSection({
           </ul>
         ) : (
           <>
-            <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+            <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
               Component reference ranges aren&apos;t catalogued yet. See each component above.
             </p>
             <DoseDisclaimerFooter />
@@ -507,7 +507,7 @@ function DosingSection({
 
   return (
     <Sec title="Dosing — literature reference">
-      <div className="mb-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-3 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+      <div className="mb-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-3 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
         Reference dose:{" "}
         <span className="font-medium text-[var(--fg)]">{detail.representativeDose}</span>
         {detail.frequency !== "—" ? ` · ${detail.frequency}` : ""} — educational, override with your
@@ -519,7 +519,7 @@ function DosingSection({
           {detail.protocols.map((p) => (
             <li key={p.id} className="rounded-[var(--r-md)] border border-[var(--border)] p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-[family-name:var(--font-sans)] text-[13px] font-medium capitalize text-[var(--fg)]">
+                <span className="font-[family-name:var(--font-sans)] text-sm font-medium capitalize text-[var(--fg)]">
                   {p.context}
                 </span>
                 <div className="flex items-center gap-2">
@@ -527,12 +527,12 @@ function DosingSection({
                   {!p.is_human_data && <NonHumanPill />}
                 </div>
               </div>
-              <div className="mt-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]">
+              <div className="mt-2 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]">
                 <DoseAnnotatedText text={p.range_display} />
               </div>
               {p.route && <RoutePill route={p.route} />}
               {p.notes && (
-                <p className="mt-1 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                <p className="mt-1 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                   {p.notes}
                 </p>
               )}
@@ -541,7 +541,7 @@ function DosingSection({
         </ul>
       ) : (
         <>
-          <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
             No established literature dose ranges for this compound. Use values from you or your
             clinician in the calculator.
           </p>
@@ -556,7 +556,7 @@ function DosingSection({
 
 function NonHumanPill() {
   return (
-    <span className="rounded bg-[var(--surface-2)] px-1.5 py-0.5 font-[family-name:var(--font-sans)] text-[10px] text-[var(--fg-muted)]">
+    <span className="rounded bg-[var(--surface-2)] px-1.5 py-0.5 font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-muted)]">
       non-human data
     </span>
   );
@@ -564,7 +564,7 @@ function NonHumanPill() {
 
 function RoutePill({ route }: { route: string }) {
   return (
-    <p className="mt-1 font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-wide text-[var(--fg-subtle)]">
+    <p className="mt-1 font-[family-name:var(--font-sans)] text-2xs uppercase tracking-wide text-[var(--fg-subtle)]">
       route: {route}
     </p>
   );
@@ -574,7 +574,7 @@ function CalculatorLink({ href }: { href: string }) {
   return (
     <Link
       href={href}
-      className="mt-4 flex items-center justify-center gap-2 rounded-[var(--r-md)] bg-[var(--primary)] px-4 py-3 font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+      className="mt-4 flex items-center justify-center gap-2 rounded-[var(--r-md)] bg-[var(--primary)] px-4 py-3 font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
     >
       <Calculator className="h-4 w-4" /> Open in reconstitution calculator
     </Link>
@@ -587,13 +587,13 @@ function ComponentsCard({ detail }: { detail: CompoundDetail }) {
   );
   const total = detail.component_mg.reduce((n, c) => n + (c.mg ?? 0), 0);
   return (
-    <Card title={`Components (${detail.components.length})`} className="mb-[14px]">
+    <Card title={`Components (${detail.components.length})`} className="mb-[var(--space-grid)]">
       {detail.component_mg.length > 0 && (
         <div className="mb-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-3">
-          <p className="font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--fg-subtle)]">
+          <p className="font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-[0.1em] text-[var(--fg-subtle)]">
             Composition
           </p>
-          <p className="mt-1 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]">
+          <p className="mt-1 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]">
             {detail.component_mg
               .map((c) => `${c.label}${c.mg !== null ? ` ${c.mg} mg` : ""}`)
               .join(" / ")}
@@ -613,7 +613,7 @@ function ComponentsCard({ detail }: { detail: CompoundDetail }) {
               href={`/peptides/library/${c.slug}`}
               className="flex items-center justify-between gap-2 rounded-[var(--r-md)] border border-[var(--border)] p-3 transition-colors hover:border-[var(--primary)]"
             >
-              <span className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+              <span className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                 {c.name}
               </span>
               <EvidenceBadge level={c.evidence_level as EvidenceLevel} fdaApproved={c.fda_approved} />
@@ -623,10 +623,10 @@ function ComponentsCard({ detail }: { detail: CompoundDetail }) {
       </ul>
       {combinedAbsolute.length > 0 && (
         <div className="mt-3 rounded-[var(--r-md)] border border-[var(--danger-line)] bg-[var(--danger-wash)] p-3">
-          <p className="font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--danger-bright)]">
+          <p className="font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-[0.1em] text-[var(--danger-bright)]">
             Combined — do not use if (union of all components)
           </p>
-          <ul className="mt-1 list-disc space-y-0.5 pl-4 font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+          <ul className="mt-1 list-disc space-y-0.5 pl-4 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
             {combinedAbsolute.map((x, i) => (
               <li key={i}>{x}</li>
             ))}
@@ -693,7 +693,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]"
       >
         {q}
         <ChevronDown
@@ -701,7 +701,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         />
       </button>
       {open && (
-        <p className="border-t border-[var(--border)] px-4 py-3 font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.55] text-[var(--fg-muted)]">
+        <p className="border-t border-[var(--border)] px-4 py-3 font-[family-name:var(--font-sans)] text-xs leading-[1.55] text-[var(--fg-muted)]">
           {a}
         </p>
       )}

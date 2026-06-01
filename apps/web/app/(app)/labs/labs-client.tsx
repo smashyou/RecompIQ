@@ -13,6 +13,7 @@ import {
 } from "@peptide/shared";
 import { postJson } from "@/lib/post-json";
 import { Card, Overline } from "@/components/kit";
+import { AutoGrid } from "@/components/ui/layout";
 import {
   shapeLabSeries,
   formatLabValue,
@@ -170,7 +171,7 @@ export function LabsClient({ initialRows }: { initialRows: LabReadingRow[] }) {
   return (
     <div className="space-y-5">
       {error && (
-        <div className="flex items-start gap-2 rounded-[var(--r-md)] border border-[var(--danger-line)] bg-[var(--danger-wash)] px-3 py-2 font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--danger-bright)]">
+        <div className="flex items-start gap-2 rounded-[var(--r-md)] border border-[var(--danger-line)] bg-[var(--danger-wash)] px-3 py-2 font-[family-name:var(--font-sans)] text-xs text-[var(--danger-bright)]">
           <span className="flex-1">{error}</span>
           <button onClick={() => setError(null)} aria-label="Dismiss">
             <X size={14} />
@@ -246,14 +247,14 @@ function UploadCard({
             <FileText size={20} />
           </span>
         )}
-        <span className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+        <span className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
           {mode === "uploading"
             ? "Uploading…"
             : mode === "parsing"
               ? "Reading your report…"
               : "Upload a lab report (JPEG/PNG/PDF)"}
         </span>
-        <span className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+        <span className="font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
           We transcribe the printed values for you to review before saving. Nothing is interpreted.
         </span>
       </button>
@@ -286,20 +287,20 @@ function ReviewPanel({
 
   return (
     <Card title="Review & confirm" hint={`${kept} of ${rows.length} markers`}>
-      <p className="mb-3 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+      <p className="mb-3 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
         Check each value against your report. Edit anything the reader got wrong, untick rows you
         don&apos;t want, then save. These are your own values — RecompIQ only flags what falls
         outside a typical range.
       </p>
 
-      <label className="mb-3 flex items-center gap-2 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+      <label className="mb-3 flex items-center gap-2 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
         Collected on
         <input
           type="date"
           value={date}
           max={today()}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1 font-[family-name:var(--font-mono)] text-[12px] text-[var(--fg)]"
+          className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1 font-[family-name:var(--font-mono)] text-xs text-[var(--fg)]"
         />
       </label>
 
@@ -327,20 +328,20 @@ function ReviewPanel({
                   value={r.marker}
                   onChange={(e) => update(i, { marker: e.target.value })}
                   placeholder="Marker"
-                  className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg)]"
+                  className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1 font-[family-name:var(--font-sans)] text-xs text-[var(--fg)]"
                 />
                 <input
                   value={r.value}
                   inputMode="decimal"
                   onChange={(e) => update(i, { value: e.target.value })}
                   placeholder="Value"
-                  className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1 font-[family-name:var(--font-mono)] text-[12px] tabular-nums text-[var(--fg)]"
+                  className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1 font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg)]"
                 />
                 <input
                   value={r.unit}
                   onChange={(e) => update(i, { unit: e.target.value })}
                   placeholder="Unit"
-                  className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1 font-[family-name:var(--font-mono)] text-[11px] text-[var(--fg-muted)]"
+                  className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1 font-[family-name:var(--font-mono)] text-2xs text-[var(--fg-muted)]"
                 />
                 <span className="flex items-center gap-1">
                   <input
@@ -348,7 +349,7 @@ function ReviewPanel({
                     inputMode="decimal"
                     onChange={(e) => update(i, { ref_low: e.target.value })}
                     placeholder="low"
-                    className="w-full rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-1.5 py-1 font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-muted)]"
+                    className="w-full rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-1.5 py-1 font-[family-name:var(--font-mono)] text-2xs tabular-nums text-[var(--fg-muted)]"
                   />
                   <span className="text-[var(--fg-subtle)]">–</span>
                   <input
@@ -356,7 +357,7 @@ function ReviewPanel({
                     inputMode="decimal"
                     onChange={(e) => update(i, { ref_high: e.target.value })}
                     placeholder="high"
-                    className="w-full rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-1.5 py-1 font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-muted)]"
+                    className="w-full rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-1.5 py-1 font-[family-name:var(--font-mono)] text-2xs tabular-nums text-[var(--fg-muted)]"
                   />
                 </span>
                 <StatusBadge status={status} />
@@ -370,14 +371,14 @@ function ReviewPanel({
         <button
           onClick={onSave}
           disabled={busy || kept === 0}
-          className="rounded-[var(--r-md)] bg-[var(--primary)] px-4 py-2 font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--primary-foreground)] disabled:opacity-50"
+          className="rounded-[var(--r-md)] bg-[var(--primary)] px-4 py-2 font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--primary-foreground)] disabled:opacity-50"
         >
           {busy ? "Saving…" : `Save ${kept} marker${kept === 1 ? "" : "s"}`}
         </button>
         <button
           onClick={onCancel}
           disabled={busy}
-          className="rounded-[var(--r-md)] border border-[var(--border)] px-4 py-2 font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg-muted)]"
+          className="rounded-[var(--r-md)] border border-[var(--border)] px-4 py-2 font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg-muted)]"
         >
           Cancel
         </button>
@@ -459,7 +460,7 @@ function ManualEntry({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 font-[family-name:var(--font-sans)] text-[12.5px] font-medium text-[var(--fg-muted)] hover:border-[var(--primary-line)] hover:text-[var(--fg)]"
+        className="flex items-center gap-2 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 font-[family-name:var(--font-sans)] text-xs font-medium text-[var(--fg-muted)] hover:border-[var(--primary-line)] hover:text-[var(--fg)]"
       >
         <Plus size={15} /> Add a marker by hand
       </button>
@@ -474,7 +475,7 @@ function ManualEntry({
           <select
             value={markerKey}
             onChange={(e) => pickMarker(e.target.value)}
-            className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg)]"
+            className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg)]"
           >
             <option value="">Other / type below…</option>
             {LAB_MARKER_DEFS.map((m) => (
@@ -491,7 +492,7 @@ function ManualEntry({
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               placeholder="e.g. Magnesium"
-              className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg)]"
+              className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg)]"
             />
           </label>
         )}
@@ -502,7 +503,7 @@ function ManualEntry({
             inputMode="decimal"
             onChange={(e) => setValue(e.target.value)}
             placeholder="0"
-            className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-mono)] text-[12.5px] tabular-nums text-[var(--fg)]"
+            className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg)]"
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -511,7 +512,7 @@ function ManualEntry({
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
             placeholder="mg/dL"
-            className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-mono)] text-[12px] text-[var(--fg-muted)]"
+            className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-mono)] text-xs text-[var(--fg-muted)]"
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -521,7 +522,7 @@ function ManualEntry({
             value={date}
             max={today()}
             onChange={(e) => setDate(e.target.value)}
-            className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-mono)] text-[12px] text-[var(--fg)]"
+            className="rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface-1)] px-2 py-1.5 font-[family-name:var(--font-mono)] text-xs text-[var(--fg)]"
           />
         </label>
       </div>
@@ -529,13 +530,13 @@ function ManualEntry({
         <button
           onClick={submit}
           disabled={saving || busy}
-          className="rounded-[var(--r-md)] bg-[var(--primary)] px-4 py-2 font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--primary-foreground)] disabled:opacity-50"
+          className="rounded-[var(--r-md)] bg-[var(--primary)] px-4 py-2 font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--primary-foreground)] disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save marker"}
         </button>
         <button
           onClick={() => setOpen(false)}
-          className="rounded-[var(--r-md)] border border-[var(--border)] px-4 py-2 font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg-muted)]"
+          className="rounded-[var(--r-md)] border border-[var(--border)] px-4 py-2 font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg-muted)]"
         >
           Cancel
         </button>
@@ -555,7 +556,7 @@ function MarkerHistory({
   if (series.length === 0) {
     return (
       <Card>
-        <p className="py-2 text-center font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-subtle)]">
+        <p className="py-2 text-center font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           No labs yet. Upload a report or add a marker to start tracking trends.
         </p>
       </Card>
@@ -564,11 +565,11 @@ function MarkerHistory({
   return (
     <div className="space-y-2">
       <Overline>Your markers · {series.length}</Overline>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <AutoGrid min="240px">
         {series.map((s) => (
           <MarkerCard key={s.key} s={s} onDelete={onDelete} />
         ))}
-      </div>
+      </AutoGrid>
     </div>
   );
 }
@@ -584,11 +585,11 @@ function MarkerCard({ s, onDelete }: { s: MarkerSeries; onDelete: (id: string) =
     <Card pad={14}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="truncate font-[family-name:var(--font-sans)] text-[13.5px] font-semibold text-[var(--fg)]">
+          <div className="truncate font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">
             {s.marker}
           </div>
           {s.panelLabel && (
-            <div className="font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-subtle)]">
+            <div className="font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
               {s.panelLabel}
             </div>
           )}
@@ -598,11 +599,11 @@ function MarkerCard({ s, onDelete }: { s: MarkerSeries; onDelete: (id: string) =
 
       <div className="mt-2 flex items-end justify-between gap-2">
         <div>
-          <span className="font-[family-name:var(--font-mono)] text-[22px] font-semibold tabular-nums text-[var(--fg)]">
+          <span className="font-[family-name:var(--font-mono)] text-xl font-semibold tabular-nums text-[var(--fg)]">
             {latestVal}
           </span>
           {s.unit && (
-            <span className="ml-1 font-[family-name:var(--font-mono)] text-[12px] text-[var(--fg-subtle)]">
+            <span className="ml-1 font-[family-name:var(--font-mono)] text-xs text-[var(--fg-subtle)]">
               {s.unit}
             </span>
           )}
@@ -610,7 +611,7 @@ function MarkerCard({ s, onDelete }: { s: MarkerSeries; onDelete: (id: string) =
         <Sparkline series={s} />
       </div>
 
-      <div className="mt-1.5 flex items-center justify-between font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-subtle)]">
+      <div className="mt-1.5 flex items-center justify-between font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
         <span>
           ref {rangeText}
           {s.refSource === "catalog" && <span className="ml-1 opacity-70">(typical)</span>}
@@ -618,14 +619,14 @@ function MarkerCard({ s, onDelete }: { s: MarkerSeries; onDelete: (id: string) =
         <span>{s.latest.collected_on}</span>
       </div>
       {s.refSource === "catalog" && s.sexSpecific && (
-        <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[10px] leading-snug text-[var(--warn-foreground)]">
+        <p className="mt-0.5 font-[family-name:var(--font-sans)] text-2xs leading-snug text-[var(--warn-foreground)]">
           Sex-specific range — discuss with your clinician.
         </p>
       )}
 
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="mt-2 font-[family-name:var(--font-sans)] text-[11px] font-medium text-[var(--primary-bright)]"
+        className="mt-2 font-[family-name:var(--font-sans)] text-2xs font-medium text-[var(--primary-bright)]"
       >
         {expanded ? "Hide" : `History (${s.readings.length})`}
       </button>
@@ -636,7 +637,7 @@ function MarkerCard({ s, onDelete }: { s: MarkerSeries; onDelete: (id: string) =
             return (
               <li
                 key={r.id}
-                className="flex items-center justify-between gap-2 font-[family-name:var(--font-sans)] text-[11.5px]"
+                className="flex items-center justify-between gap-2 font-[family-name:var(--font-sans)] text-xs"
               >
                 <span className="text-[var(--fg-subtle)]">{r.collected_on}</span>
                 <span className="flex items-center gap-2">
@@ -648,7 +649,7 @@ function MarkerCard({ s, onDelete }: { s: MarkerSeries; onDelete: (id: string) =
                     {formatLabValue(r.value, s.decimals)}
                   </span>
                   {r.source === "manual" && (
-                    <span className="text-[9px] uppercase tracking-wide text-[var(--fg-subtle)]">man</span>
+                    <span className="text-2xs uppercase tracking-wide text-[var(--fg-subtle)]">man</span>
                   )}
                   <button
                     onClick={() => onDelete(r.id)}
@@ -669,7 +670,7 @@ function MarkerCard({ s, onDelete }: { s: MarkerSeries; onDelete: (id: string) =
 
 function Sparkline({ series }: { series: MarkerSeries }) {
   const pts = series.readings;
-  if (pts.length < 2) return <span className="text-[10px] text-[var(--fg-subtle)]">1 reading</span>;
+  if (pts.length < 2) return <span className="text-2xs text-[var(--fg-subtle)]">1 reading</span>;
   const w = 96;
   const h = 30;
   const vals = pts.map((p) => p.value);
@@ -695,20 +696,20 @@ function Sparkline({ series }: { series: MarkerSeries }) {
 function StatusBadge({ status }: { status: RangeStatus }) {
   if (status === "unknown") {
     return (
-      <span className="rounded-[var(--r-pill)] border border-[var(--border)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-wide text-[var(--fg-subtle)]">
+      <span className="rounded-[var(--r-pill)] border border-[var(--border)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-wide text-[var(--fg-subtle)]">
         no range
       </span>
     );
   }
   if (status === "in") {
     return (
-      <span className="rounded-[var(--r-pill)] border border-[var(--positive-line)] bg-[var(--positive-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-wide text-[var(--positive)]">
+      <span className="rounded-[var(--r-pill)] border border-[var(--positive-line)] bg-[var(--positive-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-wide text-[var(--positive)]">
         in range
       </span>
     );
   }
   return (
-    <span className="rounded-[var(--r-pill)] border border-[var(--warn-line)] bg-[var(--warn-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-wide text-[var(--warn-foreground)]">
+    <span className="rounded-[var(--r-pill)] border border-[var(--warn-line)] bg-[var(--warn-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-wide text-[var(--warn-foreground)]">
       {status === "high" ? "high" : "low"}
     </span>
   );

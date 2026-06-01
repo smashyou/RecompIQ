@@ -30,7 +30,7 @@ const SECTIONS: SettingsLink[] = [
 export default async function SettingsPage() {
   await requireUser();
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[18px]">
       <SectionHeader title="Settings" note="Manage how RecompIQ works for you." />
 
       <Card pad={0}>
@@ -47,10 +47,10 @@ export default async function SettingsPage() {
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-[family-name:var(--font-sans)] text-[13.5px] font-semibold text-[var(--fg)]">
+                  <span className="block font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">
                     {s.title}
                   </span>
-                  <span className="block truncate font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+                  <span className="block truncate font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                     {s.description}
                   </span>
                 </span>

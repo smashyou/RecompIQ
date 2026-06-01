@@ -194,10 +194,10 @@ export default async function CompoundDetailPage({
     .join(" · ");
 
   return (
-    <div className="mx-auto max-w-[860px]">
+    <div>
       <Link
         href="/peptides/library"
-        className="mb-[18px] inline-flex items-center gap-1.5 font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)] hover:text-[var(--fg)]"
+        className="mb-[18px] inline-flex items-center gap-1.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)] hover:text-[var(--fg)]"
       >
         <ChevronRight className="h-[15px] w-[15px] rotate-180" /> All compounds
       </Link>
@@ -209,7 +209,7 @@ export default async function CompoundDetailPage({
         </span>
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-[family-name:var(--font-display)] text-[28px] font-semibold tracking-[-0.02em] text-[var(--fg)]">
+            <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-[-0.02em] text-[var(--fg)]">
               {compound.name}
             </h1>
             <EvidenceBadge
@@ -218,18 +218,18 @@ export default async function CompoundDetailPage({
             />
           </div>
           {subtitle && (
-            <p className="mt-1 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+            <p className="mt-1 font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
               {subtitle}
             </p>
           )}
           {/* stat boxes — Route / Dose range / Frequency / Evidence */}
-          <div className="mt-4 flex flex-wrap gap-[18px]">
+          <div className="mt-4 grid grid-cols-2 gap-[var(--space-grid)] sm:grid-cols-4">
             {stats.map((s) => (
               <div key={s.label}>
-                <span className="font-[family-name:var(--font-sans)] text-[9.5px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
+                <span className="font-[family-name:var(--font-sans)] text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
                   {s.label}
                 </span>
-                <div className="mt-1 font-[family-name:var(--font-mono)] text-[15px] capitalize tabular-nums text-[var(--fg)]">
+                <div className="mt-1 font-[family-name:var(--font-mono)] text-base capitalize tabular-nums text-[var(--fg)]">
                   {s.value}
                 </div>
               </div>
@@ -241,7 +241,7 @@ export default async function CompoundDetailPage({
       {/* clinician prompt strip */}
       <div className="mb-[18px] flex items-center gap-3 rounded-[var(--r-md)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-4 py-3">
         <Shield size={18} className="shrink-0 text-[var(--primary)]" />
-        <span className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]">
+        <span className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]">
           Discuss this compound and any protocol with a licensed clinician before starting or
           changing.
         </span>
@@ -249,7 +249,7 @@ export default async function CompoundDetailPage({
 
       <CompoundTabs detail={detail} />
 
-      <div className="mt-[14px]">
+      <div className="mt-[var(--space-grid)]">
         <SafetyDisclaimer />
       </div>
     </div>

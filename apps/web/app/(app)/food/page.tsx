@@ -81,13 +81,13 @@ export default async function FoodPage() {
   );
 
   return (
-    <div className="flex w-full flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[var(--space-grid)]">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-[26px] font-semibold tracking-[-0.02em] text-foreground">
+          <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-[-0.02em] text-foreground">
             Food
           </h1>
-          <p className="mt-1 font-[family-name:var(--font-sans)] text-[13.5px] text-[var(--fg-subtle)]">
+          <p className="mt-1 font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
             What you ate today. Add anything, even rough estimates — patterns matter.
           </p>
         </div>
@@ -107,7 +107,7 @@ export default async function FoodPage() {
           <MetricBox label="Calories" value={Math.round(totals.cal)} unit="kcal" />
         </div>
         {proteinTarget && (
-          <p className="mt-3 font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
+          <p className="mt-3 font-[family-name:var(--font-sans)] text-2xs uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
             Protein {proteinTarget}
           </p>
         )}
@@ -119,12 +119,12 @@ export default async function FoodPage() {
           style={{ background: "var(--surface-1)" }}
         >
           <Utensils className="mx-auto mb-3 h-8 w-8 text-[var(--fg-subtle)]" />
-          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
             Nothing logged today. Add your first meal to start filling the macros card.
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-[14px]">
+        <div className="flex flex-col gap-[var(--space-grid)]">
           {groups.map(([mealType, items]) => {
             const mealCal = items.reduce((s, r) => s + Number(r.calories_kcal), 0);
             return (
@@ -138,10 +138,10 @@ export default async function FoodPage() {
                   {items.map((log) => (
                     <li key={log.id} className="flex items-center justify-between gap-3 px-[18px] py-3">
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-foreground">
+                        <p className="truncate font-[family-name:var(--font-sans)] text-sm font-medium text-foreground">
                           {log.description}
                         </p>
-                        <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+                        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                           {log.brand ? `${log.brand} · ` : ""}
                           <span className="font-[family-name:var(--font-mono)] tabular-nums">
                             {Number(log.amount)}
@@ -149,7 +149,7 @@ export default async function FoodPage() {
                           {log.unit}
                         </p>
                       </div>
-                      <div className="text-right font-[family-name:var(--font-mono)] text-[11.5px] tabular-nums text-[var(--fg-subtle)]">
+                      <div className="text-right font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg-subtle)]">
                         <p className="text-foreground">{Math.round(Number(log.calories_kcal))} kcal</p>
                         <p>
                           P {Math.round(Number(log.protein_g))}g · C {Math.round(Number(log.carbs_g))}g · F{" "}

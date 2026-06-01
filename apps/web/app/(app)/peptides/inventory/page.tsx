@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { loadInventory } from "@/lib/queries/inventory";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 import { Card, SectionHeader, Overline, Stat } from "@/components/kit";
+import { AutoGrid } from "@/components/ui/layout";
 import { InventoryManager } from "./inventory-client";
 
 export const dynamic = "force-dynamic";
@@ -40,9 +41,9 @@ export default async function InventoryPage({
   const nameById = new Map(inv.purchases.map((p) => [p.compound_id, p.compound_name]));
 
   return (
-    <div className="mx-auto max-w-[860px]">
+    <div>
       <SectionHeader title="Inventory & expenses" note="cost-per-dose is derived · educational only" />
-      <p className="mb-5 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="mb-5 font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Log vial purchases. RecompIQ derives what each dose costs and what you&apos;ve spent — from
         the numbers you enter. It does not prescribe doses.
       </p>
@@ -55,7 +56,7 @@ export default async function InventoryPage({
             <Link
               key={p.key}
               href={`/peptides/inventory?range=${p.key}`}
-              className={`rounded-[var(--r-pill)] border px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] font-medium transition-colors ${
+              className={`rounded-[var(--r-pill)] border px-3 py-1.5 font-[family-name:var(--font-sans)] text-xs font-medium transition-colors ${
                 active
                   ? "border-[var(--primary-line)] bg-[var(--primary-wash)] text-[var(--primary-bright)]"
                   : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--primary-line)]"
@@ -83,7 +84,7 @@ export default async function InventoryPage({
             <Overline>By compound · weighted avg</Overline>
             <ul className="mt-2 space-y-1.5">
               {inv.summary.byCompound.map((b) => (
-                <li key={b.compoundId} className="flex items-center justify-between gap-3 font-[family-name:var(--font-sans)] text-[12.5px]">
+                <li key={b.compoundId} className="flex items-center justify-between gap-3 font-[family-name:var(--font-sans)] text-xs">
                   <span className="text-[var(--fg)]">{nameById.get(b.compoundId) ?? "Unknown"}</span>
                   <span className="flex items-center gap-3">
                     {b.avgCostPerMg !== null && (
@@ -107,31 +108,31 @@ export default async function InventoryPage({
       {inv.compounds.length > 0 && (
         <div className="mb-4 space-y-2">
           <Overline>Inventory · what&apos;s left</Overline>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <AutoGrid min="240px">
             {inv.compounds.map((c) => (
               <Card key={c.compoundId}>
                 <div className="flex items-center justify-between">
-                  <span className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)]">
+                  <span className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                     {c.name}
                   </span>
-                  <span className="font-[family-name:var(--font-mono)] text-[12px] tabular-nums text-[var(--fg-subtle)]">
+                  <span className="font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg-subtle)]">
                     {num(c.remainingMg)} mg left
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-[family-name:var(--font-sans)] text-[11.5px]">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-[family-name:var(--font-sans)] text-xs">
                   <Row label="Next dose (FIFO)" value={usd(c.costOfNextDoseUsd)} />
                   <Row label="Avg / dose" value={usd(c.avgCostPerDoseUsd)} />
                   <Row label="Doses left" value={c.remainingDoses !== null ? num(c.remainingDoses, 0) : "—"} />
                   <Row label="Total spent" value={usd(c.totalSpendUsd)} />
                 </div>
                 {c.doseLabel === null && (
-                  <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-subtle)]">
+                  <p className="mt-0.5 font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
                     Set a dose on this compound in your regimen for per-dose cost.
                   </p>
                 )}
               </Card>
             ))}
-          </div>
+          </AutoGrid>
         </div>
       )}
 

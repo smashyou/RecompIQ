@@ -133,7 +133,7 @@ export function SymptomForm() {
             className="w-full"
           />
         </div>
-        <div className="grid grid-cols-3 gap-3 text-sm">
+        <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
           <label className="flex items-center gap-2 rounded-[var(--r-md)] border border-border p-2 font-[family-name:var(--font-sans)]">
             <input type="checkbox" {...register("nausea")} />
             Nausea

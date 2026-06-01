@@ -30,7 +30,7 @@ export default async function NotificationsSettingsPage() {
     : DEFAULT_NOTIFICATION_SETTINGS;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[18px]">
       <SectionHeader
         title="Notifications"
         note="Pick how you want reminders delivered, and which ones. Account emails always send."

@@ -22,7 +22,7 @@ export function Card({
       <header className="flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-medium">{title}</h2>
         {hint && (
-          <span className="text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)]">
+          <span className="text-2xs uppercase tracking-wider text-[var(--color-muted-foreground)]">
             {hint}
           </span>
         )}

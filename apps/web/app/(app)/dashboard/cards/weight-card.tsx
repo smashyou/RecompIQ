@@ -29,7 +29,7 @@ export function WeightCard({ snapshot }: { snapshot: DashboardSnapshot }) {
       })}
     >
       <div className="flex items-baseline justify-between">
-        <p className="text-3xl font-semibold tabular-nums">
+        <p className="text-stat font-semibold tabular-nums">
           {latestWeight.value_lb.toFixed(1)}
           <span className="ml-1 text-sm font-normal text-[var(--color-muted-foreground)]">lb</span>
         </p>

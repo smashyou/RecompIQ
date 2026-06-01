@@ -190,7 +190,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
               }}
             >
               <div
-                className="truncate font-[family-name:var(--font-sans)] text-[12.5px]"
+                className="truncate font-[family-name:var(--font-sans)] text-xs"
                 style={{
                   fontWeight: active ? 600 : 500,
                   color: active ? "var(--fg)" : "var(--fg-muted)",
@@ -198,7 +198,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
               >
                 {t.title ?? "(untitled)"}
               </div>
-              <div className="mt-[2px] font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-faint)]">
+              <div className="mt-[2px] font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-faint)]">
                 {relativeTime(t.updated_at)}
               </div>
             </button>
@@ -210,7 +210,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
       <section className="flex min-w-0 flex-1 flex-col rounded-[var(--r-lg)] border border-border bg-[var(--surface-1)] lg:min-w-[340px]">
         <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-[22px]">
           {loadingThread ? (
-            <p className="font-[family-name:var(--font-sans)] text-[13.5px] text-[var(--fg-muted)]">
+            <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
               Loading…
             </p>
           ) : messages.length === 0 ? (
@@ -225,7 +225,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
             )
           )}
           {sending && (
-            <div className="flex items-center gap-2 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-faint)]">
+            <div className="flex items-center gap-2 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-faint)]">
               <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-[var(--primary)]" />
               Thinking…
             </div>
@@ -247,7 +247,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
                 key={s}
                 type="button"
                 onClick={() => setInput((v) => (v ? `${v} ${s}` : `${s} `))}
-                className="rounded-[var(--r-sm)] border border-border bg-[var(--surface-2)] px-2 py-[3px] font-[family-name:var(--font-mono)] text-[11px] text-[var(--primary)] transition-colors hover:bg-[var(--surface-1)]"
+                className="rounded-[var(--r-sm)] border border-border bg-[var(--surface-2)] px-2 py-[3px] font-[family-name:var(--font-mono)] text-2xs text-[var(--primary)] transition-colors hover:bg-[var(--surface-1)]"
               >
                 {s}
               </button>
@@ -265,7 +265,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
               }}
               rows={1}
               placeholder="Ask the coach, or type / for a command…"
-              className="h-[30px] max-h-[120px] flex-1 resize-none bg-transparent font-[family-name:var(--font-sans)] text-[13.5px] text-[var(--fg)] outline-none placeholder:text-[var(--fg-faint)]"
+              className="h-[30px] max-h-[120px] flex-1 resize-none bg-transparent font-[family-name:var(--font-sans)] text-sm text-[var(--fg)] outline-none placeholder:text-[var(--fg-faint)]"
             />
             <Button
               type="submit"
@@ -276,7 +276,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
               <Send size={15} />
             </Button>
           </div>
-          <p className="mt-2 text-center font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-faint)]">
+          <p className="mt-2 text-center font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-faint)]">
             The coach educates, tracks, and warns &mdash; it never prescribes. Not medical advice.
           </p>
         </form>
@@ -299,7 +299,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
                   {done && <Check size={11} strokeWidth={2.6} />}
                 </span>
                 <span
-                  className="font-[family-name:var(--font-sans)] text-[12.5px]"
+                  className="font-[family-name:var(--font-sans)] text-xs"
                   style={{
                     color: done ? "var(--fg-subtle)" : "var(--fg)",
                     textDecoration: done ? "line-through" : "none",
@@ -316,7 +316,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
             {CLINICIAN_POINTS.map((t) => (
               <li
                 key={t}
-                className="flex gap-2 font-[family-name:var(--font-sans)] text-[12px] leading-[1.45] text-[var(--fg-muted)]"
+                className="flex gap-2 font-[family-name:var(--font-sans)] text-xs leading-[1.45] text-[var(--fg-muted)]"
               >
                 <span className="flex-none text-[var(--primary)]">&bull;</span>
                 {t}
@@ -332,7 +332,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
 function RailCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-[var(--r-lg)] border border-border bg-[var(--surface-1)] p-[14px]">
-      <h2 className="mb-3 font-[family-name:var(--font-sans)] text-[13px] font-medium text-foreground">
+      <h2 className="mb-3 font-[family-name:var(--font-sans)] text-sm font-medium text-foreground">
         {title}
       </h2>
       {children}
@@ -345,7 +345,7 @@ function EmptyState() {
     <div className="flex max-w-[86%] gap-[11px] self-start">
       <CoachAvatar />
       <div className="min-w-0">
-        <p className="font-[family-name:var(--font-sans)] text-[13.5px] leading-[1.6] text-[var(--fg)]">
+        <p className="font-[family-name:var(--font-sans)] text-sm leading-[1.6] text-[var(--fg)]">
           Hi. I summarize evidence, track what you log, and surface discussion points for your
           clinician &mdash; I won&apos;t prescribe a protocol. A few things I can help with:
         </p>
@@ -358,7 +358,7 @@ function EmptyState() {
           ].map((t) => (
             <li
               key={t}
-              className="flex gap-2 font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.5] text-[var(--fg-muted)]"
+              className="flex gap-2 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]"
             >
               <span className="flex-none text-[var(--primary)]">&bull;</span>
               {t}
@@ -391,7 +391,7 @@ function UserBubble({ content }: { content: string }) {
         borderRadius: "14px 14px 4px 14px",
       }}
     >
-      <p className="whitespace-pre-wrap font-[family-name:var(--font-sans)] text-[13.5px] leading-[1.55] text-[var(--fg)]">
+      <p className="whitespace-pre-wrap font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg)]">
         {content}
       </p>
     </div>
@@ -406,7 +406,7 @@ function AssistantBubble({ message }: { message: Message }) {
       <div className="min-w-0">
         {/* DoseAnnotatedText renders [edu]…[/edu] dose quarantine + the
             educational-summary-only footer when a dose is present. */}
-        <div className="font-[family-name:var(--font-sans)] text-[13.5px] leading-[1.6] text-[var(--fg)]">
+        <div className="font-[family-name:var(--font-sans)] text-sm leading-[1.6] text-[var(--fg)]">
           <DoseAnnotatedText text={message.content} />
         </div>
 
@@ -419,7 +419,7 @@ function AssistantBubble({ message }: { message: Message }) {
         )}
 
         {message.model_string && (
-          <p className="mt-2 font-[family-name:var(--font-mono)] text-[9px] text-[var(--fg-faint)]">
+          <p className="mt-2 font-[family-name:var(--font-mono)] text-2xs text-[var(--fg-faint)]">
             {message.model_string}
           </p>
         )}
@@ -433,10 +433,10 @@ function CitationChip({ citation }: { citation: Citation }) {
     <span
       className="inline-flex items-center gap-[7px] rounded-[var(--r-sm)] border border-border bg-[var(--surface-2)] px-[9px] py-[5px]"
     >
-      <span className="font-[family-name:var(--font-mono)] text-[10px] font-semibold text-[var(--primary)]">
+      <span className="font-[family-name:var(--font-mono)] text-2xs font-semibold text-[var(--primary)]">
         [{citation.n}]
       </span>
-      <span className="max-w-[200px] truncate font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-muted)]">
+      <span className="max-w-[200px] truncate font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-muted)]">
         {citation.title}
       </span>
       <EvidenceBadge level={citation.evidence_level as EvidenceLevel} />

@@ -220,7 +220,7 @@ export function PhotoFlow() {
     return (
       <Card pad={20} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <Preview src={state.previewUrl} />
-        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
           Uploading…
         </p>
       </Card>
@@ -248,7 +248,7 @@ export function PhotoFlow() {
     return (
       <Card pad={20} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <Preview src={state.blobUrl} />
-        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
           Identifying items… (10–30 s)
         </p>
       </Card>
@@ -257,7 +257,7 @@ export function PhotoFlow() {
 
   if (state.kind === "saving") {
     return (
-      <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+      <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
         Saving…
       </p>
     );
@@ -269,7 +269,7 @@ export function PhotoFlow() {
       <Preview src={state.blobUrl} compact />
 
       <Card pad={16} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div className="flex flex-wrap items-center justify-between gap-2 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           <span>
             Identified by{" "}
             <span className="font-medium text-foreground">{state.modelUsed}</span>
@@ -280,7 +280,7 @@ export function PhotoFlow() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Label className="text-[12px]">Meal type for all:</Label>
+          <Label className="text-xs">Meal type for all:</Label>
           {MEAL_TYPE.map((mt) => (
             <Chip key={mt} active={bulkMealType === mt} onClick={() => applyBulkMealType(mt)}>
               <span className="capitalize">{mt}</span>
@@ -291,7 +291,7 @@ export function PhotoFlow() {
 
       {drafts.length === 0 ? (
         <Card pad={20}>
-          <p className="text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          <p className="text-center font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
             No food detected. Try a sharper photo or re-parse with a different model.
           </p>
         </Card>
@@ -340,10 +340,10 @@ function FilePicker({ onFile }: { onFile: (file: File) => void }) {
       >
         <Camera className="h-10 w-10 text-[var(--fg-subtle)]" />
         <div className="space-y-1">
-          <p className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-foreground">
+          <p className="font-[family-name:var(--font-sans)] text-sm font-medium text-foreground">
             Snap a photo or upload one
           </p>
-          <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+          <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
             JPEG · PNG · WEBP · HEIC · 10 MB max
           </p>
         </div>
@@ -397,10 +397,10 @@ function ItemCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-[family-name:var(--font-sans)] text-[13.5px] font-semibold capitalize text-foreground">
+          <p className="truncate font-[family-name:var(--font-sans)] text-sm font-semibold capitalize text-foreground">
             {draft.parsed.name}
           </p>
-          <p className={`font-[family-name:var(--font-sans)] text-[12px] ${confidenceColor}`}>
+          <p className={`font-[family-name:var(--font-sans)] text-xs ${confidenceColor}`}>
             confidence{" "}
             <span className="font-[family-name:var(--font-mono)] tabular-nums">
               {Math.round(draft.parsed.confidence * 100)}%
@@ -428,11 +428,11 @@ function ItemCard({
 
       {!skipped && draft.suggestions.length > 0 && (
         <div className="space-y-1">
-          <Label className="text-[12px]">Match</Label>
+          <Label className="text-xs">Match</Label>
           <select
             value={draft.selectedSourceId ?? ""}
             onChange={(e) => onPatch({ selectedSourceId: e.target.value })}
-            className="w-full rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1.5 font-[family-name:var(--font-sans)] text-[12px]"
+            className="w-full rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1.5 font-[family-name:var(--font-sans)] text-xs"
           >
             {draft.suggestions.map((s) => (
               <option key={s.sourceId} value={s.sourceId}>
@@ -445,7 +445,7 @@ function ItemCard({
       )}
 
       {!skipped && draft.suggestions.length === 0 && (
-        <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           No USDA match found. Skip this item or log it manually from /food/log.
         </p>
       )}
@@ -453,21 +453,21 @@ function ItemCard({
       {!skipped && draft.selectedSourceId && (
         <div className="grid grid-cols-3 gap-2">
           <div className="col-span-1 space-y-1">
-            <Label className="text-[12px]">Amount</Label>
+            <Label className="text-xs">Amount</Label>
             <Input
               type="number"
               step="1"
               value={draft.amountG}
               onChange={(e) => onPatch({ amountG: Math.max(1, Number(e.target.value) || 0) })}
-              className="text-[12px]"
+              className="text-xs"
             />
           </div>
           <div className="col-span-1 space-y-1">
-            <Label className="text-[12px]">Unit</Label>
+            <Label className="text-xs">Unit</Label>
             <select
               value={draft.unit}
               onChange={(e) => onPatch({ unit: e.target.value as FoodUnit })}
-              className="w-full rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1.5 font-[family-name:var(--font-sans)] text-[12px]"
+              className="w-full rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1.5 font-[family-name:var(--font-sans)] text-xs"
             >
               {FOOD_UNIT.map((u) => (
                 <option key={u} value={u}>{u}</option>
@@ -475,11 +475,11 @@ function ItemCard({
             </select>
           </div>
           <div className="col-span-1 space-y-1">
-            <Label className="text-[12px]">Meal</Label>
+            <Label className="text-xs">Meal</Label>
             <select
               value={draft.mealType}
               onChange={(e) => onPatch({ mealType: e.target.value as MealType })}
-              className="w-full rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1.5 font-[family-name:var(--font-sans)] text-[12px] capitalize"
+              className="w-full rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1.5 font-[family-name:var(--font-sans)] text-xs capitalize"
             >
               {MEAL_TYPE.map((mt) => (
                 <option key={mt} value={mt} className="capitalize">{mt}</option>
@@ -490,7 +490,7 @@ function ItemCard({
       )}
 
       {!skipped && macros && (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-2 font-[family-name:var(--font-mono)] text-[11.5px] tabular-nums text-[var(--fg-subtle)]">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-2 font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg-subtle)]">
           <span>{Math.round(macros.calories_kcal)} kcal</span>
           <span>P {Math.round(macros.protein_g)} g</span>
           <span>C {Math.round(macros.carbs_g)} g</span>

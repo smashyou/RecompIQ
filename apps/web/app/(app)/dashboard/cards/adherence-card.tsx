@@ -67,7 +67,7 @@ export function AdherenceCard({
       ) : (
         <div className="space-y-3">
           <div className="flex items-baseline justify-between">
-            <p className="text-3xl font-semibold tabular-nums">
+            <p className="text-stat font-semibold tabular-nums">
               {pct ?? "—"}
               <span className="ml-1 text-sm font-normal text-[var(--color-muted-foreground)]">
                 %

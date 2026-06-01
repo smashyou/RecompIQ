@@ -62,14 +62,14 @@ export function GoalMetricsForm() {
   }
 
   if (!loaded) {
-    return <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">Loading…</p>;
+    return <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">Loading…</p>;
   }
 
   if (metrics.length === 0) {
     return (
       <Card style={{ borderStyle: "dashed" }}>
         <div className="py-6 text-center">
-          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
             No goal metrics to log yet.{" "}
             <Link href="/goals" className="text-[var(--primary)] underline">
               Pick your goals
@@ -88,13 +88,13 @@ export function GoalMetricsForm() {
         {metrics.map((m) => (
           <div key={m.key} className="space-y-1.5">
             <div className="flex items-baseline justify-between">
-              <Label className="text-[12px]">
+              <Label className="text-xs">
                 {m.label}
-                {m.hint ? <span className="ml-2 text-[10px] text-[var(--fg-subtle)]">{m.hint}</span> : null}
+                {m.hint ? <span className="ml-2 text-2xs text-[var(--fg-subtle)]">{m.hint}</span> : null}
               </Label>
-              <span className="font-[family-name:var(--font-mono)] text-[13px] tabular-nums text-[var(--fg)]">
+              <span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-[var(--fg)]">
                 {values[m.key] ?? "—"}
-                <span className="ml-1 text-[10px] text-[var(--fg-subtle)]">{m.unit === "cm" ? "cm" : ""}</span>
+                <span className="ml-1 text-2xs text-[var(--fg-subtle)]">{m.unit === "cm" ? "cm" : ""}</span>
               </span>
             </div>
             {m.kind === "rating" ? (
@@ -123,7 +123,7 @@ export function GoalMetricsForm() {
         <Button onClick={save} disabled={busy} className="w-full">
           {busy ? "Saving…" : "Log check-in"}
         </Button>
-        <p className="font-[family-name:var(--font-sans)] text-[10.5px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
           Self-reported trends, not clinical measurements.
         </p>
       </div>

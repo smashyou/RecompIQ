@@ -13,10 +13,10 @@ export function FormCard({
   return (
     <Card pad={24}>
       <header className="mb-5 space-y-1">
-        <h2 className="font-[family-name:var(--font-display)] text-[18px] font-semibold tracking-[-0.01em] text-foreground">
+        <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.01em] text-foreground">
           {title}
         </h2>
-        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
           {subtitle}
         </p>
       </header>

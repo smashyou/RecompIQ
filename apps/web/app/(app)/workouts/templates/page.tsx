@@ -35,7 +35,7 @@ export default async function TemplatesPage() {
   const userPhase = (goalRes.data?.phase as string | null) ?? "P1";
 
   return (
-    <div className="flex w-full flex-col gap-[18px]">
+    <div className="flex w-full flex-col gap-[var(--space-grid)]">
       <SectionHeader
         num="09"
         title="Workout templates"

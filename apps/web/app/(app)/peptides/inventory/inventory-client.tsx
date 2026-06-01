@@ -112,7 +112,7 @@ export function InventoryManager({ purchases }: { purchases: PurchaseRow[] }) {
         <div className="space-y-3">
           {!compoundId ? (
             <div className="space-y-2">
-              <Label className="text-[10px] uppercase">Compound</Label>
+              <Label className="text-2xs uppercase">Compound</Label>
               <div className="relative">
                 <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle)]" />
                 <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search compounds" className="pl-9" />
@@ -122,7 +122,7 @@ export function InventoryManager({ purchases }: { purchases: PurchaseRow[] }) {
                   key={c.id}
                   type="button"
                   onClick={() => pick(c)}
-                  className="block w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 text-left font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] hover:border-[var(--primary-line)]"
+                  className="block w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 text-left font-[family-name:var(--font-sans)] text-sm text-[var(--fg)] hover:border-[var(--primary-line)]"
                 >
                   + {c.name}
                 </button>
@@ -130,10 +130,10 @@ export function InventoryManager({ purchases }: { purchases: PurchaseRow[] }) {
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <span className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)]">
+              <span className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                 {compoundName}
               </span>
-              <button type="button" onClick={() => setCompoundId(null)} className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--primary)] hover:underline">
+              <button type="button" onClick={() => setCompoundId(null)} className="font-[family-name:var(--font-sans)] text-2xs text-[var(--primary)] hover:underline">
                 change
               </button>
             </div>
@@ -141,25 +141,25 @@ export function InventoryManager({ purchases }: { purchases: PurchaseRow[] }) {
 
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase">Vial (mg)</Label>
+              <Label className="text-2xs uppercase">Vial (mg)</Label>
               <Input type="number" step="0.1" min={0} value={vialMg} onChange={(e) => setVialMg(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase">Vials</Label>
+              <Label className="text-2xs uppercase">Vials</Label>
               <Input type="number" step="1" min={1} value={vialCount} onChange={(e) => setVialCount(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase">Total price</Label>
+              <Label className="text-2xs uppercase">Total price</Label>
               <Input type="number" step="0.01" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="$" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase">Vendor</Label>
+              <Label className="text-2xs uppercase">Vendor</Label>
               <Input value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="optional" />
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase">Purchased</Label>
+              <Label className="text-2xs uppercase">Purchased</Label>
               <Input type="date" value={purchasedOn} onChange={(e) => setPurchasedOn(e.target.value)} />
             </div>
           </div>
@@ -172,7 +172,7 @@ export function InventoryManager({ purchases }: { purchases: PurchaseRow[] }) {
       <section className="space-y-2">
         <Overline>Purchase history</Overline>
         {purchases.length === 0 ? (
-          <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-6 text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+          <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-6 text-center font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
             No purchases logged yet.
           </p>
         ) : (
@@ -180,15 +180,15 @@ export function InventoryManager({ purchases }: { purchases: PurchaseRow[] }) {
             {purchases.map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-3 p-3.5">
                 <div className="min-w-0 flex-1">
-                  <p className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+                  <p className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                     {p.compound_name}
                   </p>
-                  <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                  <p className="mt-0.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                     {p.vial_count}× {p.vial_mg} mg
                     {p.vendor ? ` · ${p.vendor}` : ""} · {new Date(p.purchased_on).toLocaleDateString()}
                   </p>
                 </div>
-                <span className="font-[family-name:var(--font-mono)] text-[13.5px] tabular-nums text-[var(--fg)]">
+                <span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-[var(--fg)]">
                   {usd(p.price_usd)}
                 </span>
                 <button

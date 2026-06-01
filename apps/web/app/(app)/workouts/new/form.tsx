@@ -146,7 +146,7 @@ export function NewWorkoutForm({
   }
 
   return (
-    <div className="space-y-[18px]">
+    <div className="space-y-[var(--space-grid)]">
       <Card title="Session" pad={20} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div className="space-y-2">
           <Label htmlFor="name">Session name</Label>
@@ -189,7 +189,7 @@ export function NewWorkoutForm({
             </select>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
             <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -237,7 +237,7 @@ export function NewWorkoutForm({
         </div>
         {exercises.length === 0 ? (
           <Card style={{ borderStyle: "dashed", textAlign: "center", padding: 16 }}>
-            <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+            <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
               No exercises yet. Add one above.
             </p>
           </Card>
@@ -260,7 +260,7 @@ export function NewWorkoutForm({
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <NumCell
                   label="Sets"
                   value={e.sets}
@@ -284,7 +284,7 @@ export function NewWorkoutForm({
                 />
               </div>
               {e.notes && (
-                <p className="font-[family-name:var(--font-sans)] text-[11px] italic text-[var(--fg-muted)]">
+                <p className="font-[family-name:var(--font-sans)] text-2xs italic text-[var(--fg-muted)]">
                   {e.notes}
                 </p>
               )}
@@ -318,7 +318,7 @@ function NumCell({
 }) {
   return (
     <div className="space-y-1">
-      <Label className="text-[10px] uppercase">{label}</Label>
+      <Label className="text-2xs uppercase">{label}</Label>
       <Input
         type="number"
         step={step}

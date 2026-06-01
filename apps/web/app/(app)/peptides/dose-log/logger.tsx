@@ -29,7 +29,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
 
   if (items.length === 0) {
     return (
-      <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-6 text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+      <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-6 text-center font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
         No compounds with a set dose in your regimen yet. Add one in{" "}
         <a href="/peptides/stacks/new" className="text-[var(--primary)] underline">
           your regimen
@@ -92,7 +92,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
               }`}
             >
               <div className="flex items-center gap-2">
-                <p className="font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+                <p className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                   {it.compounds.name}
                 </p>
                 <EvidenceBadge
@@ -100,7 +100,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
                   fdaApproved={it.compounds.fda_approved}
                 />
               </div>
-              <p className="mt-0.5 font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-[var(--fg-subtle)]">
+              <p className="mt-0.5 font-[family-name:var(--font-mono)] text-2xs tabular-nums text-[var(--fg-subtle)]">
                 {Number(it.dose_value)} {it.dose_unit} · {it.route} · {it.frequency}
               </p>
             </button>
@@ -112,7 +112,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
         <div className="mt-4 space-y-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase">Injection site</Label>
+              <Label className="text-2xs uppercase">Injection site</Label>
               <Input
                 value={injectionSite}
                 placeholder="e.g. abdomen L"
@@ -120,11 +120,11 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase">Adherence</Label>
+              <Label className="text-2xs uppercase">Adherence</Label>
               <select
                 value={adherence}
                 onChange={(e) => setAdherence(e.target.value as "taken" | "skipped" | "partial")}
-                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-1)] px-2 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]"
               >
                 <option value="taken">Taken</option>
                 <option value="partial">Partial</option>

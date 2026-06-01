@@ -72,7 +72,7 @@ export default function LandingPage() {
             style={{ background: "var(--primary)", boxShadow: "0 0 8px var(--primary)" }}
           />
           <span
-            className="text-[11px] font-semibold uppercase"
+            className="text-2xs font-semibold uppercase"
             style={{ color: "var(--primary-bright)", letterSpacing: "0.14em" }}
           >
             Educational tracking · Not medical advice
@@ -80,7 +80,7 @@ export default function LandingPage() {
         </span>
 
         <h1
-          className="font-[family-name:var(--font-display)] text-[40px] font-semibold leading-[1.02] tracking-[-0.025em] md:text-[60px]"
+          className="font-[family-name:var(--font-display)] text-display font-semibold leading-[1.02] tracking-[-0.025em]"
           style={{ color: "var(--fg)", maxWidth: 880, textWrap: "balance" }}
         >
           A coach for your body
@@ -89,7 +89,7 @@ export default function LandingPage() {
         </h1>
 
         <p
-          className="mt-6 font-[family-name:var(--font-sans)] text-[18px] leading-[1.55]"
+          className="mt-6 font-[family-name:var(--font-sans)] text-lg leading-[1.55]"
           style={{ color: "var(--fg-muted)", maxWidth: 560 }}
         >
           Track peptide protocols, nutrition, biomarkers, and workouts. Get evidence-graded
@@ -129,13 +129,13 @@ export default function LandingPage() {
                 <Icon size={18} />
               </span>
               <h3
-                className="mt-3.5 font-[family-name:var(--font-sans)] text-[15px] font-semibold"
+                className="mt-3.5 font-[family-name:var(--font-sans)] text-base font-semibold"
                 style={{ color: "var(--fg)" }}
               >
                 {title}
               </h3>
               <p
-                className="mt-1.5 font-[family-name:var(--font-sans)] text-[13px] leading-[1.5]"
+                className="mt-1.5 font-[family-name:var(--font-sans)] text-sm leading-[1.5]"
                 style={{ color: "var(--fg-subtle)" }}
               >
                 {desc}
@@ -150,7 +150,7 @@ export default function LandingPage() {
         style={{ borderColor: "var(--border)" }}
       >
         <span
-          className="font-[family-name:var(--font-sans)] text-[12px]"
+          className="font-[family-name:var(--font-sans)] text-xs"
           style={{ color: "var(--fg-subtle)" }}
         >
           © {new Date().getFullYear()} RecompIQ · Not a substitute for medical care
@@ -160,7 +160,7 @@ export default function LandingPage() {
             <Link
               key={href}
               href={href}
-              className="font-[family-name:var(--font-sans)] text-[12px] transition-colors hover:text-[var(--fg)]"
+              className="font-[family-name:var(--font-sans)] text-xs transition-colors hover:text-[var(--fg)]"
               style={{ color: "var(--fg-muted)" }}
             >
               {label}

@@ -11,9 +11,9 @@ export default async function LabsPage() {
   const { rows } = await loadLabs(user.id);
 
   return (
-    <div className="mx-auto max-w-[920px]">
+    <>
       <SectionHeader title="Labs & biomarkers" note="self-tracked · educational, not diagnostic" />
-      <p className="mb-5 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="mb-5 font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Upload a lab report photo or PDF and RecompIQ reads your markers, or enter values by hand.
         Out-of-range values are flagged for you to discuss with a clinician — RecompIQ does not
         interpret results or give medical advice.
@@ -24,6 +24,6 @@ export default async function LabsPage() {
       <div className="mt-6">
         <SafetyDisclaimer variant="compact" />
       </div>
-    </div>
+    </>
   );
 }

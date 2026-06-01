@@ -66,15 +66,15 @@ export function AccountForm({ email }: { email: string }) {
     <div className="flex flex-col gap-[18px]">
       {/* Account identity */}
       <Card title="Account">
-        <div className="font-[family-name:var(--font-sans)] text-[13px]">
+        <div className="font-[family-name:var(--font-sans)] text-sm">
           <span className="text-[var(--fg-muted)]">Email</span>
-          <p className="mt-0.5 font-mono text-[13px] text-[var(--fg)]">{email}</p>
+          <p className="mt-0.5 font-mono text-sm text-[var(--fg)]">{email}</p>
         </div>
       </Card>
 
       {/* Export */}
       <Card title="Export your data">
-        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+        <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
           Download a complete copy of everything you&apos;ve logged — profile,
           protocols, doses, weights, workouts, food, photos metadata, and more —
           as a single JSON file. We&apos;ll also email you the download link.
@@ -94,10 +94,10 @@ export function AccountForm({ email }: { email: string }) {
         }}
       >
         <div className="space-y-1">
-          <h2 className="font-[family-name:var(--font-sans)] text-[13px] font-semibold text-[var(--danger)]">
+          <h2 className="font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--danger)]">
             Delete account
           </h2>
-          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
             This permanently deletes your account and all associated data —
             protocols, logs, photos, and AI conversations. This cannot be undone.
             Consider exporting your data first.
@@ -106,7 +106,7 @@ export function AccountForm({ email }: { email: string }) {
         <div className="mt-4 space-y-2">
           <label
             htmlFor="confirm-delete"
-            className="block font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]"
+            className="block font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]"
           >
             Type <span className="font-mono font-semibold">DELETE</span> to confirm
           </label>
@@ -117,7 +117,7 @@ export function AccountForm({ email }: { email: string }) {
             onChange={(e) => setConfirmText(e.target.value)}
             autoComplete="off"
             spellCheck={false}
-            className="w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 font-mono text-[13px] text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            className="w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 font-mono text-sm text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
             placeholder="DELETE"
           />
         </div>

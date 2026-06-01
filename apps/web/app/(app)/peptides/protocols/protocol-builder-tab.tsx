@@ -105,7 +105,7 @@ export function ProtocolBuilderTab({
     <div className="space-y-5">
       <SafetyDisclaimer variant="compact" />
 
-      <p className="font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Build your own (or your clinician&apos;s) week-by-week titration plan. All values are
         yours — the app stores and schedules them, it doesn&apos;t prescribe.
       </p>
@@ -140,7 +140,7 @@ export function ProtocolBuilderTab({
               <select
                 value={r.compound_id}
                 onChange={(e) => update(i, { compound_id: e.target.value })}
-                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]"
               >
                 {compounds.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -164,7 +164,7 @@ export function ProtocolBuilderTab({
               <select
                 value={r.dose_unit}
                 onChange={(e) => update(i, { dose_unit: e.target.value as DoseUnit })}
-                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-1 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-1 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]"
               >
                 {DOSE_UNIT.map((u) => (
                   <option key={u} value={u}>
@@ -186,7 +186,7 @@ export function ProtocolBuilderTab({
               <select
                 value={r.route}
                 onChange={(e) => update(i, { route: e.target.value as Route })}
-                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-1 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-1 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]"
               >
                 {ROUTE.map((rt) => (
                   <option key={rt} value={rt}>

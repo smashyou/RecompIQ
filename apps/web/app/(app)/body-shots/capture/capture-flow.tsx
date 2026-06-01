@@ -101,11 +101,11 @@ export function CaptureFlow() {
   const completed = Object.values(photos).filter(Boolean).length;
 
   return (
-    <div className="space-y-[14px]">
+    <div className="space-y-[var(--space-grid)]">
       <Card pad={18}>
         <div className="flex items-baseline justify-between">
           <Overline>Progress</Overline>
-          <span className="font-[family-name:var(--font-mono)] text-[12px] tabular-nums text-[var(--fg)]">
+          <span className="font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg)]">
             {completed}
             <span className="text-[var(--fg-subtle)]">/4 angles</span>
           </span>
@@ -118,7 +118,7 @@ export function CaptureFlow() {
         </div>
       </Card>
 
-      <ul className="space-y-[14px]">
+      <ul className="space-y-[var(--space-grid)]">
         {ANGLES.map((a) => {
           const uploaded = photos[a.id];
           return (
@@ -127,14 +127,14 @@ export function CaptureFlow() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-[family-name:var(--font-sans)] text-[13.5px] font-semibold text-[var(--fg)]">
+                    <h3 className="font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">
                       {a.label}
                     </h3>
                     {uploaded && (
                       <CheckCircle2 className="h-4 w-4" style={{ color: "var(--positive)" }} />
                     )}
                   </div>
-                  <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                  <p className="mt-0.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                     {a.tip}
                   </p>
                 </div>
@@ -151,7 +151,7 @@ export function CaptureFlow() {
                     }}
                   />
                   <span
-                    className={`inline-flex items-center gap-2 rounded-[var(--r-md)] border px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] font-medium transition-colors hover:bg-[var(--surface-2)] ${
+                    className={`inline-flex items-center gap-2 rounded-[var(--r-md)] border px-3 py-1.5 font-[family-name:var(--font-sans)] text-xs font-medium transition-colors hover:bg-[var(--surface-2)] ${
                       uploaded
                         ? "border-[var(--border)] text-[var(--fg-muted)]"
                         : "border-[var(--primary-line)] text-[var(--primary-bright)]"
@@ -188,7 +188,7 @@ export function CaptureFlow() {
       </ul>
 
       <Card title="Optional" pad={18} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="weight">Weight at capture (lb)</Label>
             <Input

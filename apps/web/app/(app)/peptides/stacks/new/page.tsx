@@ -14,9 +14,9 @@ export default async function NewStackPage() {
     .select("id,slug,name,evidence_level,fda_approved,typical_route")
     .order("name");
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       <SectionHeader title="New stack" note="doses are user-supplied" />
-      <p className="mb-6 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="mb-6 font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Record the compounds + doses your clinician has approved. Doses come from you — RecompIQ
         does not prescribe.
       </p>

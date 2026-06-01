@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 import { SectionHeader, Overline } from "@/components/kit";
+import { AutoGrid } from "@/components/ui/layout";
 
 export const dynamic = "force-dynamic";
 
@@ -32,18 +33,18 @@ export default async function CompoundsPage() {
   const compounds = (data ?? []) as CompoundRow[];
 
   return (
-    <div className="mx-auto max-w-[980px]">
+    <div>
       <SectionHeader
         title="Compound catalog"
         note={`${compounds.length} compounds`}
       />
 
-      <p className="mb-6 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="mb-6 font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Evidence-graded summaries sourced from public literature. No doses listed here — those come
         from you or your clinician.
       </p>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <AutoGrid min="320px">
         {compounds.map((c) => (
           <Link
             key={c.id}
@@ -52,11 +53,11 @@ export default async function CompoundsPage() {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="font-[family-name:var(--font-display)] text-[17px] font-semibold tracking-[-0.01em] text-[var(--fg)] group-hover:text-[var(--primary)]">
+                <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.01em] text-[var(--fg)] group-hover:text-[var(--primary)]">
                   {c.name}
                 </h2>
                 {c.aliases.length > 0 && (
-                  <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+                  <p className="mt-0.5 font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
                     aka {c.aliases.join(" · ")}
                   </p>
                 )}
@@ -70,12 +71,12 @@ export default async function CompoundsPage() {
               </div>
             </div>
 
-            <p className="mt-3 font-[family-name:var(--font-sans)] text-[12.5px] leading-[1.5] text-[var(--fg-muted)]">
+            <p className="mt-3 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
               {c.short_description}
             </p>
 
             {c.mechanism && (
-              <p className="mt-2 font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.5] text-[var(--fg-subtle)]">
+              <p className="mt-2 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-subtle)]">
                 <span className="font-medium text-[var(--fg-muted)]">Mechanism</span> · {c.mechanism}
               </p>
             )}
@@ -87,14 +88,14 @@ export default async function CompoundsPage() {
             </div>
 
             {c.common_side_effects.length > 0 && (
-              <p className="mt-3 font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.5] text-[var(--fg-subtle)]">
+              <p className="mt-3 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-subtle)]">
                 <span className="font-medium text-[var(--fg-muted)]">Common side effects</span> ·{" "}
                 {c.common_side_effects.join(", ")}
               </p>
             )}
           </Link>
         ))}
-      </div>
+      </AutoGrid>
 
       <div className="mt-6">
         <SafetyDisclaimer />
@@ -106,9 +107,9 @@ export default async function CompoundsPage() {
 function DetailList({ title, items }: { title: string; items: string[] }) {
   return (
     <div>
-      <Overline style={{ fontSize: 9, letterSpacing: "0.08em" }}>{title}</Overline>
+      <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em" }}>{title}</Overline>
       {items.length === 0 ? (
-        <p className="mt-1 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+        <p className="mt-1 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           —
         </p>
       ) : (
@@ -116,7 +117,7 @@ function DetailList({ title, items }: { title: string; items: string[] }) {
           {items.map((it, i) => (
             <li
               key={i}
-              className="font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.45] text-[var(--fg-muted)]"
+              className="font-[family-name:var(--font-sans)] text-xs leading-[1.45] text-[var(--fg-muted)]"
             >
               {it}
             </li>

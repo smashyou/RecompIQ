@@ -162,16 +162,16 @@ export default async function ProtocolsPage({
     : null;
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div>
       <SectionHeader title="Reconstitution & protocols" note="math on your inputs" />
-      <p className="mb-6 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="mb-6 font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Step-by-step reconstitution math, a protocol builder, evidence-graded compound reference,
         and titration schedules — all in one place.
       </p>
 
       <Suspense
         fallback={
-          <div className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+          <div className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
             Loading…
           </div>
         }

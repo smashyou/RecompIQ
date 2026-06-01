@@ -46,13 +46,13 @@ export function Gallery({ sessions }: { sessions: Session[] }) {
 
   return (
     <>
-      <ul className="flex flex-col gap-[14px]">
+      <ul className="flex flex-col gap-[var(--space-grid)]">
         {sessions.map((s) => (
           <li key={s.id}>
             <Card style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div className="flex items-baseline justify-between gap-3">
                 <div>
-                  <p className="font-[family-name:var(--font-sans)] text-[13.5px] font-semibold text-[var(--fg)]">
+                  <p className="font-[family-name:var(--font-sans)] text-sm font-semibold text-[var(--fg)]">
                     {new Date(s.captured_at).toLocaleDateString(undefined, {
                       weekday: "short",
                       month: "short",
@@ -62,13 +62,13 @@ export function Gallery({ sessions }: { sessions: Session[] }) {
                   </p>
                   <p className="mt-1 flex flex-wrap items-baseline gap-x-2">
                     {s.weight_at_capture_lb !== null && (
-                      <span className="font-[family-name:var(--font-mono)] text-[12px] tabular-nums text-[var(--fg-muted)]">
+                      <span className="font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg-muted)]">
                         {Number(s.weight_at_capture_lb).toFixed(1)}
                         <span className="text-[var(--fg-subtle)]"> lb</span>
                       </span>
                     )}
                     {s.notes && (
-                      <span className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                      <span className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                         {s.notes}
                       </span>
                     )}
@@ -104,12 +104,12 @@ export function Gallery({ sessions }: { sessions: Session[] }) {
                           </button>
                         ) : (
                           <div className="flex h-full w-full items-center justify-center">
-                            <Overline style={{ fontSize: 9 }}>no {label.toLowerCase()}</Overline>
+                            <Overline style={{ fontSize: "var(--text-2xs)" }}>no {label.toLowerCase()}</Overline>
                           </div>
                         )}
                       </div>
                       <div className="border-t border-[var(--border)] px-2 py-1.5">
-                        <Overline style={{ fontSize: 9 }}>{label}</Overline>
+                        <Overline style={{ fontSize: "var(--text-2xs)" }}>{label}</Overline>
                       </div>
                     </div>
                   );

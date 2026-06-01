@@ -136,7 +136,7 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
                 id="phase"
                 value={phase}
                 onChange={(e) => setPhase(e.target.value)}
-                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
+                className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
               >
                 {PHASES.map((p) => (
                   <option key={p} value={p}>
@@ -161,13 +161,13 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
       <section className="space-y-3">
         <div className="flex items-baseline justify-between">
           <Overline>Compounds in this stack</Overline>
-          <span className="font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+          <span className="font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
             {items.length} added
           </span>
         </div>
 
         {items.length === 0 && (
-          <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-4 text-center font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+          <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-4 text-center font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
             Pick from the catalog below to add compounds.
           </p>
         )}
@@ -179,7 +179,7 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <p className="font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-[var(--fg)]">
+                <p className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
                   {it.compound_name}
                 </p>
                 <EvidenceBadge level={it.evidence_level as never} fdaApproved={it.fda_approved} />
@@ -195,7 +195,7 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-1 space-y-1">
-                <Label className="text-[10px] uppercase">Dose</Label>
+                <Label className="text-2xs uppercase">Dose</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -205,11 +205,11 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] uppercase">Unit</Label>
+                <Label className="text-2xs uppercase">Unit</Label>
                 <select
                   value={it.dose_unit}
                   onChange={(e) => updateItem(idx, { dose_unit: e.target.value })}
-                  className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
+                  className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]"
                 >
                   {DOSE_UNITS.map((u) => (
                     <option key={u} value={u}>
@@ -219,11 +219,11 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
                 </select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] uppercase">Route</Label>
+                <Label className="text-2xs uppercase">Route</Label>
                 <select
                   value={it.route}
                   onChange={(e) => updateItem(idx, { route: e.target.value })}
-                  className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)]"
+                  className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-2 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)]"
                 >
                   {ROUTES.map((r) => (
                     <option key={r} value={r}>
@@ -234,7 +234,7 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase">Frequency</Label>
+              <Label className="text-2xs uppercase">Frequency</Label>
               <Input
                 value={it.frequency}
                 placeholder='e.g. "weekly", "EOD", "Mon/Wed/Fri"'
@@ -242,7 +242,7 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase">Notes</Label>
+              <Label className="text-2xs uppercase">Notes</Label>
               <Input
                 value={it.notes}
                 placeholder="optional"
@@ -261,7 +261,7 @@ export function NewStackForm({ compounds }: { compounds: CompoundLite[] }) {
               key={c.id}
               type="button"
               onClick={() => addItem(c)}
-              className="flex items-center gap-2 rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)] transition-colors hover:border-[var(--primary-line)] hover:text-[var(--fg)]"
+              className="flex items-center gap-2 rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-1.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)] transition-colors hover:border-[var(--primary-line)] hover:text-[var(--fg)]"
             >
               <Plus className="h-3 w-3" />
               {c.name}

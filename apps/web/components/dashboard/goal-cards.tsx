@@ -32,10 +32,10 @@ export function GoalCards({ cards }: { cards: GoalCard[] }) {
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+        <h2 className="font-[family-name:var(--font-display)] text-base font-semibold tracking-[-0.01em] text-[var(--fg)]">
           Goal progress
         </h2>
-        <Link href="/goals" className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--primary)] hover:underline">
+        <Link href="/goals" className="font-[family-name:var(--font-sans)] text-xs text-[var(--primary)] hover:underline">
           edit goals
         </Link>
       </div>
@@ -44,17 +44,17 @@ export function GoalCards({ cards }: { cards: GoalCard[] }) {
           <Card key={c.goalKey}>
             <div className="flex items-baseline justify-between gap-2">
               <div className="min-w-0">
-                <Overline style={{ fontSize: 9 }}>{c.goalLabel}</Overline>
-                <p className="mt-0.5 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                <Overline style={{ fontSize: "var(--text-2xs)" }}>{c.goalLabel}</Overline>
+                <p className="mt-0.5 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                   {c.metricLabel}
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-[family-name:var(--font-mono)] text-[20px] font-semibold tabular-nums text-[var(--fg)]">
+                <p className="font-[family-name:var(--font-mono)] text-xl font-semibold tabular-nums text-[var(--fg)]">
                   {c.current ?? "—"}
-                  <span className="ml-1 text-[11px] text-[var(--fg-subtle)]">{c.unit}</span>
+                  <span className="ml-1 text-2xs text-[var(--fg-subtle)]">{c.unit}</span>
                 </p>
-                <p className="font-[family-name:var(--font-sans)] text-[11px] tabular-nums">
+                <p className="font-[family-name:var(--font-sans)] text-2xs tabular-nums">
                   <Trend perWeek={c.observedPerWeek} higherIsBetter={c.higherIsBetter} unit={c.unit} />
                 </p>
               </div>
@@ -77,7 +77,7 @@ export function GoalCards({ cards }: { cards: GoalCard[] }) {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="mt-2 font-[family-name:var(--font-sans)] text-[11px] text-[var(--fg-subtle)]">
+              <p className="mt-2 font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
                 <Link href="/log?tab=goals" className="text-[var(--primary)] underline">
                   Log a check-in
                 </Link>{" "}
@@ -88,13 +88,13 @@ export function GoalCards({ cards }: { cards: GoalCard[] }) {
             {c.projection && (
               <div className="mt-2 border-t border-[var(--border)] pt-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-muted)]">
+                  <span className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                     Illustrative: ~{c.projection.targetValue}
                     {c.unit} by ~{c.projection.weeks} wks
                   </span>
                   <EvidenceBadge level={c.projection.evidenceLevel as never} fdaApproved={false} />
                 </div>
-                <p className="mt-1 font-[family-name:var(--font-sans)] text-[10px] leading-[1.4] text-[var(--fg-subtle)]">
+                <p className="mt-1 font-[family-name:var(--font-sans)] text-2xs leading-[1.4] text-[var(--fg-subtle)]">
                   Illustrative — not a predicted outcome. {c.projection.caveat} Discuss with your clinician.
                 </p>
               </div>

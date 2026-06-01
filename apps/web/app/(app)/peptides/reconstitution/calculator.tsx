@@ -44,7 +44,7 @@ export function ReconstitutionCalculator() {
               id="syringe"
               value={syringe}
               onChange={(e) => setSyringe(Number(e.target.value) as 100 | 30)}
-              className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
+              className="flex h-10 w-full rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 font-[family-name:var(--font-sans)] text-sm text-[var(--fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-line)]"
             >
               <option value={100}>U-100 (100 units / mL)</option>
               <option value={30}>U-30 / U-50 (30 or 50 units / mL)</option>
@@ -58,7 +58,7 @@ export function ReconstitutionCalculator() {
         style={{ borderColor: "var(--primary-line)", background: "var(--primary-wash)" }}
       >
         {!result ? (
-          <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--danger)]">
+          <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--danger)]">
             All inputs must be greater than 0.
           </p>
         ) : (
@@ -82,11 +82,11 @@ export function ReconstitutionCalculator() {
       <div className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] p-4">
         <div className="flex items-center gap-2">
           <ShieldAlert size={14} className="text-[var(--fg-subtle)]" />
-          <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>
+          <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em" }}>
             Sterile-technique reminders
           </Overline>
         </div>
-        <ul className="mt-2 space-y-1 font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.5] text-[var(--fg-muted)]">
+        <ul className="mt-2 space-y-1 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
           <li>Wipe the vial stopper with an alcohol prep before each draw.</li>
           <li>Inject bacteriostatic water down the side of the vial, slowly.</li>
           <li>Swirl gently; do not shake.</li>
@@ -137,18 +137,17 @@ function ResultStat({
 }) {
   return (
     <div>
-      <Overline style={{ fontSize: 9.5, letterSpacing: "0.08em" }}>{label}</Overline>
+      <Overline style={{ fontSize: "var(--text-2xs)", letterSpacing: "0.08em" }}>{label}</Overline>
       <dd
-        className="mt-1 font-[family-name:var(--font-mono)] tabular-nums"
+        className={`mt-1 font-[family-name:var(--font-mono)] tabular-nums ${emphasis ? "text-3xl" : "text-xl"}`}
         style={{
-          fontSize: emphasis ? 28 : 20,
           fontWeight: 500,
           letterSpacing: "-0.02em",
           color: emphasis ? "var(--primary-bright)" : "var(--fg)",
         }}
       >
         {value}
-        <span className="ml-1 text-[11px] font-normal text-[var(--fg-subtle)]">{unit}</span>
+        <span className="ml-1 text-2xs font-normal text-[var(--fg-subtle)]">{unit}</span>
       </dd>
     </div>
   );

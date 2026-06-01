@@ -35,7 +35,7 @@ export default async function NewWorkoutPage({
   const userPhase = (goalRes.data?.phase as string | null) ?? "P1";
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-[18px]">
+    <div className="mx-auto flex max-w-narrow flex-col gap-[var(--space-grid)]">
       <SectionHeader
         num="09"
         title={templateRes.data ? templateRes.data.name : "New workout session"}

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default function CapturePage() {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-[18px]">
+    <div className="mx-auto flex max-w-narrow flex-col gap-[var(--space-grid)]">
       <SectionHeader
         num="12"
         title="New body-shot session"

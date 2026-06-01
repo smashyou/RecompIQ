@@ -147,12 +147,12 @@ export function FoodLogger() {
       </div>
 
       {searching && (
-        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
           Searching…
         </p>
       )}
       {searchError && (
-        <p className="font-[family-name:var(--font-sans)] text-[13px] text-[var(--danger)]">
+        <p className="font-[family-name:var(--font-sans)] text-sm text-[var(--danger)]">
           {searchError}
         </p>
       )}
@@ -170,15 +170,15 @@ export function FoodLogger() {
                 className="flex w-full items-center justify-between gap-3 px-[18px] py-3.5 text-left transition-colors hover:bg-[var(--surface-2)]"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-[family-name:var(--font-sans)] text-[13.5px] font-medium text-foreground">
+                  <p className="truncate font-[family-name:var(--font-sans)] text-sm font-medium text-foreground">
                     {r.description}
                   </p>
-                  <p className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-subtle)]">
+                  <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
                     {r.brand ? `${r.brand} · ` : ""}
                     <span className="uppercase tracking-[0.08em]">{r.source}</span>
                   </p>
                 </div>
-                <div className="text-right font-[family-name:var(--font-mono)] text-[11.5px] tabular-nums text-[var(--fg-subtle)]">
+                <div className="text-right font-[family-name:var(--font-mono)] text-xs tabular-nums text-[var(--fg-subtle)]">
                   <p className="text-foreground">{Math.round(r.caloriesKcal)} kcal</p>
                   <p>per {r.basis === "per_100g" ? "100 g" : `${r.servingSizeG ?? "?"} g`}</p>
                 </div>
@@ -190,7 +190,7 @@ export function FoodLogger() {
 
       {!searching && query.trim() && results.length === 0 && !searchError && (
         <p
-          className="rounded-[var(--r-lg)] border border-dashed border-border p-6 text-center font-[family-name:var(--font-sans)] text-[13px] text-[var(--fg-muted)]"
+          className="rounded-[var(--r-lg)] border border-dashed border-border p-6 text-center font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]"
           style={{ background: "var(--surface-1)" }}
         >
           No results. Try a simpler term, or check spelling. USDA search is rate-limited without
@@ -257,11 +257,11 @@ function PortionForm({
   return (
     <Card pad={24} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div className="space-y-1">
-        <p className="font-[family-name:var(--font-sans)] text-[11px] uppercase tracking-[0.16em] text-[var(--fg-subtle)]">
+        <p className="font-[family-name:var(--font-sans)] text-2xs uppercase tracking-[0.16em] text-[var(--fg-subtle)]">
           {food.source}
           {food.brand ? ` · ${food.brand}` : ""}
         </p>
-        <h2 className="font-[family-name:var(--font-display)] text-[18px] font-semibold tracking-[-0.01em] text-foreground">
+        <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-[-0.01em] text-foreground">
           {food.description}
         </h2>
       </div>
@@ -319,7 +319,7 @@ function PortionForm({
       </div>
 
       {macros ? (
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <MetricBox label="Protein" value={Math.round(macros.protein_g)} unit="g" />
           <MetricBox label="Carbs" value={Math.round(macros.carbs_g)} unit="g" />
           <MetricBox label="Fat" value={Math.round(macros.fat_g)} unit="g" />
@@ -330,7 +330,7 @@ function PortionForm({
           className="rounded-[var(--r-md)] border border-border p-3"
           style={{ background: "var(--surface-2)" }}
         >
-          <p className="font-[family-name:var(--font-sans)] text-[12.5px] text-[var(--fg-muted)]">
+          <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
             Pick a unit with a known conversion to see macros.
           </p>
         </div>

@@ -21,14 +21,14 @@ export default async function GoalsPage() {
   for (const c of compoundsRes.data ?? []) compoundNames[c.slug as string] = c.name as string;
 
   return (
-    <div className="mx-auto max-w-[860px]">
+    <>
       <SectionHeader title="Your goals" note="what we track, suggest, and project" />
-      <p className="mb-5 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="mb-5 font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Pick the outcomes you care about. Goals decide what RecompIQ tracks and projects, and they
         guide the AI when it helps you assemble a regimen. You can pick several — priority follows the
         order you select.
       </p>
       <GoalsClient initialSelected={initialSelected} compoundNames={compoundNames} />
-    </div>
+    </>
   );
 }

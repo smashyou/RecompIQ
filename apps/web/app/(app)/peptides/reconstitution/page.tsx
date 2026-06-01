@@ -6,9 +6,9 @@ export const dynamic = "force-dynamic";
 
 export default function ReconstitutionPage() {
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       <SectionHeader title="Reconstitution calculator" note="math on your inputs" />
-      <p className="mb-6 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="mb-6 font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Calculates concentration, draw volume, and insulin-syringe units from vial size +
         bacteriostatic water + desired dose. It does math on the numbers you enter — it does not
         recommend doses.

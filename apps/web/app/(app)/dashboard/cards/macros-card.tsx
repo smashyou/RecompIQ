@@ -40,7 +40,7 @@ export function MacrosCard({
     <Card title="Today's macros" hint="from food logs">
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
-          <p className="text-3xl font-semibold tabular-nums">
+          <p className="text-stat font-semibold tabular-nums">
             {Math.round(macros.calories_kcal)}
             <span className="ml-1 text-sm font-normal text-[var(--color-muted-foreground)]">
               kcal
@@ -88,7 +88,7 @@ function MacroStat({
       <dt className="text-[var(--color-muted-foreground)]">{label}</dt>
       <dd className="tabular-nums">{Math.round(value)} g</dd>
       {target && (
-        <p className="mt-0.5 text-[10px] text-[var(--color-muted-foreground)]">target {target}</p>
+        <p className="mt-0.5 text-2xs text-[var(--color-muted-foreground)]">target {target}</p>
       )}
     </div>
   );

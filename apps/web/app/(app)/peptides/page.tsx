@@ -7,6 +7,7 @@ import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 import { ContraindicationBanner } from "@/components/peptides/contraindication-banner";
 import { SectionHeader } from "@/components/kit";
 import { RegimenBoard, type BoardPhase } from "@/components/regimen/regimen-board";
+import { AutoGrid } from "@/components/ui/layout";
 import { evaluateContraindications } from "@peptide/peptides";
 
 export const dynamic = "force-dynamic";
@@ -75,31 +76,31 @@ export default async function PeptidesPage() {
   );
 
   return (
-    <div className="mx-auto max-w-[860px]">
+    <div>
       <SectionHeader
         num="07"
         title="Peptides"
         note="educational tracking · not prescriptive"
       />
 
-      <p className="mb-5 font-[family-name:var(--font-sans)] text-[13px] leading-[1.55] text-[var(--fg-muted)]">
+      <p className="mb-5 font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
         Your living regimen, phased over time. Track the compounds and doses you or your clinician
         have decided on. RecompIQ grades the evidence and flags contraindications — it does not
         prescribe.
       </p>
 
       {/* nav tiles */}
-      <div className="mb-5 grid gap-3 sm:grid-cols-2">
+      <AutoGrid min="240px" className="mb-5">
         {NAV.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
-            className="group flex items-center gap-3 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-[14px] transition-colors hover:border-[var(--primary-line)]"
+            className="group flex items-center gap-3 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-[var(--space-card)] transition-colors hover:border-[var(--primary-line)]"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--surface-2)] text-[var(--primary)]">
               <Icon size={17} />
             </span>
-            <span className="flex-1 font-[family-name:var(--font-sans)] text-[13px] font-medium text-[var(--fg)]">
+            <span className="flex-1 font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
               {label}
             </span>
             <ChevronRight
@@ -108,7 +109,7 @@ export default async function PeptidesPage() {
             />
           </Link>
         ))}
-      </div>
+      </AutoGrid>
 
       {allFindings.length > 0 && (
         <div className="mb-6">
