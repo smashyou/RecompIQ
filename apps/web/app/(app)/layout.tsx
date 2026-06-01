@@ -25,13 +25,17 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <SplashGate />
       <div className="flex min-h-screen">
         <Sidebar isAdmin={isAdmin} />
-        <div className="flex flex-1 flex-col">
+        {/* min-w-0 lets this column shrink below its content's min-content width
+            (without it, a wide child — e.g. a Recharts ResponsiveContainer —
+            forces the column past the viewport and the whole page zooms out on
+            mobile). */}
+        <div className="flex min-w-0 flex-1 flex-col">
           <Topbar email={user.email ?? ""} isAdmin={isAdmin} />
           <main
-            className="flex-1"
+            className="min-w-0 flex-1"
             style={{ paddingInline: "var(--space-page)", paddingBlock: "var(--space-pagey)" }}
           >
-            <div className="mx-auto w-full max-w-app">{children}</div>
+            <div className="mx-auto w-full min-w-0 max-w-app">{children}</div>
           </main>
         </div>
       </div>
