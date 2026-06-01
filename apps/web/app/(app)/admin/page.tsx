@@ -49,9 +49,19 @@ export default async function AdminPage() {
       .order("feature"),
   ]);
 
+  // Connection status: a provider is "configured" when its API-key env var is
+  // present on the server. (e.g. Google Gemini only routes via the gateway, so
+  // it shows as configured only if AI_GATEWAY_API_KEY is set on this deploy.)
+  const providers = (providersRes.data ?? []).map((p) => ({
+    ...p,
+    configured: Boolean(
+      p.env_key_var && process.env[p.env_key_var] && process.env[p.env_key_var]!.trim() !== "",
+    ),
+  }));
+
   return (
     <AdminClient
-      providers={providersRes.data ?? []}
+      providers={providers}
       models={(modelsRes.data ?? []) as unknown as ModelJoinRow[]}
       config={(configRes.data ?? []) as FeatureConfigRow[]}
     />

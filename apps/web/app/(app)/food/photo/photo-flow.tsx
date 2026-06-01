@@ -9,7 +9,6 @@ import {
   type FoodUnit,
   type MealType,
   type ParsedFoodItem,
-  VISION_PROVIDER_DEFAULT_MODEL,
 } from "@peptide/shared";
 import { macrosForPortion, type NutritionFacts } from "@peptide/nutrition";
 import { Button } from "@/components/ui/button";
@@ -17,8 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
 import { Card, Chip } from "@/components/kit";
-
-type Provider = "anthropic" | "openai" | "google";
 
 interface ParsedItemWithSuggestions extends ParsedFoodItem {
   suggestions: NutritionFacts[];
@@ -69,19 +66,12 @@ function makeDraft(item: ParsedItemWithSuggestions, fallbackMealType: MealType):
   };
 }
 
-const MODEL_PICKER: { value: Provider; label: string; modelId: string }[] = [
-  { value: "anthropic", label: "Claude Sonnet 4.6", modelId: VISION_PROVIDER_DEFAULT_MODEL.anthropic },
-  { value: "openai", label: "GPT-4o", modelId: VISION_PROVIDER_DEFAULT_MODEL.openai },
-  { value: "google", label: "Gemini 2.5 Flash", modelId: VISION_PROVIDER_DEFAULT_MODEL.google },
-];
-
-export function PhotoFlow({ userProvider }: { userProvider: Provider }) {
+export function PhotoFlow() {
   const router = useRouter();
   const toast = useFireToast();
   const [state, setState] = useState<FlowState>({ kind: "idle" });
   const [drafts, setDrafts] = useState<ItemDraft[]>([]);
   const [bulkMealType, setBulkMealType] = useState<MealType>(defaultMealType());
-  const [selectedProvider, setSelectedProvider] = useState<Provider>(userProvider);
 
   async function handleFile(file: File) {
     const previewUrl = URL.createObjectURL(file);
@@ -104,7 +94,7 @@ export function PhotoFlow({ userProvider }: { userProvider: Provider }) {
     setState({ kind: "uploaded", assetId: body.data.asset_id, blobUrl: body.data.blob_url });
   }
 
-  async function parseNow(modelOverride?: string) {
+  async function parseNow() {
     if (state.kind !== "uploaded" && state.kind !== "review") return;
     const assetId = state.assetId;
     const blobUrl = state.blobUrl;
@@ -113,7 +103,7 @@ export function PhotoFlow({ userProvider }: { userProvider: Provider }) {
     const res = await fetch("/api/food/photo/parse", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ asset_id: assetId, model: modelOverride }),
+      body: JSON.stringify({ asset_id: assetId }),
     });
     if (res.status === 401) {
       router.replace("/signin?next=/food/photo");
@@ -284,26 +274,9 @@ export function PhotoFlow({ userProvider }: { userProvider: Provider }) {
             Identified by{" "}
             <span className="font-medium text-foreground">{state.modelUsed}</span>
           </span>
-          <div className="flex items-center gap-2">
-            <Label className="text-[12px]" htmlFor="reparse">Re-parse with:</Label>
-            <select
-              id="reparse"
-              value={selectedProvider}
-              onChange={(e) => setSelectedProvider(e.target.value as Provider)}
-              className="rounded-[var(--r-sm)] border border-border bg-transparent px-2 py-1 font-[family-name:var(--font-sans)] text-[12px]"
-            >
-              {MODEL_PICKER.map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => parseNow(VISION_PROVIDER_DEFAULT_MODEL[selectedProvider])}
-            >
-              Re-parse
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" onClick={() => parseNow()}>
+            Re-parse
+          </Button>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

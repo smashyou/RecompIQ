@@ -14,6 +14,7 @@ interface Provider {
   kind: string;
   env_key_var: string;
   notes: string | null;
+  configured: boolean;
 }
 
 interface ModelRow {
@@ -62,6 +63,8 @@ export function AdminClient({
   const [savingFeature, setSavingFeature] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, { ok: boolean; msg: string }>>({});
+  const [testingProvider, setTestingProvider] = useState<string | null>(null);
+  const [providerTests, setProviderTests] = useState<Record<string, { ok: boolean; msg: string }>>({});
 
   const modelsByModality = useMemo(() => {
     const map = new Map<string, ModelRow[]>();
@@ -97,6 +100,29 @@ export function AdminClient({
     }
     toast.success(`${FEATURE_INFO[feature]?.label ?? feature} updated`);
     router.refresh();
+  }
+
+  async function testProvider(slug: string) {
+    setTestingProvider(slug);
+    const res = await fetch("/api/admin/providers/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+    });
+    setTestingProvider(null);
+    const body = (await res.json()) as {
+      data?: { ok: boolean; configured?: boolean; latencyMs?: number; error?: string };
+    };
+    const d = body.data;
+    if (d?.ok) {
+      const msg = `reachable · ${d.latencyMs}ms`;
+      setProviderTests((prev) => ({ ...prev, [slug]: { ok: true, msg } }));
+      toast.success(`${slug} ok · ${msg}`);
+    } else {
+      const msg = d?.error ?? "test failed";
+      setProviderTests((prev) => ({ ...prev, [slug]: { ok: false, msg } }));
+      toast.error(`${slug}: ${msg}`);
+    }
   }
 
   async function testModel(modelId: string) {
@@ -300,15 +326,53 @@ export function AdminClient({
             const providerModels = models.filter((m) => m.ai_providers.slug === p.slug);
             return (
               <Card key={p.id} title={p.name}>
-                <div className="-mt-2 mb-4 flex flex-wrap items-center gap-2">
-                  <Chip>{p.kind}</Chip>
-                  <Chip>env: {p.env_key_var}</Chip>
-                  {p.notes && (
-                    <span className="font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
-                      {p.notes}
+                <div className="-mt-2 mb-3 flex flex-wrap items-center gap-2">
+                  {p.configured ? (
+                    <span className="inline-flex items-center gap-1 rounded-[var(--r-pill)] border border-[var(--positive-line)] bg-[var(--positive-wash)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10.5px] font-semibold uppercase tracking-wide text-[var(--positive)]">
+                      <CheckCircle2 size={12} /> Configured
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-[var(--r-pill)] border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-[family-name:var(--font-sans)] text-[10.5px] font-semibold uppercase tracking-wide text-[var(--fg-subtle)]">
+                      <XCircle size={12} /> Not configured
                     </span>
                   )}
+                  <Chip>{p.kind}</Chip>
+                  <Chip>env: {p.env_key_var}</Chip>
+                  <button
+                    onClick={() => testProvider(p.slug)}
+                    disabled={!p.configured || testingProvider === p.slug}
+                    className="ml-auto inline-flex items-center gap-1 rounded-[var(--r-md)] border border-[var(--border)] px-2.5 py-1 font-[family-name:var(--font-sans)] text-[11.5px] font-medium text-[var(--fg-muted)] hover:border-[var(--primary-line)] hover:text-[var(--fg)] disabled:opacity-50"
+                    title={p.configured ? "Make a live test call" : `Set ${p.env_key_var} to enable`}
+                  >
+                    {testingProvider === p.slug ? (
+                      <RefreshCw size={12} className="animate-spin" />
+                    ) : (
+                      <Activity size={12} />
+                    )}
+                    Test connection
+                  </button>
                 </div>
+                {providerTests[p.slug] && (
+                  <div
+                    className={`-mt-1 mb-3 font-[family-name:var(--font-sans)] text-[11.5px] ${
+                      providerTests[p.slug]!.ok ? "text-[var(--positive)]" : "text-[var(--danger-bright)]"
+                    }`}
+                  >
+                    {providerTests[p.slug]!.ok ? "✓ " : "✕ "}
+                    {providerTests[p.slug]!.msg}
+                  </div>
+                )}
+                {!p.configured && (
+                  <p className="-mt-1 mb-3 font-[family-name:var(--font-sans)] text-[11.5px] text-[var(--fg-subtle)]">
+                    Set <code className="font-[family-name:var(--font-mono)]">{p.env_key_var}</code> in the
+                    server environment (Vercel → Settings → Environment Variables) to enable this provider.
+                  </p>
+                )}
+                {p.notes && (
+                  <p className="mb-3 font-[family-name:var(--font-sans)] text-[12px] text-[var(--fg-muted)]">
+                    {p.notes}
+                  </p>
+                )}
                 <table className="w-full font-[family-name:var(--font-sans)] text-[12px]">
                   <thead>
                     <tr className="text-left">

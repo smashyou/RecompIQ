@@ -11,7 +11,6 @@ import { ProfileStepForm } from "./steps/profile";
 import { GoalStepForm } from "./steps/goal";
 import { ListStepForm } from "./steps/list-step";
 import { GoalsStepForm } from "./steps/goals";
-import { VisionStepForm } from "./steps/vision";
 import { DoneStep } from "./steps/done";
 
 export interface OnboardingState {
@@ -141,9 +140,6 @@ export function OnboardingFlow() {
         />
       )}
       {step === "goals" && <GoalsStepForm onSaved={next} onBack={back} />}
-      {step === "vision" && (
-        <VisionStepForm initial={state.settings} onSaved={next} onBack={back} />
-      )}
       {step === "done" && <DoneStep />}
     </div>
   );

@@ -1,21 +1,10 @@
 import { PhotoFlow } from "./photo-flow";
 import { requireUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-type Provider = "anthropic" | "openai" | "google";
-
 export default async function FoodPhotoPage() {
-  const user = await requireUser();
-  const supabase = await createSupabaseServerClient();
-  const { data: settings } = await supabase
-    .from("user_settings")
-    .select("vision_provider")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  const userProvider = (settings?.vision_provider as Provider | null) ?? "anthropic";
+  await requireUser();
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -28,7 +17,7 @@ export default async function FoodPhotoPage() {
           FoodData Central with Open Food Facts as fallback.
         </p>
       </header>
-      <PhotoFlow userProvider={userProvider} />
+      <PhotoFlow />
     </div>
   );
 }

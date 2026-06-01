@@ -10,7 +10,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import { apiFetch } from "@/lib/api";
 import { colors } from "@/lib/theme";
 
-const STEPS = ["welcome", "profile", "goal", "conditions", "medications", "injuries", "vision", "done"] as const;
+const STEPS = ["welcome", "profile", "goal", "conditions", "medications", "injuries", "done"] as const;
 type Step = (typeof STEPS)[number];
 
 interface ListItem { name: string; detail: string }
@@ -37,8 +37,6 @@ export default function Onboarding() {
   const [conditions, setConditions] = useState<ListItem[]>([]);
   const [medications, setMedications] = useState<ListItem[]>([]);
   const [injuries, setInjuries] = useState<ListItem[]>([]);
-  // vision
-  const [vision, setVision] = useState("anthropic");
 
   function onStartWeight(v: string) {
     setStartW(v);
@@ -63,8 +61,6 @@ export default function Onboarding() {
         await apiFetch("/api/onboarding/medications", { method: "POST", body: JSON.stringify({ items: medications.filter((m) => m.name.trim()).map((m) => ({ name: m.name, dose: m.detail || null })) }) });
       } else if (step === "injuries") {
         await apiFetch("/api/onboarding/injuries", { method: "POST", body: JSON.stringify({ items: injuries.filter((i) => i.name.trim()).map((i) => ({ name: i.name, detail: i.detail || null })) }) });
-      } else if (step === "vision") {
-        await apiFetch("/api/onboarding/vision", { method: "POST", body: JSON.stringify({ vision_provider: vision }) });
       }
       return true;
     } catch (e) {
@@ -139,12 +135,6 @@ export default function Onboarding() {
             <ListStep title="Medications" hint="Current medications (optional)." items={medications} setItems={setMedications} detailLabel="Dose" />
           ) : step === "injuries" ? (
             <ListStep title="Injuries" hint="Injury history that affects training (optional)." items={injuries} setItems={setInjuries} detailLabel="Detail" />
-          ) : step === "vision" ? (
-            <Card className="gap-4">
-              <Text className="text-xl font-semibold text-foreground">Food photo AI</Text>
-              <Text className="text-sm text-muted-foreground">Which model parses your meal photos? You can change this later.</Text>
-              <Segmented options={[{ value: "anthropic", label: "Claude" }, { value: "openai", label: "GPT-4o" }, { value: "google", label: "Gemini" }]} value={vision} onChange={setVision} />
-            </Card>
           ) : (
             <View className="gap-3">
               <Text className="text-3xl font-bold text-foreground">You're all set</Text>

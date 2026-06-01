@@ -15,6 +15,8 @@ export const PROVIDER_KINDS = [
   "openrouter",
   "voyage",
   "direct",
+  "openai",
+  "anthropic",
 ] as const;
 export type ProviderKind = (typeof PROVIDER_KINDS)[number];
 

@@ -14,7 +14,6 @@ export const ONBOARDING_STEPS = [
   "medications",
   "injuries",
   "goals",
-  "vision",
   "done",
 ] as const;
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];

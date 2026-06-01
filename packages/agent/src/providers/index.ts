@@ -82,6 +82,81 @@ const chatOpenRouter: ChatExec = (req, model, apiKey) =>
   });
 
 // ---------------------------------------------------------------------------
+// OpenAI direct — native /v1/chat/completions. image_url parts work natively,
+// so the OpenAI-compatible adapter handles text + vision unchanged.
+// ---------------------------------------------------------------------------
+const chatOpenAIDirect: ChatExec = (req, model, apiKey) =>
+  chatOpenAILike("https://api.openai.com/v1", req, model, apiKey);
+
+// ---------------------------------------------------------------------------
+// Anthropic direct — native Messages API. Translates the OpenAI-style request:
+//   - system messages → top-level `system` string
+//   - image_url parts → { type:'image', source:{ type:'url', url } }
+//   - response content blocks → concatenated text
+// ---------------------------------------------------------------------------
+interface AnthropicBlock {
+  type: "text" | "image";
+  text?: string;
+  source?: { type: "url"; url: string };
+}
+const chatAnthropicDirect: ChatExec = async (req, model, apiKey) => {
+  const systemText = req.messages
+    .filter((m) => m.role === "system")
+    .map((m) => (typeof m.content === "string" ? m.content : ""))
+    .join("\n\n")
+    .trim();
+
+  const messages = req.messages
+    .filter((m) => m.role !== "system")
+    .map((m) => {
+      if (typeof m.content === "string") {
+        return { role: m.role, content: m.content };
+      }
+      const blocks: AnthropicBlock[] = m.content.map((part) =>
+        part.type === "text"
+          ? { type: "text", text: part.text }
+          : { type: "image", source: { type: "url", url: part.image_url.url } },
+      );
+      return { role: m.role, content: blocks };
+    });
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: model.model_id,
+      max_tokens: req.max_tokens ?? 1024,
+      temperature: req.temperature ?? 0.7,
+      ...(systemText ? { system: systemText } : {}),
+      messages,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`anthropic ${model.model_id}: ${res.status} ${text.slice(0, 300)}`);
+  }
+  const body = (await res.json()) as {
+    content: { type: string; text?: string }[];
+    usage?: { input_tokens?: number; output_tokens?: number };
+  };
+  const text = body.content
+    .filter((b) => b.type === "text" && typeof b.text === "string")
+    .map((b) => b.text)
+    .join("");
+  return {
+    text,
+    model: model.model_id,
+    provider_slug: model.provider_slug,
+    input_tokens: body.usage?.input_tokens ?? 0,
+    output_tokens: body.usage?.output_tokens ?? 0,
+  };
+};
+
+// ---------------------------------------------------------------------------
 // Voyage AI — embeddings at https://api.voyageai.com/v1
 // ---------------------------------------------------------------------------
 const embedVoyage: EmbeddingExec = async (req, model, apiKey) => {
@@ -119,6 +194,8 @@ export const CHAT_PROVIDERS: Record<ProviderKind, ChatExec | null> = {
   openrouter: chatOpenRouter,
   voyage: null,
   direct: null,
+  openai: chatOpenAIDirect,
+  anthropic: chatAnthropicDirect,
 };
 
 export const EMBEDDING_PROVIDERS: Record<ProviderKind, EmbeddingExec | null> = {
@@ -126,4 +203,6 @@ export const EMBEDDING_PROVIDERS: Record<ProviderKind, EmbeddingExec | null> = {
   openrouter: null,
   voyage: embedVoyage,
   direct: null,
+  openai: null,
+  anthropic: null,
 };
