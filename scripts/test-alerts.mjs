@@ -1,0 +1,93 @@
+#!/usr/bin/env node
+// Test harness for the safety-alert engine. Runs via `pnpm test:alerts`.
+import assert from "node:assert/strict";
+import { scanRecentLogs, fingerprintOf } from "../packages/peptides/src/alerts.ts";
+
+let passed = 0, failed = 0;
+function it(name, fn) {
+  try { fn(); console.log(`  ✓ ${name}`); passed++; }
+  catch (e) { console.log(`  ✗ ${name}\n     ${e.message}`); failed++; }
+}
+
+const NOW = "2026-06-01T12:00:00Z";
+const base = () => ({
+  weights: [], vitals: [], proteinByDay: [], proteinGoalMin: 160,
+  doses: [], metrics: [], symptoms: [], waterByDay: [],
+  activeCompounds: [], health: { conditions: [], medications: [], injuries: [], age: 42, sex: "male" },
+  now: NOW,
+});
+
+it("glucose_high critical fires above the critical cut", () => {
+  // catalog: warnAt 250 / criticalAt 300 → 310 is critical
+  const input = { ...base(), vitals: [{ logged_at: NOW, bp_systolic: null, bp_diastolic: null, glucose_mgdl: 310 }] };
+  const f = scanRecentLogs(input).find((x) => x.kind === "glucose_high");
+  assert.ok(f, "expected a glucose_high finding");
+  assert.equal(f.severity, "critical");
+  assert.match(f.message, /310/);
+  assert.ok(!/take|increase|dose/i.test(f.message), "message must not instruct/prescribe");
+});
+
+it("glucose_high warns between warn and critical cut", () => {
+  // catalog: 260 is between warnAt 250 and criticalAt 300 → warn
+  const input = { ...base(), vitals: [{ logged_at: NOW, bp_systolic: null, bp_diastolic: null, glucose_mgdl: 260 }] };
+  const f = scanRecentLogs(input).find((x) => x.kind === "glucose_high");
+  assert.ok(f, "expected a glucose_high finding");
+  assert.equal(f.severity, "warn");
+});
+
+it("glucose_high does NOT fire when normal", () => {
+  // catalog: warnAt 250 → 110 is well below, no fire
+  const input = { ...base(), vitals: [{ logged_at: NOW, bp_systolic: null, bp_diastolic: null, glucose_mgdl: 110 }] };
+  assert.equal(scanRecentLogs(input).find((x) => x.kind === "glucose_high"), undefined);
+});
+
+it("bp_high warn at stage-2, critical at crisis", () => {
+  const warn = scanRecentLogs({ ...base(), vitals: [{ logged_at: NOW, bp_systolic: 150, bp_diastolic: 95, glucose_mgdl: null }] }).find((x) => x.kind === "bp_high");
+  assert.equal(warn.severity, "warn");
+  const crit = scanRecentLogs({ ...base(), vitals: [{ logged_at: NOW, bp_systolic: 184, bp_diastolic: 121, glucose_mgdl: null }] }).find((x) => x.kind === "bp_high");
+  assert.equal(crit.severity, "critical");
+});
+
+it("rapid_weight_loss fires on a sustained >2 lb/wk slope", () => {
+  // 6 lb over 14 days = 3 lb/wk; catalog warnAt 2 / criticalAt 3
+  const weights = [];
+  for (let i = 14; i >= 0; i--) weights.push({ logged_at: new Date(Date.parse(NOW) - i * 86400000).toISOString(), value_lb: 250 + (i / 14) * 6 });
+  const f = scanRecentLogs({ ...base(), weights }).find((x) => x.kind === "rapid_weight_loss");
+  assert.ok(f, "expected rapid_weight_loss");
+});
+
+it("neuro_worsening fires off the self-check, not free text", () => {
+  // catalog warnAt 6 → a rise to 7 (>= 6) warns
+  const metrics = [
+    { metric_key: "neuro_severity", value: 3, logged_at: new Date(Date.parse(NOW) - 10 * 86400000).toISOString() },
+    { metric_key: "neuro_severity", value: 7, logged_at: NOW },
+  ];
+  const f = scanRecentLogs({ ...base(), metrics, health: { ...base().health, injuries: ["left foot drop"] } }).find((x) => x.kind === "neuro_worsening");
+  assert.ok(f, "expected neuro_worsening from a rise to 7");
+});
+
+it("missing self-check emits a gentle info nudge, not an alarm", () => {
+  const f = scanRecentLogs({ ...base(), health: { ...base().health, injuries: ["left foot drop / neuropathy"] } }).find((x) => x.kind === "neuro_worsening");
+  assert.ok(f, "expected a nudge finding");
+  assert.equal(f.severity, "info");
+  assert.match(f.message, /log|check/i);
+});
+
+it("unsafe_stack critical on an absolute contraindication", () => {
+  const input = {
+    ...base(),
+    activeCompounds: [{ slug: "x", name: "Compound X", absolute_contraindications: ["medullary thyroid carcinoma"], relative_contraindications: [] }],
+    health: { ...base().health, conditions: ["history of thyroid carcinoma"] },
+  };
+  const f = scanRecentLogs(input).find((x) => x.kind === "unsafe_stack");
+  assert.ok(f);
+  assert.equal(f.severity, "critical");
+});
+
+it("fingerprintOf is stable for the same situation, distinct across kinds", () => {
+  assert.equal(fingerprintOf("bp_high", "crisis"), fingerprintOf("bp_high", "crisis"));
+  assert.notEqual(fingerprintOf("bp_high", "crisis"), fingerprintOf("glucose_high", "crisis"));
+});
+
+console.log(`\n${passed} passed, ${failed} failed`);
+process.exit(failed > 0 ? 1 : 0);

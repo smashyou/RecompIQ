@@ -32,7 +32,8 @@
     "test:reconstitution": "tsx scripts/test-reconstitution.mjs",
     "test:inventory": "tsx scripts/test-inventory.mjs",
     "test:metric-projection": "tsx scripts/test-metric-projection.mjs",
-    "test:timeline": "tsx scripts/test-timeline.mjs"
+    "test:timeline": "tsx scripts/test-timeline.mjs",
+    "test:alerts": "tsx scripts/test-alerts.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
