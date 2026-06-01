@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Activity, Droplets, Footprints, HeartPulse, Moon, Scale } from "lucide-react";
+import { Activity, Droplets, Footprints, HeartPulse, Moon, Scale, Target } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { WeightForm } from "./forms/weight";
 import { VitalForm } from "./forms/vital";
@@ -9,11 +9,13 @@ import { SymptomForm } from "./forms/symptom";
 import { SleepForm } from "./forms/sleep";
 import { WaterForm } from "./forms/water";
 import { StepsForm } from "./forms/steps";
+import { GoalMetricsForm } from "./forms/goals";
 
 const TABS = [
   { id: "weight", label: "Weight", icon: Scale, Form: WeightForm },
   { id: "vital", label: "Vitals", icon: HeartPulse, Form: VitalForm },
   { id: "symptom", label: "Symptoms", icon: Activity, Form: SymptomForm },
+  { id: "goals", label: "Goals", icon: Target, Form: GoalMetricsForm },
   { id: "sleep", label: "Sleep", icon: Moon, Form: SleepForm },
   { id: "water", label: "Water", icon: Droplets, Form: WaterForm },
   { id: "steps", label: "Steps", icon: Footprints, Form: StepsForm },

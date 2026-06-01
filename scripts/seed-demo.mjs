@@ -461,6 +461,27 @@ async function seedGoals(uid) {
   console.log(`✓ ${DEMO_GOALS.length} goals`);
 }
 
+// Demo goal-metric history (~21 days) trending toward the demo goals.
+async function seedGoalMetrics(uid) {
+  await del("goal_metrics", `user_id=eq.${uid}&is_demo=eq.true`);
+  const rows = [];
+  for (let dAgo = 21; dAgo >= 0; dAgo -= 3) {
+    const t = (frac) => frac; // readability
+    const at = new Date(Date.now() - dAgo * 86_400_000);
+    at.setHours(8, 0, 0, 0);
+    const p = (21 - dAgo) / 21; // 0 → 1 progress
+    const push = (metric_key, value, unit) =>
+      rows.push({ user_id: uid, metric_key, value, unit, logged_at: at.toISOString(), is_demo: true });
+    push("waist_cm", Math.round((112 - 6 * p) * 10) / 10, "cm"); // 112 → 106 cm
+    push("skin_quality", Math.min(10, Math.round(5 + 3 * p)), "rating"); // 5 → 8
+    push("pain_level", Math.max(0, Math.round(6 - 3 * p)), "rating"); // 6 → 3
+    push("mobility", Math.min(10, Math.round(4 + 3 * p)), "rating"); // 4 → 7
+    void t;
+  }
+  await insert("goal_metrics", rows);
+  console.log(`✓ ${rows.length} goal metrics`);
+}
+
 async function seedPurchases(uid) {
   const compoundsRes = await api(`/rest/v1/compounds?select=id,slug`);
   const slugToId = new Map(compoundsRes.map((c) => [c.slug, c.id]));
@@ -554,6 +575,7 @@ try {
   await seedRegimen(uid);
   await seedPurchases(uid);
   await seedGoals(uid);
+  await seedGoalMetrics(uid);
   await seedWorkouts(uid);
   console.log("");
   console.log("=== Demo User A ready ===");

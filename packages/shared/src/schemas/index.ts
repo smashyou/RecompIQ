@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { SEX, UNIT_LENGTH, UNIT_WEIGHT, GOAL_PHASE } from "../enums/index";
 import { GOAL_KEYS, GOAL_STATUS } from "../goals/taxonomy";
+import { METRIC_BY_KEY } from "../goals/metrics";
 
 export * from "./onboarding/index";
 export * from "./logging/index";
@@ -51,6 +52,36 @@ export const userGoalsReplaceInput = z.object({
   goals: z.array(userGoalInput).max(20),
 });
 export type UserGoalsReplaceInput = z.infer<typeof userGoalsReplaceInput>;
+
+// Goal-metric logging (REGIMEN_GOALS_PRD §5.6). A single self-reported metric
+// point. metric_key is validated against the shared METRIC catalog.
+export const goalMetricInput = z
+  .object({
+    metric_key: z.string().refine((k) => k in METRIC_BY_KEY, "Unknown metric"),
+    value: z.number().finite(),
+    unit: z.string().max(20).nullable().optional(),
+    goal_key: z.enum(GOAL_KEYS).nullable().optional(),
+    logged_at: z.coerce.date().default(() => new Date()),
+    note: z.string().max(500).nullable().optional(),
+  })
+  // Enforce the catalog's per-metric bounds (ratings 0–10, cm, ms, score) so a
+  // malformed value can't reach the DB and skew the projection charts.
+  .superRefine((data, ctx) => {
+    const def = METRIC_BY_KEY[data.metric_key];
+    if (def && (data.value < def.min || data.value > def.max)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["value"],
+        message: `${data.metric_key} must be between ${def.min} and ${def.max}`,
+      });
+    }
+  });
+export type GoalMetricInput = z.infer<typeof goalMetricInput>;
+
+export const goalMetricsBatchInput = z.object({
+  metrics: z.array(goalMetricInput).min(1).max(30),
+});
+export type GoalMetricsBatchInput = z.infer<typeof goalMetricsBatchInput>;
 
 // ---------------------------------------------------------------
 // AI auto-stacker (REGIMEN_GOALS_PRD §3/§7). Goal-driven SUGGESTIONS the user

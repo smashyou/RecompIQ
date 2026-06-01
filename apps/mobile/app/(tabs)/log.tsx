@@ -7,15 +7,17 @@ import { Input } from "@/components/ui/Input";
 import { Screen } from "@/components/ui/Screen";
 import { Segmented } from "@/components/ui/Segmented";
 import { TileSelect, type TileOption } from "@/components/ui/TileSelect";
+import { GoalMetricsLog } from "@/components/GoalMetricsLog";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
 
-type Tab = "weight" | "vitals" | "symptoms" | "sleep" | "water" | "steps";
+type Tab = "weight" | "vitals" | "symptoms" | "goals" | "sleep" | "water" | "steps";
 
 const TABS: ReadonlyArray<TileOption<Tab>> = [
   { value: "weight", label: "Weight", icon: "scale-outline" },
   { value: "vitals", label: "Vitals", icon: "heart-outline" },
   { value: "symptoms", label: "Symptoms", icon: "medkit-outline" },
+  { value: "goals", label: "Goals", icon: "flag-outline" },
   { value: "sleep", label: "Sleep", icon: "moon-outline" },
   { value: "water", label: "Water", icon: "water-outline" },
   { value: "steps", label: "Steps", icon: "walk-outline" },
@@ -150,6 +152,9 @@ export default function QuickLog() {
       <Text className="text-2xl font-bold text-foreground">Quick log</Text>
       <TileSelect options={TABS} value={tab} onChange={setTab} />
 
+      {tab === "goals" ? (
+        <GoalMetricsLog />
+      ) : (
       <Card className="gap-4">
         {tab === "weight" && (
           <Field label="Weight (lb)">
@@ -233,8 +238,9 @@ export default function QuickLog() {
           </Field>
         )}
       </Card>
+      )}
 
-      <Button title="Save" onPress={save} loading={saving} />
+      {tab !== "goals" && <Button title="Save" onPress={save} loading={saving} />}
     </Screen>
   );
 }

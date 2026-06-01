@@ -10,7 +10,8 @@
     "./errors": "./src/errors.ts",
     "./logger": "./src/logger.ts",
     "./legal": "./src/legal/index.ts",
-    "./goals": "./src/goals/taxonomy.ts"
+    "./goals": "./src/goals/taxonomy.ts",
+    "./goals/metrics": "./src/goals/metrics.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

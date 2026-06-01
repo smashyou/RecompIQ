@@ -3,3 +3,4 @@ export * from "./schemas/index";
 export * from "./errors";
 export * from "./logger";
 export * from "./goals/taxonomy";
+export * from "./goals/metrics";
