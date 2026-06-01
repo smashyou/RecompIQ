@@ -13,7 +13,8 @@
     "./goals": "./src/goals/taxonomy.ts",
     "./goals/metrics": "./src/goals/metrics.ts",
     "./labs": "./src/labs/catalog.ts",
-    "./labs/shape": "./src/labs/shape.ts"
+    "./labs/shape": "./src/labs/shape.ts",
+    "./timeline": "./src/timeline/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
