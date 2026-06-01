@@ -18,7 +18,8 @@ export default function LegalDoc() {
   return (
     <>
       <Stack.Screen options={{ title: doc.title }} />
-      <ScrollView className="flex-1 bg-background" contentContainerClassName="p-4 gap-4 pb-12">
+      <ScrollView className="flex-1 bg-background" contentContainerClassName="p-4 pb-12">
+        <View className="gap-4" style={{ width: "100%", maxWidth: 760, alignSelf: "center" }}>
         <Text className="text-xs text-muted-foreground">Last updated {doc.updated}</Text>
         <View className="rounded-lg border border-border bg-muted p-3">
           <Text className="text-sm leading-relaxed text-muted-foreground">{doc.summary}</Text>
@@ -39,6 +40,7 @@ export default function LegalDoc() {
         <Text className="mt-2 text-xs text-muted-foreground">
           This screen is general information, not legal advice.
         </Text>
+        </View>
       </ScrollView>
     </>
   );

@@ -91,9 +91,9 @@ export default function Goals() {
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Text style={{ fontSize: 14.5, fontWeight: "600", color: colors.foreground }}>{g.label}</Text>
+                  <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 14.5, fontWeight: "600", color: colors.foreground }}>{g.label}</Text>
                   {g.hasV1Projection ? (
-                    <Text style={{ fontSize: 9, fontWeight: "700", color: colors.fgSubtle }}>PROJECTED</Text>
+                    <Text style={{ flexShrink: 0, fontSize: 9, fontWeight: "700", color: colors.fgSubtle }}>PROJECTED</Text>
                   ) : null}
                 </View>
                 <Text style={{ fontSize: 12, color: colors.fgSubtle, marginTop: 2 }}>{g.blurb}</Text>

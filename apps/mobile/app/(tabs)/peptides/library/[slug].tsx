@@ -12,6 +12,7 @@ import { Loading, ErrorState } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
 import { usePeptideSelection } from "@/lib/peptide-selection";
 import { colors, radius } from "@/lib/theme";
+import { useResponsive } from "@/lib/responsive";
 
 interface Citation { source?: string; title?: string; url?: string; year?: number }
 interface Compound {
@@ -49,6 +50,7 @@ const TABS = [
 
 export default function CompoundDetail() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { type } = useResponsive();
   const sel = usePeptideSelection();
   const [compound, setCompound] = useState<Compound | null>(null);
   const [doses, setDoses] = useState<DoseRef[]>([]);
@@ -94,7 +96,7 @@ export default function CompoundDetail() {
             <Ionicons name="flask-outline" size={24} color={colors.primary} />
           </View>
           <View className="flex-1">
-            <Text className="text-2xl font-bold text-foreground" style={{ letterSpacing: -0.4 }}>{compound.name}</Text>
+            <Text numberOfLines={2} className="font-bold text-foreground" style={{ fontSize: type["2xl"], letterSpacing: -0.4 }}>{compound.name}</Text>
             <View className="mt-1.5 flex-row flex-wrap items-center gap-2">
               <EvidenceBadge level={compound.evidence_level} />
               {compound.fda_approved ? <Pill label="FDA" tone="accent" /> : null}

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Segmented } from "@/components/ui/Segmented";
 import { StatBox } from "@/components/ui/StatBox";
 import { apiFetch } from "@/lib/api";
+import { useResponsive } from "@/lib/responsive";
 import { colors } from "@/lib/theme";
 
 // Mirrors @peptide/nutrition NutritionFacts (camelCase as returned by /api/food/search).
@@ -194,6 +195,7 @@ export default function FoodLog() {
 
 function PortionForm({ food, onCancel }: { food: NutritionFacts; onCancel: () => void }) {
   const router = useRouter();
+  const { type } = useResponsive();
   const defaultUnit: Unit = food.servingSizeG ? "serving" : "g";
   const defaultAmount = food.servingSizeG ? 1 : 100;
   const [amountStr, setAmountStr] = useState(String(defaultAmount));
@@ -246,7 +248,12 @@ function PortionForm({ food, onCancel }: { food: NutritionFacts; onCancel: () =>
             {food.source}
             {food.brand ? ` · ${food.brand}` : ""}
           </Text>
-          <Text className="mt-0.5 text-lg font-semibold text-foreground">{food.description}</Text>
+          <Text
+            className="mt-0.5 font-semibold text-foreground"
+            style={{ fontSize: type.lg }}
+          >
+            {food.description}
+          </Text>
         </View>
 
         <View className="flex-row gap-3">

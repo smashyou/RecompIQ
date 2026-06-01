@@ -17,6 +17,7 @@ import { Syringe } from "@/components/peptides/Syringe";
 import { supabase } from "@/lib/supabase";
 import { addRegimenItem, patchRegimenItem } from "@/lib/regimen";
 import { useSession } from "@/lib/session";
+import { useResponsive } from "@/lib/responsive";
 
 interface CatalogCompound {
   id: string;
@@ -44,6 +45,7 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 export default function RegimenItemScreen() {
   const router = useRouter();
   const { session } = useSession();
+  const { type } = useResponsive();
   const uid = session?.user.id;
   const { itemId } = useLocalSearchParams<{ itemId?: string }>();
   const isEdit = Boolean(itemId);
@@ -199,10 +201,10 @@ export default function RegimenItemScreen() {
       ) : (
         <>
           <Card className="gap-4">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-base font-semibold text-foreground">{compoundName}</Text>
+            <View className="flex-row items-center justify-between gap-2">
+              <Text numberOfLines={1} className="flex-1 font-semibold text-foreground" style={{ fontSize: type.lg }}>{compoundName}</Text>
               {!isEdit ? (
-                <Pressable onPress={() => setCompoundId(null)}>
+                <Pressable onPress={() => setCompoundId(null)} style={{ flexShrink: 0 }}>
                   <Text className="text-sm text-primary">change</Text>
                 </Pressable>
               ) : null}

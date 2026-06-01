@@ -6,6 +6,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Loading, ErrorState, EmptyState } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
+import { useResponsive } from "@/lib/responsive";
 
 interface WorkoutRow {
   id: string;
@@ -21,6 +22,7 @@ interface WorkoutRow {
 
 export default function Workouts() {
   const router = useRouter();
+  const { type } = useResponsive();
   const { session } = useSession();
   const uid = session?.user.id;
   const [rows, setRows] = useState<WorkoutRow[]>([]);
@@ -86,7 +88,11 @@ export default function Workouts() {
           renderItem={({ item: w }) => (
             <View className="rounded-xl border border-border bg-card p-4">
               <View className="flex-row flex-wrap items-center gap-2">
-                <Text className="text-base font-semibold text-foreground">
+                <Text
+                  className="font-semibold text-foreground"
+                  style={{ fontSize: type.lg, flexShrink: 1 }}
+                  numberOfLines={1}
+                >
                   {w.name ?? w.template_slug ?? `${w.session_type} session`}
                 </Text>
                 <Pill label={w.session_type} />

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Segmented } from "@/components/ui/Segmented";
 import { apiFetch } from "@/lib/api";
 import { colors } from "@/lib/theme";
+import { useResponsive } from "@/lib/responsive";
 
 const STEPS = ["welcome", "profile", "goal", "conditions", "medications", "injuries", "done"] as const;
 type Step = (typeof STEPS)[number];
@@ -17,6 +18,7 @@ interface ListItem { name: string; detail: string }
 
 export default function Onboarding() {
   const router = useRouter();
+  const { type } = useResponsive();
   const [idx, setIdx] = useState(0);
   const step: Step = STEPS[idx];
   const [busy, setBusy] = useState(false);
@@ -98,10 +100,11 @@ export default function Onboarding() {
           ))}
         </View>
 
-        <ScrollView contentContainerClassName="px-4 pb-6 pt-4 gap-4" keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerClassName="px-4 pb-6 pt-4" keyboardShouldPersistTaps="handled">
+          <View className="gap-4" style={{ width: "100%", maxWidth: 560, alignSelf: "center" }}>
           {step === "welcome" ? (
             <View className="gap-3">
-              <Text className="text-3xl font-bold text-foreground">Welcome to RecompIQ</Text>
+              <Text className="font-bold text-foreground" style={{ fontSize: type["3xl"] }}>Welcome to RecompIQ</Text>
               <Text className="text-base text-muted-foreground">A few quick questions to personalize your tracking. This is educational tracking — not medical advice. Nothing here prescribes doses.</Text>
               <Pressable onPress={() => router.push("/legal")}>
                 <Text className="text-sm text-primary">Review Terms, Privacy, Medical Disclaimer & Research-Use →</Text>
@@ -109,7 +112,7 @@ export default function Onboarding() {
             </View>
           ) : step === "profile" ? (
             <Card className="gap-4">
-              <Text className="text-xl font-semibold text-foreground">About you</Text>
+              <Text className="font-semibold text-foreground" style={{ fontSize: type.xl }}>About you</Text>
               <Field label="Display name"><Input value={displayName} onChangeText={setDisplayName} placeholder="Your name" /></Field>
               <Field label="Date of birth (YYYY-MM-DD)"><Input value={dob} onChangeText={setDob} placeholder="1984-06-15" /></Field>
               <Field label="Sex"><Segmented options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }, { value: "intersex", label: "Intersex" }, { value: "prefer_not_to_say", label: "N/A" }]} value={sex} onChange={setSex} fill /></Field>
@@ -117,7 +120,7 @@ export default function Onboarding() {
             </Card>
           ) : step === "goal" ? (
             <Card className="gap-4">
-              <Text className="text-xl font-semibold text-foreground">Your goal</Text>
+              <Text className="font-semibold text-foreground" style={{ fontSize: type.xl }}>Your goal</Text>
               <Field label="Start weight (lb)"><Input value={startW} onChangeText={onStartWeight} keyboardType="decimal-pad" placeholder="265" /></Field>
               <View className="flex-row gap-3">
                 <View className="flex-1"><Field label="Goal min (lb)"><Input value={goalMin} onChangeText={setGoalMin} keyboardType="decimal-pad" placeholder="190" /></Field></View>
@@ -137,10 +140,11 @@ export default function Onboarding() {
             <ListStep title="Injuries" hint="Injury history that affects training (optional)." items={injuries} setItems={setInjuries} detailLabel="Detail" />
           ) : (
             <View className="gap-3">
-              <Text className="text-3xl font-bold text-foreground">You're all set</Text>
+              <Text className="font-bold text-foreground" style={{ fontSize: type["3xl"] }}>You're all set</Text>
               <Text className="text-base text-muted-foreground">Your profile is ready. Tap finish to head to your dashboard.</Text>
             </View>
           )}
+          </View>
         </ScrollView>
 
         <View className="flex-row gap-3 border-t border-border p-4">
@@ -153,9 +157,10 @@ export default function Onboarding() {
 }
 
 function ListStep({ title, hint, items, setItems, detailLabel }: { title: string; hint: string; items: ListItem[]; setItems: (f: ListItem[]) => void; detailLabel: string }) {
+  const { type } = useResponsive();
   return (
     <Card className="gap-3">
-      <Text className="text-xl font-semibold text-foreground">{title}</Text>
+      <Text className="font-semibold text-foreground" style={{ fontSize: type.xl }}>{title}</Text>
       <Text className="text-sm text-muted-foreground">{hint}</Text>
       {items.map((it, i) => (
         <View key={i} className="gap-2 rounded-lg border border-border p-3">

@@ -13,6 +13,7 @@ import { SafetyDisclaimer } from "@/components/ui/SafetyDisclaimer";
 import { supabase } from "@/lib/supabase";
 import { loadInventory, type InventoryView } from "@/lib/inventory";
 import { useSession } from "@/lib/session";
+import { useResponsive } from "@/lib/responsive";
 
 interface CatalogCompound {
   id: string;
@@ -43,6 +44,7 @@ function rangeFor(key: string): { from?: string; to?: string } {
 
 export default function Inventory() {
   const { session } = useSession();
+  const { type } = useResponsive();
   const uid = session?.user.id;
   const [rangeKey, setRangeKey] = useState("all");
   const [view, setView] = useState<InventoryView | null>(null);
@@ -147,11 +149,11 @@ export default function Inventory() {
         <View className="flex-row justify-between">
           <View>
             <Text className="text-xs text-muted-foreground">Spend (range)</Text>
-            <Text className="text-lg font-semibold text-foreground">{usd(view.summary.totalUsd)}</Text>
+            <Text className="font-semibold text-foreground" style={{ fontSize: type.metric }}>{usd(view.summary.totalUsd)}</Text>
           </View>
           <View className="items-end">
             <Text className="text-xs text-muted-foreground">$ / lb lost</Text>
-            <Text className="text-lg font-semibold text-foreground">{usd(view.summary.costPerLbLostUsd)}</Text>
+            <Text className="font-semibold text-foreground" style={{ fontSize: type.metric }}>{usd(view.summary.costPerLbLostUsd)}</Text>
           </View>
         </View>
         {view.summary.byCompound.length > 0 ? (
@@ -173,12 +175,12 @@ export default function Inventory() {
 
       {view.compounds.length > 0 ? (
         <View className="gap-2">
-          <Text className="text-sm font-semibold text-foreground">What&apos;s left</Text>
+          <Text className="font-semibold text-foreground" style={{ fontSize: type.lg }}>What&apos;s left</Text>
           {view.compounds.map((c) => (
             <Card key={c.compoundId} className="gap-1">
-              <View className="flex-row justify-between">
-                <Text className="text-sm font-medium text-foreground">{c.name}</Text>
-                <Text className="text-xs text-muted-foreground">{num(c.remainingMg)} mg left</Text>
+              <View className="flex-row items-center justify-between gap-2">
+                <Text numberOfLines={1} className="flex-1 text-sm font-medium text-foreground">{c.name}</Text>
+                <Text className="text-xs text-muted-foreground" style={{ flexShrink: 0 }}>{num(c.remainingMg)} mg left</Text>
               </View>
               <View className="flex-row justify-between">
                 <Text className="text-xs text-muted-foreground">Next dose (FIFO)</Text>
@@ -196,7 +198,7 @@ export default function Inventory() {
       ) : null}
 
       <Card className="gap-3">
-        <Text className="text-sm font-semibold text-foreground">Log a purchase</Text>
+        <Text className="font-semibold text-foreground" style={{ fontSize: type.lg }}>Log a purchase</Text>
         {!compoundId ? (
           <>
             <Field label="Compound">
@@ -249,14 +251,14 @@ export default function Inventory() {
       </Card>
 
       <View className="gap-2">
-        <Text className="text-sm font-semibold text-foreground">History</Text>
+        <Text className="font-semibold text-foreground" style={{ fontSize: type.lg }}>History</Text>
         {view.purchases.length === 0 ? (
           <EmptyState title="No purchases yet" hint="Log a vial purchase to track spend + cost-per-dose." />
         ) : (
           view.purchases.map((p) => (
             <View key={p.id} className="flex-row items-center gap-3 rounded-lg border border-border bg-card p-3">
               <View className="flex-1">
-                <Text className="text-sm font-medium text-foreground">{p.compound_name}</Text>
+                <Text numberOfLines={1} className="text-sm font-medium text-foreground">{p.compound_name}</Text>
                 <Text className="text-xs text-muted-foreground">
                   {p.vial_count}× {p.vial_mg} mg{p.vendor ? ` · ${p.vendor}` : ""} · {new Date(p.purchased_on).toLocaleDateString()}
                 </Text>

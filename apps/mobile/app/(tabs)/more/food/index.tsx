@@ -7,6 +7,7 @@ import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { StatBox } from "@/components/ui/StatBox";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
+import { useResponsive } from "@/lib/responsive";
 import { colors } from "@/lib/theme";
 
 interface FoodLogRow {
@@ -51,6 +52,7 @@ function startOfTodayIso(): string {
 
 export default function Food() {
   const router = useRouter();
+  const { type } = useResponsive();
   const { session } = useSession();
   const uid = session?.user.id;
   const [logs, setLogs] = useState<FoodLogRow[]>([]);
@@ -164,7 +166,7 @@ export default function Food() {
             <Text className="text-sm text-muted-foreground">target {proteinTarget}</Text>
           ) : null}
         </View>
-        <Text className="mt-1 text-3xl font-bold text-foreground">
+        <Text className="mt-1 font-bold text-foreground" style={{ fontSize: type.metric }}>
           {Math.round(totals.p)}
           <Text className="text-base text-muted-foreground"> g</Text>
         </Text>

@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { supabase } from "@/lib/supabase";
 import { colors } from "@/lib/theme";
+import { useResponsive } from "@/lib/responsive";
 
 export default function SignUp() {
   const router = useRouter();
+  const { type } = useResponsive();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [consent, setConsent] = useState(false);
@@ -42,9 +44,11 @@ export default function SignUp() {
   if (done) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background px-6">
-        <Text className="text-xl font-semibold text-foreground">Check your inbox</Text>
-        <Text className="mt-2 text-center text-sm text-muted-foreground">Confirm your email, then sign in to finish setting up your profile.</Text>
-        <Button title="Back to sign in" variant="outline" className="mt-6" onPress={() => router.replace("/(auth)/sign-in")} />
+        <View style={{ width: "100%", maxWidth: 440, alignSelf: "center", alignItems: "center" }}>
+          <Text className="font-semibold text-foreground" style={{ fontSize: type.xl }}>Check your inbox</Text>
+          <Text className="mt-2 text-center text-sm text-muted-foreground">Confirm your email, then sign in to finish setting up your profile.</Text>
+          <Button title="Back to sign in" variant="outline" className="mt-6" onPress={() => router.replace("/(auth)/sign-in")} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -52,7 +56,8 @@ export default function SignUp() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 justify-center px-6">
-        <Text className="text-3xl font-bold text-foreground">Create account</Text>
+        <View style={{ width: "100%", maxWidth: 440, alignSelf: "center" }}>
+        <Text className="font-bold text-foreground" style={{ fontSize: type["3xl"] }}>Create account</Text>
         <Text className="mt-1 text-base text-muted-foreground">Start tracking your recomposition.</Text>
 
         <View className="mt-8 gap-3">
@@ -80,6 +85,7 @@ export default function SignUp() {
 
           <Button title="Create account" onPress={submit} loading={busy} disabled={!email || !password} className="mt-2" />
           <Pressable onPress={() => router.replace("/(auth)/sign-in")}><Text className="text-center text-sm text-primary">Already have an account? Sign in</Text></Pressable>
+        </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

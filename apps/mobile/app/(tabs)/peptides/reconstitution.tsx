@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api";
 import { usePeptideSelection } from "@/lib/peptide-selection";
 import { colors } from "@/lib/theme";
+import { useResponsive } from "@/lib/responsive";
 
 interface Option {
   id: string;
@@ -54,6 +55,7 @@ function fmtMg(mg: number): string {
 export default function Reconstitution() {
   const { compound: compoundSlug } = useLocalSearchParams<{ compound?: string }>();
   const router = useRouter();
+  const { type } = useResponsive();
   const sel = usePeptideSelection();
   const [options, setOptions] = useState<Option[]>([]);
   // Selected compound is the shared peptide-section selection (by slug).
@@ -197,7 +199,7 @@ export default function Reconstitution() {
     <Content className="gap-4">
       {/* STEP 1 — product + reconstitution */}
       <Card className="gap-4">
-        <Text className="text-sm font-semibold text-foreground">1 · Product & reconstitution</Text>
+        <Text className="font-semibold text-foreground" style={{ fontSize: type.lg }}>1 · Product & reconstitution</Text>
 
         <Field label="Peptide / blend" hint={selected?.ref_dose ? undefined : "Pick one to load its vial size + reference dose."}>
           <CompoundPicker
@@ -249,7 +251,7 @@ export default function Reconstitution() {
         <View className="flex-row items-center justify-between rounded-lg border border-border bg-muted px-4 py-3">
           <View>
             <Text className="text-[10px] uppercase tracking-wide text-muted-foreground">Concentration</Text>
-            <Text className="text-xl font-semibold text-primary">
+            <Text className="font-semibold text-primary" style={{ fontSize: type.metric }}>
               {concentration > 0 ? concentration.toFixed(3) : "—"}
               <Text className="text-xs font-normal text-muted-foreground"> mg/mL</Text>
             </Text>
@@ -265,7 +267,7 @@ export default function Reconstitution() {
 
       {/* STEP 2 — dose / reverse toggle */}
       <Card className="gap-4">
-        <Text className="text-sm font-semibold text-foreground">2 · Dose</Text>
+        <Text className="font-semibold text-foreground" style={{ fontSize: type.lg }}>2 · Dose</Text>
         <Segmented options={MODES} value={mode} onChange={setMode} />
 
         {mode === "dose" ? (

@@ -11,6 +11,7 @@ import { Loading, EmptyState } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
 import { loadActiveRegimen } from "@/lib/regimen";
 import { useSession } from "@/lib/session";
+import { useResponsive } from "@/lib/responsive";
 
 interface Item {
   id: string;
@@ -37,6 +38,7 @@ const ADHERENCE = [
 
 export default function DoseLog() {
   const { session } = useSession();
+  const { type } = useResponsive();
   const uid = session?.user.id;
   const [items, setItems] = useState<Item[]>([]);
   const [recent, setRecent] = useState<Dose[]>([]);
@@ -122,10 +124,10 @@ export default function DoseLog() {
                   <Pressable
                     key={it.id}
                     onPress={() => setSelected(it.id)}
-                    className={`flex-row items-center justify-between rounded-lg border p-3 ${active ? "border-primary bg-muted" : "border-border bg-card"}`}
+                    className={`flex-row items-center justify-between gap-2 rounded-lg border p-3 ${active ? "border-primary bg-muted" : "border-border bg-card"}`}
                   >
-                    <Text className="text-sm font-medium text-foreground">{it.compoundName}</Text>
-                    <Text className="text-sm text-muted-foreground">{it.dose_value} {it.dose_unit} · {it.route}</Text>
+                    <Text numberOfLines={1} className="flex-1 text-sm font-medium text-foreground">{it.compoundName}</Text>
+                    <Text className="text-sm text-muted-foreground" style={{ flexShrink: 0 }}>{it.dose_value} {it.dose_unit} · {it.route}</Text>
                   </Pressable>
                 );
               })}
@@ -145,14 +147,14 @@ export default function DoseLog() {
       )}
 
       <View className="gap-2">
-        <Text className="text-sm font-semibold text-foreground">Recent (14 days)</Text>
+        <Text className="font-semibold text-foreground" style={{ fontSize: type.lg }}>Recent (14 days)</Text>
         {recent.length === 0 ? (
           <Text className="text-sm text-muted-foreground">No doses logged yet.</Text>
         ) : (
           recent.map((d) => (
             <View key={d.id} className="flex-row items-center justify-between rounded-lg border border-border bg-card p-3">
               <View className="flex-1">
-                <Text className="text-sm font-medium text-foreground">{d.compounds?.name ?? "—"}</Text>
+                <Text numberOfLines={1} className="text-sm font-medium text-foreground">{d.compounds?.name ?? "—"}</Text>
                 <Text className="text-xs text-muted-foreground">
                   {new Date(d.taken_at).toLocaleDateString()} · {d.dose_value} {d.dose_unit}
                 </Text>

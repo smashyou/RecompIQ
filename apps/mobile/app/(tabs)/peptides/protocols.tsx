@@ -18,6 +18,7 @@ import { apiFetch } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { usePeptideSelection } from "@/lib/peptide-selection";
 import { colors } from "@/lib/theme";
+import { useResponsive } from "@/lib/responsive";
 
 // ---------- shared types ----------
 interface DoseRef {
@@ -198,6 +199,7 @@ function ReferenceTab({
   onExpand: (slug: string) => void;
   onUseInCalculator: (slug: string) => void;
 }) {
+  const { type } = useResponsive();
   const initialOpen = useMemo(() => {
     if (cameFromSlug) {
       const m = compounds.find((c) => c.slug === cameFromSlug);
@@ -226,8 +228,10 @@ function ReferenceTab({
               className="flex-row items-center justify-between p-4"
             >
               <View className="flex-1 flex-row items-center gap-2">
-                <Text className="text-base font-semibold text-foreground">{c.name}</Text>
-                <EvidenceBadge level={c.evidence_level} />
+                <Text numberOfLines={1} className="flex-shrink font-semibold text-foreground" style={{ fontSize: type.lg }}>{c.name}</Text>
+                <View style={{ flexShrink: 0 }}>
+                  <EvidenceBadge level={c.evidence_level} />
+                </View>
               </View>
               <Ionicons name={isOpen ? "remove" : "add"} size={18} color={colors.mutedForeground} />
             </Pressable>
@@ -410,6 +414,7 @@ function BuilderTab({
 
 // ---------- Titration Schedules ----------
 function TitrationTab({ schedules, onDeleted }: { schedules: Schedule[]; onDeleted: () => void }) {
+  const { type } = useResponsive();
   const [deleting, setDeleting] = useState<string | null>(null);
 
   async function remove(id: string) {
@@ -436,7 +441,7 @@ function TitrationTab({ schedules, onDeleted }: { schedules: Schedule[]; onDelet
           <Card key={s.id} className="gap-2">
             <View className="flex-row items-start justify-between">
               <View className="flex-1">
-                <Text className="text-base font-semibold text-foreground">{s.name}</Text>
+                <Text className="font-semibold text-foreground" style={{ fontSize: type.lg }}>{s.name}</Text>
                 <Text className="text-xs text-muted-foreground">
                   {s.phase ? `${s.phase} · ` : ""}
                   {byWeek.length} week{byWeek.length === 1 ? "" : "s"}

@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
 import { useTheme } from "@/lib/theme-context";
 import { radius } from "@/lib/theme";
+import { useResponsive } from "@/lib/responsive";
 
 // Camera-first quick-log bottom sheet — matches the handoff MQuickLog:
 // grab handle + title + 2x2 action tiles (Weight / Glucose / Dose / Vitals)
@@ -27,6 +28,7 @@ export function QuickLogSheet({ visible, onClose }: { visible: boolean; onClose:
   const router = useRouter();
   const { session } = useSession();
   const { colors } = useTheme();
+  const { type } = useResponsive();
   const [latest, setLatest] = useState<Latest>({ weight: null, glucose: null, dose: null, bp: null });
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export function QuickLogSheet({ visible, onClose }: { visible: boolean; onClose:
           }}
         >
           <View style={{ width: 40, height: 4, borderRadius: 999, backgroundColor: colors.surface3, alignSelf: "center", marginBottom: 16 }} />
-          <Text style={{ fontSize: 19, fontWeight: "600", color: colors.foreground, marginBottom: 4 }}>Quick log</Text>
+          <Text style={{ fontSize: type.xl, fontWeight: "600", color: colors.foreground, marginBottom: 4 }}>Quick log</Text>
           <Text style={{ fontSize: 12, color: colors.fgSubtle, marginBottom: 16 }}>One tap to record. Times stamp automatically.</Text>
 
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 11 }}>

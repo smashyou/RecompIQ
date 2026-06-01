@@ -15,6 +15,7 @@ import { ListRow } from "@/components/ui/ListRow";
 import { Pill } from "@/components/ui/Pill";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { ContraindicationBanner } from "@/components/peptides/ContraindicationBanner";
+import { useResponsive } from "@/lib/responsive";
 import {
   loadActiveRegimen,
   stopRegimenItem,
@@ -38,6 +39,7 @@ function ageFromDob(dob: string | null): number | null {
 export default function PeptidesHub() {
   const router = useRouter();
   const { session } = useSession();
+  const { type } = useResponsive();
   const uid = session?.user.id;
   const [regimen, setRegimen] = useState<ActiveRegimen | null>(null);
   const [findings, setFindings] = useState<ContraindicationFinding[]>([]);
@@ -129,7 +131,7 @@ export default function PeptidesHub() {
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-semibold text-foreground">Your regimen</Text>
+        <Text className="font-semibold text-foreground" style={{ fontSize: type.lg }}>Your regimen</Text>
         {phases.length === 0 ? (
           <EmptyState title="Regimen is empty" hint="Add the compounds you and your clinician have decided on." />
         ) : (
@@ -140,7 +142,8 @@ export default function PeptidesHub() {
                 <View className="flex-row items-center gap-2">
                   <Text
                     numberOfLines={1}
-                    className="flex-1 text-base font-semibold text-foreground"
+                    className="flex-1 font-semibold text-foreground"
+                    style={{ fontSize: type.lg }}
                   >
                     {p.name}
                   </Text>
@@ -198,7 +201,7 @@ export default function PeptidesHub() {
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-semibold text-foreground">Tools</Text>
+        <Text className="font-semibold text-foreground" style={{ fontSize: type.lg }}>Tools</Text>
         <ListRow title="Compound Catalog" subtitle="All compounds + safety data" icon="list-outline" onPress={() => router.push("/(tabs)/peptides/compounds")} />
         <ListRow title="Protocol Library" subtitle="Evidence-graded dose references" icon="library-outline" onPress={() => router.push("/(tabs)/peptides/library")} />
         <ListRow title="Reconstitution" subtitle="Vial math + syringe draw" icon="flask-outline" onPress={() => router.push("/(tabs)/peptides/reconstitution")} />

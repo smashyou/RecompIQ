@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/lib/theme-context";
 import { radius } from "@/lib/theme";
+import { useResponsive } from "@/lib/responsive";
 
 // Mobile consent + 18+ gate. Mirrors the handoff MConsent / web ConsentGate:
 // four acknowledgements (educational/research, research-chemical framing,
@@ -29,6 +30,7 @@ const ITEMS: ReadonlyArray<{ id: ConsentId; text: ReactNode }> = [
 
 export function ConsentGate({ onEnter }: { onEnter: () => void }) {
   const { colors } = useTheme();
+  const { type } = useResponsive();
   const [checks, setChecks] = useState<Record<ConsentId, boolean>>({
     edu: false,
     research: false,
@@ -40,6 +42,7 @@ export function ConsentGate({ onEnter }: { onEnter: () => void }) {
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.bgDeep }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20, justifyContent: "center" }}>
+        <View style={{ width: "100%", maxWidth: 480, alignSelf: "center" }}>
         <View
           style={{
             width: 56,
@@ -69,7 +72,7 @@ export function ConsentGate({ onEnter }: { onEnter: () => void }) {
         </Text>
         <Text
           style={{
-            fontSize: 26,
+            fontSize: type["2xl"],
             fontWeight: "600",
             letterSpacing: -0.5,
             color: colors.foreground,
@@ -163,6 +166,7 @@ export function ConsentGate({ onEnter }: { onEnter: () => void }) {
         >
           By continuing you accept the Terms of Use and Privacy Policy.
         </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

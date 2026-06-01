@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useSession } from "@/lib/session";
+import { useResponsive } from "@/lib/responsive";
 
 const DEMO_EMAIL = "demo@recompiq.app";
 const DEMO_PASSWORD = "DemoUser!2026";
@@ -12,6 +13,7 @@ const DEMO_PASSWORD = "DemoUser!2026";
 export default function SignIn() {
   const { signIn } = useSession();
   const router = useRouter();
+  const { type } = useResponsive();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,8 +43,9 @@ export default function SignIn() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1 justify-center px-6"
       >
+        <View style={{ width: "100%", maxWidth: 440, alignSelf: "center" }}>
         <View className="mb-8">
-          <Text className="text-3xl font-bold text-foreground">RecompIQ</Text>
+          <Text className="font-bold text-foreground" style={{ fontSize: type["3xl"] }}>RecompIQ</Text>
           <Text className="mt-1 text-base text-muted-foreground">
             Sign in to your recomposition coach.
           </Text>
@@ -92,6 +95,7 @@ export default function SignIn() {
               <Text className="text-sm text-muted-foreground">Forgot password?</Text>
             </Pressable>
           </View>
+        </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

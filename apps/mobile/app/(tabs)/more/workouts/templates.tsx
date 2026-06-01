@@ -9,6 +9,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import { Loading, ErrorState, EmptyState } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
+import { useResponsive } from "@/lib/responsive";
 
 interface Exercise {
   name: string;
@@ -30,6 +31,7 @@ const PHASES: string[] = ["P1", "P2", "P3"];
 
 export default function WorkoutTemplates() {
   const router = useRouter();
+  const { type } = useResponsive();
   const { session } = useSession();
   const uid = session?.user.id;
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
@@ -103,7 +105,13 @@ export default function WorkoutTemplates() {
           <Card key={t.slug} className="gap-3">
             <View>
               <View className="flex-row flex-wrap items-center gap-2">
-                <Text className="text-base font-semibold text-foreground">{t.name}</Text>
+                <Text
+                  className="font-semibold text-foreground"
+                  style={{ fontSize: type.lg, flexShrink: 1 }}
+                  numberOfLines={1}
+                >
+                  {t.name}
+                </Text>
                 <Pill label={t.phase} />
                 <Pill label={t.session_type} />
               </View>
