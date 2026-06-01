@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { metricsForGoals, type GoalKey, type MetricDef } from "@peptide/shared";
+import { Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFireToast } from "@/components/ui/toast";
 import { Card } from "@/components/kit";
+import { CognitionTest } from "@/components/cognition-test";
 
 export function GoalMetricsForm() {
   const router = useRouter();
@@ -30,6 +32,8 @@ export function GoalMetricsForm() {
     () => metricsForGoals(goalKeys).filter((m) => m.kind !== "objective"),
     [goalKeys],
   );
+  const showCognition = goalKeys.includes("cognition" as GoalKey);
+  const [cognitionOpen, setCognitionOpen] = useState(false);
 
   function set(key: string, v: string) {
     setValues((prev) => ({ ...prev, [key]: v }));
@@ -78,6 +82,7 @@ export function GoalMetricsForm() {
   }
 
   return (
+    <div className="space-y-4">
     <Card title="Today's goal check-in">
       <div className="space-y-4">
         {metrics.map((m) => (
@@ -123,5 +128,15 @@ export function GoalMetricsForm() {
         </p>
       </div>
     </Card>
+
+    {showCognition &&
+      (cognitionOpen ? (
+        <CognitionTest onClose={() => setCognitionOpen(false)} />
+      ) : (
+        <Button variant="outline" onClick={() => setCognitionOpen(true)} className="w-full gap-2">
+          <Brain size={16} /> Take the 30-sec cognition check
+        </Button>
+      ))}
+    </div>
   );
 }

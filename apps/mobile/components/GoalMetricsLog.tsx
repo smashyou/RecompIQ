@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { CognitionTest } from "@/components/CognitionTest";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
 import { useTheme } from "@/lib/theme-context";
@@ -21,6 +22,7 @@ export function GoalMetricsLog() {
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [circ, setCirc] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [cognitionOpen, setCognitionOpen] = useState(false);
 
   useEffect(() => {
     if (!uid) return;
@@ -80,7 +82,10 @@ export function GoalMetricsLog() {
     );
   }
 
+  const showCognition = goalKeys.includes("cognition" as GoalKey);
+
   return (
+    <View style={{ gap: 12 }}>
     <Card className="gap-4">
       <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "600" }}>Today's goal check-in</Text>
       {metrics.map((m) =>
@@ -117,5 +122,13 @@ export function GoalMetricsLog() {
       <Button title="Log check-in" onPress={save} loading={saving} />
       <Text style={{ color: colors.fgSubtle, fontSize: 10.5 }}>Self-reported trends, not clinical measurements.</Text>
     </Card>
+
+    {showCognition &&
+      (cognitionOpen ? (
+        <CognitionTest onClose={() => setCognitionOpen(false)} />
+      ) : (
+        <Button title="Take the 30-sec cognition check" variant="outline" onPress={() => setCognitionOpen(true)} />
+      ))}
+    </View>
   );
 }
