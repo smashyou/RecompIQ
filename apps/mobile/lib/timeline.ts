@@ -1,0 +1,60 @@
+import { buildTimelineModel, type TimelineInput, type RegimenLike } from "@peptide/shared/timeline";
+import { supabase } from "@/lib/supabase";
+
+export interface TimelineRange {
+  from: string;
+  to: string;
+}
+
+export async function loadTimeline(userId: string, range: TimelineRange): Promise<TimelineInput> {
+  const fromTs = `${range.from}T00:00:00`;
+  const toTs = `${range.to}T23:59:59.999`;
+
+  const [weights, foods, doses, workouts, goalMetrics, labs, purchases, regimen] = await Promise.all([
+    supabase.from("weights").select("logged_at,value_lb").eq("user_id", userId).gte("logged_at", fromTs).lte("logged_at", toTs).order("logged_at", { ascending: true }),
+    supabase.from("food_logs").select("logged_at,calories_kcal,protein_g").eq("user_id", userId).gte("logged_at", fromTs).lte("logged_at", toTs),
+    supabase.from("peptide_doses").select("taken_at,adherence").eq("user_id", userId).gte("taken_at", fromTs).lte("taken_at", toTs),
+    supabase.from("workouts").select("date,session_type,duration_min,perceived_exertion").eq("user_id", userId).gte("date", range.from).lte("date", range.to),
+    supabase.from("goal_metrics").select("metric_key,value,unit,logged_at").eq("user_id", userId).gte("logged_at", fromTs).lte("logged_at", toTs).order("logged_at", { ascending: true }),
+    supabase.from("lab_results").select("collected_on,marker,marker_key,value,unit,ref_low,ref_high").eq("user_id", userId).gte("collected_on", range.from).lte("collected_on", range.to),
+    supabase.from("peptide_purchases").select("purchased_on,price_usd").eq("user_id", userId).gte("purchased_on", range.from).lte("purchased_on", range.to),
+    supabase
+      .from("regimens")
+      .select("regimen_phases(starts_on,ends_on, regimen_items(starts_on,ends_on, compounds(name)))")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const reg = regimen.data as
+    | { regimen_phases?: Array<{ starts_on: string | null; ends_on: string | null; regimen_items?: Array<{ starts_on: string | null; ends_on: string | null; compounds?: { name: string } | { name: string }[] | null }> }> }
+    | null;
+  const regimenLike: RegimenLike | null = reg
+    ? {
+        phases: (reg.regimen_phases ?? []).map((p) => ({
+          starts_on: p.starts_on,
+          ends_on: p.ends_on,
+          items: (p.regimen_items ?? []).map((i) => {
+            const c = Array.isArray(i.compounds) ? i.compounds[0] : i.compounds;
+            return { compound: c?.name ? { name: c.name } : null, starts_on: i.starts_on, ends_on: i.ends_on };
+          }),
+        })),
+      }
+    : null;
+
+  return {
+    range: { startISO: range.from, endISO: range.to },
+    weights: (weights.data ?? []).map((w) => ({ logged_at: w.logged_at as string, value_lb: Number(w.value_lb) })),
+    foods: (foods.data ?? []).map((f) => ({ logged_at: f.logged_at as string, calories_kcal: Number(f.calories_kcal), protein_g: Number(f.protein_g) })),
+    doses: (doses.data ?? []).map((d) => ({ taken_at: d.taken_at as string, adherence: d.adherence as string })),
+    workouts: (workouts.data ?? []).map((w) => ({ date: w.date as string, session_type: w.session_type as string, duration_min: w.duration_min as number | null, perceived_exertion: w.perceived_exertion as number | null })),
+    goalMetrics: (goalMetrics.data ?? []).map((g) => ({ metric_key: g.metric_key as string, value: Number(g.value), unit: (g.unit as string | null) ?? null, logged_at: g.logged_at as string })),
+    labs: (labs.data ?? []).map((l) => ({ collected_on: l.collected_on as string, marker: l.marker as string, marker_key: (l.marker_key as string | null) ?? null, value: Number(l.value), unit: (l.unit as string | null) ?? null, ref_low: l.ref_low !== null ? Number(l.ref_low) : null, ref_high: l.ref_high !== null ? Number(l.ref_high) : null })),
+    purchases: (purchases.data ?? []).map((p) => ({ purchased_on: p.purchased_on as string, price_usd: Number(p.price_usd) })),
+    regimen: regimenLike,
+  };
+}
+
+export { buildTimelineModel };
