@@ -294,6 +294,19 @@ async function seedLogs(uid) {
     }
   }
 
+  // A recent "rough day" reading (later today) so it's the LATEST vital the alerts
+  // engine evaluates — a realistic BP/glucose flare for a T2D/HTN profile. Trips
+  // bp_high + glucose_high so the demo's /alerts page shows real, current alerts.
+  vitals.push({
+    user_id: uid,
+    logged_at: atTime(today, 19, 30),
+    bp_systolic: 166,
+    bp_diastolic: 99,
+    hr: 82,
+    glucose_mgdl: 264,
+    is_demo: true,
+  });
+
   await insert("weights", weights);
   await insert("vitals", vitals);
   await insert("symptoms", symptoms);
@@ -476,6 +489,9 @@ async function seedGoalMetrics(uid) {
     push("skin_quality", Math.min(10, Math.round(5 + 3 * p)), "rating"); // 5 → 8
     push("pain_level", Math.max(0, Math.round(6 - 3 * p)), "rating"); // 6 → 3
     push("mobility", Math.min(10, Math.round(4 + 3 * p)), "rating"); // 4 → 7
+    // Nerve-symptom self-check trending UP (worse) — demo's foot numbness/drop hx.
+    // Trips neuro_worsening (latest ~7 ≥ warn 6, rising from baseline ~3). Self-report only.
+    push("neuro_severity", Math.min(10, Math.round(3 + 4 * p)), "rating"); // 3 → 7
     void t;
   }
   await insert("goal_metrics", rows);
