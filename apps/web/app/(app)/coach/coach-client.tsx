@@ -207,7 +207,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
       </aside>
 
       {/* Chat column */}
-      <section className="flex min-w-[340px] flex-1 flex-col rounded-[var(--r-lg)] border border-border bg-[var(--surface-1)]">
+      <section className="flex min-w-0 flex-1 flex-col rounded-[var(--r-lg)] border border-border bg-[var(--surface-1)] lg:min-w-[340px]">
         <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-[22px]">
           {loadingThread ? (
             <p className="font-[family-name:var(--font-sans)] text-[13.5px] text-[var(--fg-muted)]">

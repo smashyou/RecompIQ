@@ -44,13 +44,13 @@ export default function LandingPage() {
         }}
       />
 
-      <header className="relative z-10 flex items-center justify-between px-10 py-5">
-        <Link href="/" aria-label="RecompIQ home">
+      <header className="relative z-10 flex items-center justify-between gap-2 px-5 py-5 sm:px-10">
+        <Link href="/" aria-label="RecompIQ home" className="min-w-0 shrink">
           <Wordmark size={20} />
         </Link>
-        <div className="flex items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
           <ThemeToggle compact />
-          <Button asChild variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/signin">Sign in</Link>
           </Button>
           <Button asChild size="sm">
@@ -146,7 +146,7 @@ export default function LandingPage() {
       </main>
 
       <footer
-        className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-t px-10 py-5"
+        className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-t px-5 py-5 sm:px-10"
         style={{ borderColor: "var(--border)" }}
       >
         <span

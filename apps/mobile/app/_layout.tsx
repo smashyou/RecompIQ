@@ -16,11 +16,12 @@ function ThemedApp() {
   const { colors, scheme, cssVars } = useTheme();
   const { accepted, accept } = useConsent();
 
-  // Hold the branded splash for a minimum beat on cold launch (the native
-  // app.json splash doesn't render in Expo Go, so this is the visible one).
+  // Hold the branded splash long enough for its draw-on animation to play out
+  // (~2.2s) on cold launch. The native app.json splash doesn't render in Expo
+  // Go, so this animated BrandSplash is the visible launch screen there.
   const [minElapsed, setMinElapsed] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setMinElapsed(true), 1600);
+    const t = setTimeout(() => setMinElapsed(true), 2500);
     return () => clearTimeout(t);
   }, []);
 
