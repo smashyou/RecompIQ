@@ -17,7 +17,8 @@ import {
 import { DashboardAddPeptide } from "@/components/dashboard/add-peptide";
 import { GoalCards } from "@/components/dashboard/goal-cards";
 import { loadGoalCards } from "@/lib/queries/goal-cards";
-import { deriveAlerts, deriveInsight } from "@/components/dashboard/derive";
+import { deriveInsight } from "@/components/dashboard/derive";
+import { loadAlerts } from "@/lib/queries/alerts";
 import { AutoGrid } from "@/components/ui/layout";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +41,11 @@ export default async function DashboardPage() {
   const fullName = snapshot.profile?.display_name ?? user.email ?? "there";
   const firstName = fullName.split(/[\s@]/)[0] || fullName;
 
-  const alerts = deriveAlerts(snapshot);
+  const { active: activeAlerts } = await loadAlerts(user.id);
+  // Banner surfaces only the actionable critical/warn alerts (top few by severity).
+  const bannerAlerts = activeAlerts
+    .filter((a) => a.severity === "critical" || a.severity === "warn")
+    .slice(0, 3);
   const insight = deriveInsight(snapshot);
 
   return (
@@ -56,9 +61,9 @@ export default async function DashboardPage() {
         </p>
       </header>
 
-      {alerts.length > 0 && (
+      {bannerAlerts.length > 0 && (
         <Link
-          href="/log"
+          href="/alerts"
           className="flex items-center gap-3 rounded-[var(--r-md)] border px-4 py-3 transition-colors"
           style={{
             borderColor: "var(--warn-line)",
@@ -72,10 +77,10 @@ export default async function DashboardPage() {
           />
           <div className="flex-1">
             <span className="font-[family-name:var(--font-sans)] text-sm font-semibold" style={{ color: "var(--warn)" }}>
-              {alerts.length} alert{alerts.length === 1 ? "" : "s"} need review
+              {bannerAlerts.length} alert{bannerAlerts.length === 1 ? "" : "s"} need review
             </span>
             <span className="ml-2 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
-              {alerts.map((a) => a.detail).join(" · ")}
+              {bannerAlerts.map((a) => a.title).join(" · ")}
             </span>
           </div>
           <ChevronRight size={16} style={{ color: "var(--fg-subtle)" }} />

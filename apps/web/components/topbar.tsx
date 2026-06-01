@@ -19,10 +19,12 @@ export function Topbar({
   email,
   title = "RecompIQ",
   isAdmin,
+  alertCount = 0,
 }: {
   email: string;
   title?: string;
   isAdmin?: boolean;
+  alertCount?: number;
 }) {
   const router = useRouter();
 
@@ -58,7 +60,11 @@ export function Topbar({
           className="relative grid h-9 w-9 place-items-center rounded-[var(--r-md)] border border-border text-[var(--fg-muted)] transition-colors hover:bg-[var(--surface-1)] hover:text-[var(--fg)]"
         >
           <Bell size={16} />
-          <span className="absolute right-2 top-[7px] h-[7px] w-[7px] rounded-full bg-[var(--danger)] shadow-[0_0_0_2px_var(--bg)]" />
+          {alertCount > 0 && (
+            <span className="absolute -right-1.5 -top-1.5 grid h-[16px] min-w-[16px] place-items-center rounded-full bg-[var(--danger)] px-1 font-[family-name:var(--font-sans)] text-[10px] font-semibold leading-none text-white shadow-[0_0_0_2px_var(--bg)]">
+              {alertCount > 9 ? "9+" : alertCount}
+            </span>
+          )}
         </Link>
         <button
           type="button"

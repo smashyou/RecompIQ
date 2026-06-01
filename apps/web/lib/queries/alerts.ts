@@ -24,6 +24,24 @@ export interface AlertsView {
   openCount: number;
 }
 
+/**
+ * Cheap, read-only count of open critical/warn alerts (no reconcile / no writes).
+ * Safe to call on every app-layout render — a single head/count query. Excludes
+ * alerts snoozed into the future.
+ */
+export async function countOpenAlerts(userId: string): Promise<number> {
+  const supabase = await createSupabaseServerClient();
+  const nowIso = new Date().toISOString();
+  const { count } = await supabase
+    .from("alerts")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "open")
+    .in("severity", ["critical", "warn"])
+    .or(`snoozed_until.is.null,snoozed_until.lte.${nowIso}`);
+  return count ?? 0;
+}
+
 export async function loadAlerts(userId: string): Promise<AlertsView> {
   const supabase = await createSupabaseServerClient();
   const nowIso = new Date().toISOString();
