@@ -48,6 +48,25 @@ it("bp_high warn at stage-2, critical at crisis", () => {
   assert.equal(crit.severity, "critical");
 });
 
+it("bp_low warns on the low side, escalates to critical at the crisis cut", () => {
+  // catalog: warnAt 90 / criticalAt 80; companion diastolic ≤ 60
+  const crit = scanRecentLogs({ ...base(), vitals: [{ logged_at: NOW, bp_systolic: 72, bp_diastolic: 50, glucose_mgdl: null }] }).find((x) => x.kind === "bp_low");
+  assert.ok(crit, "expected a bp_low finding");
+  assert.equal(crit.severity, "critical");
+  const warn = scanRecentLogs({ ...base(), vitals: [{ logged_at: NOW, bp_systolic: 88, bp_diastolic: 58, glucose_mgdl: null }] }).find((x) => x.kind === "bp_low");
+  assert.equal(warn.severity, "warn");
+});
+
+it("adherence_drop is two-tier: warn below the critical cut, info between", () => {
+  // catalog: warnAt 80 / criticalAt 60
+  const taken = (pct, n = 8) => Array.from({ length: n }, (_, i) => ({ taken_at: NOW, adherence: i < Math.round((pct / 100) * n) ? "taken" : "missed" }));
+  const warn = scanRecentLogs({ ...base(), doses: taken(50) }).find((x) => x.kind === "adherence_drop"); // 50% < 60
+  assert.ok(warn, "expected an adherence_drop finding");
+  assert.equal(warn.severity, "warn");
+  const info = scanRecentLogs({ ...base(), doses: taken(75) }).find((x) => x.kind === "adherence_drop"); // 60 ≤ 75 < 80
+  assert.equal(info.severity, "info");
+});
+
 it("rapid_weight_loss fires on a sustained >2 lb/wk slope", () => {
   // 6 lb over 14 days = 3 lb/wk; catalog warnAt 2 / criticalAt 3
   const weights = [];

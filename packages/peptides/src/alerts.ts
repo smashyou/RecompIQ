@@ -81,13 +81,17 @@ export function scanRecentLogs(input: AlertScanInput): AlertFinding[] {
       });
     }
     const ruleLo = ruleFor("bp_low");
-    if (ruleLo.warnAt !== undefined && sys <= ruleLo.warnAt && dia <= 60) {
+    // bp_low two-tier: systolic must cross AND diastolic ≤ 60 (companion).
+    const loCrisis = ruleLo.criticalAt !== undefined && sys <= ruleLo.criticalAt && dia <= 60;
+    const loWarn = ruleLo.warnAt !== undefined && sys <= ruleLo.warnAt && dia <= 60;
+    if (loCrisis || loWarn) {
+      const severity = loCrisis ? "critical" : "warn";
       out.push({
-        kind: "bp_low", severity: "warn", title: ruleLo.title,
-        message: interp(ruleLo.messageWarn, label),
+        kind: "bp_low", severity, title: ruleLo.title,
+        message: interp(severity === "critical" && ruleLo.messageCritical ? ruleLo.messageCritical : ruleLo.messageWarn, label),
         evidence: { systolic: sys, diastolic: dia, at: latestBp.logged_at },
         evidenceLevel: ruleLo.evidenceLevel, citation: ruleLo.citation,
-        fingerprint: fingerprintOf("bp_low", "low"),
+        fingerprint: fingerprintOf("bp_low", loCrisis ? "crisis" : "low"),
       });
     }
   }
@@ -107,6 +111,7 @@ export function scanRecentLogs(input: AlertScanInput): AlertFinding[] {
     const rule = ruleFor("low_protein");
     if (avg < input.proteinGoalMin) {
       out.push({
+        // <70% of goal → warn (reaches the dashboard banner); 70–99% → info (alerts page only)
         kind: "low_protein", severity: avg < input.proteinGoalMin * 0.70 ? "warn" : "info", // research: warn below 70% of the user's own target
         title: rule.title,
         message: interp(rule.messageWarn, `${Math.round(avg)}`),
@@ -122,10 +127,15 @@ export function scanRecentLogs(input: AlertScanInput): AlertFinding[] {
     const taken = input.doses.filter((d) => d.adherence === "taken" || d.adherence === "partial").length;
     const pct = (taken / input.doses.length) * 100;
     const rule = ruleFor("adherence_drop");
-    if (rule.warnAt !== undefined && pct < rule.warnAt) {
+    // adherence_drop two-tier: < criticalAt(60) → warn (lower adherence is worse);
+    // criticalAt..warnAt(80) → info. Both use the "low" bucket — one active row.
+    const adhCrit = rule.criticalAt !== undefined && pct < rule.criticalAt;
+    const adhWarn = rule.warnAt !== undefined && pct < rule.warnAt;
+    if (adhCrit || adhWarn) {
+      const severity = adhCrit ? "warn" : "info";
       out.push({
-        kind: "adherence_drop", severity: "info", title: rule.title,
-        message: interp(rule.messageWarn, `${Math.round(pct)}`),
+        kind: "adherence_drop", severity, title: rule.title,
+        message: interp(adhCrit && rule.messageCritical ? rule.messageCritical : rule.messageWarn, `${Math.round(pct)}`),
         evidence: { pct: Math.round(pct), taken, total: input.doses.length },
         evidenceLevel: rule.evidenceLevel, citation: rule.citation,
         fingerprint: fingerprintOf("adherence_drop", "low"),

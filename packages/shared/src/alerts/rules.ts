@@ -49,7 +49,7 @@ export const ALERT_RULES: Record<string, AlertRule> = {
     evidenceLevel: "FDA_APPROVED", citation: "ADA Standards of Care 2025, Sec. 6 (hypoglycemia: <70 Level 1, <54 Level 2)",
     title: "Low blood glucose",
     messageWarn: "A reading of {v} mg/dL is below 70, which clinicians call low blood sugar — worth discussing with your clinician.",
-    messageCritical: "A reading of {v} mg/dL is in the range of severe hypoglycemia. If you feel confused, shaky, or faint, treat per your clinician's hypoglycemia plan and seek help.",
+    messageCritical: "A reading of {v} mg/dL is in the range of severe low blood sugar. If you feel confused, shaky, or faint, seek emergency care; otherwise contact your clinician promptly.",
   },
   bp_high: {
     kind: "bp_high", direction: "high", warnAt: 140, criticalAt: 180,
