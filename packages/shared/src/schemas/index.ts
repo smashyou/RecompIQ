@@ -52,6 +52,55 @@ export const userGoalsReplaceInput = z.object({
 });
 export type UserGoalsReplaceInput = z.infer<typeof userGoalsReplaceInput>;
 
+// ---------------------------------------------------------------
+// AI auto-stacker (REGIMEN_GOALS_PRD §3/§7). Goal-driven SUGGESTIONS the user
+// accepts/edits — never auto-applied, never a prescription. Dose text is
+// literature/community range only, quarantined via wrapDoseLike before display.
+// ---------------------------------------------------------------
+export const stackerGenerateInput = z.object({
+  goal_keys: z.array(z.enum(GOAL_KEYS)).max(13).default([]),
+  free_text: z.string().max(2000).nullable().optional(),
+});
+export type StackerGenerateInput = z.infer<typeof stackerGenerateInput>;
+
+// Model output (validated). Lenient strings (slug/evidence) — post-filtered to
+// the catalog server-side. literature_dose_text is wrapped before it reaches UI.
+export const stackerItem = z.object({
+  slug: z.string(),
+  name: z.string(),
+  why: z.string().max(600),
+  evidence_level: z.string(),
+  literature_dose_text: z.string().max(400).nullable().optional(),
+  monitoring: z.array(z.string().max(200)).default([]),
+  cautions: z.array(z.string().max(200)).default([]),
+});
+export type StackerItem = z.infer<typeof stackerItem>;
+
+export const stackerPhase = z.object({
+  name: z.string().max(120),
+  goal_keys: z.array(z.string()).default([]),
+  rationale: z.string().max(800),
+  items: z.array(stackerItem).max(12).default([]),
+});
+export type StackerPhase = z.infer<typeof stackerPhase>;
+
+export const stackerPlan = z.object({
+  summary: z.string().max(1200),
+  detected_goal_keys: z.array(z.string()).default([]),
+  phasing_rationale: z.string().max(1200),
+  warnings: z.array(z.string().max(400)).default([]),
+  phases: z.array(stackerPhase).max(8).default([]),
+  clinician_points: z.array(z.string().max(400)).default([]),
+});
+export type StackerPlan = z.infer<typeof stackerPlan>;
+
+// Apply an accepted plan: creates goals + phases + ai_suggested items.
+export const stackerApplyInput = z.object({
+  plan: stackerPlan,
+  goal_keys: z.array(z.enum(GOAL_KEYS)).max(13).default([]),
+});
+export type StackerApplyInput = z.infer<typeof stackerApplyInput>;
+
 export const weightLogSchema = z.object({
   value: z.number().min(50).max(800),
   unit: z.enum(UNIT_WEIGHT),

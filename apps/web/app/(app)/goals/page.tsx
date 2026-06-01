@@ -2,7 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { GOAL_TAXONOMY } from "@peptide/shared";
 import { SectionHeader } from "@/components/kit";
-import { GoalPicker } from "./goal-picker";
+import { GoalsClient } from "./goals-client";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export default async function GoalsPage() {
         guide the AI when it helps you assemble a regimen. You can pick several — priority follows the
         order you select.
       </p>
-      <GoalPicker initialSelected={initialSelected} compoundNames={compoundNames} />
+      <GoalsClient initialSelected={initialSelected} compoundNames={compoundNames} />
     </div>
   );
 }

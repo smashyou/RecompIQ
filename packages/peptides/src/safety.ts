@@ -42,10 +42,11 @@ export function safeDoseDisplay(input: {
 }
 
 // Pattern for dose-like content in free-form AI output.
-// Matches things like "6 mg weekly", "300 mcg/day", "2 mL IM 2x per week".
+// Matches "6 mg weekly", "300 mcg/day", "2 mL IM", AND ranges like "2–4 mg" /
+// "0.5-1 mg" (hyphen or en/em dash) — the canonical literature-range format.
 // Intentionally permissive — false positives just trigger an extra disclaimer wrap.
 const DOSE_PATTERN =
-  /(\d+(?:\.\d+)?)\s?(mg|mcg|μg|iu|units|ml|cc)\b/gi;
+  /(\d+(?:\.\d+)?(?:\s*[–—-]\s*\d+(?:\.\d+)?)?)\s?(mg|mcg|μg|iu|units|ml|cc)\b/gi;
 
 // Phase-9b loosened safety: instead of BLOCKING AI text that contains doses
 // (the old rejectIfDoseLike behavior), we WRAP each dose mention with [edu]…[/edu]

@@ -3,7 +3,10 @@ import {
   chat as gatewayChat,
   embed as gatewayEmbed,
   parseFoodFromImage as gatewayParseFood,
+  generateStack as gatewayGenerateStack,
   type AiCallLog,
+  type GenerateStackOpts,
+  type GenerateStackResult,
   type ChatRequest,
   type ChatResponse,
   type EmbeddingRequest,
@@ -124,6 +127,10 @@ export function parseFoodFromImage(
   opts: ParseFoodFromImageOpts,
 ): Promise<ParseFoodFromImageResult> {
   return gatewayParseFood(opts, deps);
+}
+
+export function generateStack(opts: GenerateStackOpts): Promise<GenerateStackResult> {
+  return gatewayGenerateStack(opts, deps);
 }
 
 export { loadFeatureConfig };
