@@ -48,7 +48,7 @@ export interface TimelineLane {
   events?: EventDot[];
   intervals?: IntervalSeg[];
   rowCount?: number; // number of gantt rows (intervals only)
-  /** Scrub readout for a given day; null = no data that day. */
+  /** Scrub readout for a given day (`dateISO` is a `YYYY-MM-DD` day); null = no data that day. */
   readAt(dateISO: string): string | null;
 }
 

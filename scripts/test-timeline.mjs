@@ -212,5 +212,92 @@ it("buildTimelineModel returns ticks + only non-empty lanes", () => {
   assert.ok(!model.lanes.some((l) => l.key === "calories"));
 });
 
+// ---- edge cases ----
+it("weight lane: single point → vFrac 0.5 (span-0 fallback)", () => {
+  const lane = shapeWeightLane([{ logged_at: "2026-05-10", value_lb: 260 }], scale);
+  assert.equal(lane.line.length, 1);
+  assert.ok(close(lane.line[0].vFrac, 0.5));
+});
+
+it("weight lane: non-finite value is dropped; min/max/summary stay finite", () => {
+  const lane = shapeWeightLane(
+    [
+      { logged_at: "2026-05-01", value_lb: 268 },
+      { logged_at: "2026-05-15", value_lb: Number.NaN },
+      { logged_at: "2026-05-31", value_lb: 254 },
+    ],
+    scale,
+  );
+  assert.ok(Number.isFinite(lane.min));
+  assert.ok(Number.isFinite(lane.max));
+  assert.equal(lane.min, 254);
+  assert.equal(lane.max, 268);
+  assert.ok(!/NaN/.test(lane.summary));
+  assert.equal(lane.line.length, 2); // bad row dropped
+});
+
+it("goal-metric lane: non-finite value is dropped; domain stays finite", () => {
+  const lanes = shapeGoalMetricLanes(
+    [
+      { metric_key: "waist_cm", value: 102, unit: "cm", logged_at: "2026-05-02" },
+      { metric_key: "waist_cm", value: Number.NaN, unit: "cm", logged_at: "2026-05-12" },
+      { metric_key: "waist_cm", value: 98, unit: "cm", logged_at: "2026-05-22" },
+    ],
+    scale,
+  );
+  assert.equal(lanes.length, 1);
+  const waist = lanes[0];
+  assert.ok(Number.isFinite(waist.min) && Number.isFinite(waist.max));
+  assert.equal(waist.line.length, 2);
+  assert.ok(!/NaN/.test(waist.summary));
+});
+
+it("labs lane: unknown range (no report + no catalog) is NOT flagged", () => {
+  const lane = shapeLabsLane(
+    [
+      {
+        collected_on: "2026-05-04",
+        marker: "Mystery Marker",
+        marker_key: "made_up_marker",
+        value: 42,
+        unit: "x",
+        ref_low: null,
+        ref_high: null,
+      },
+    ],
+    scale,
+  );
+  assert.equal(lane.events.length, 1);
+  assert.equal(lane.events[0].tone, "neutral");
+  const read = lane.readAt("2026-05-04");
+  assert.match(read, /Mystery Marker/);
+  assert.ok(!/clinician/i.test(read)); // nothing to flag → no clinician phrase
+});
+
+it("active-peptide lane: same compound across two phases → union interval", () => {
+  const lane = shapeActivePeptideLane(
+    {
+      phases: [
+        {
+          starts_on: "2026-05-02",
+          ends_on: "2026-05-10",
+          items: [{ compound: { name: "MOTS-C" }, starts_on: "2026-05-02", ends_on: "2026-05-10" }],
+        },
+        {
+          starts_on: "2026-05-18",
+          ends_on: "2026-05-26",
+          items: [{ compound: { name: "MOTS-C" }, starts_on: "2026-05-18", ends_on: "2026-05-26" }],
+        },
+      ],
+    },
+    scale,
+  );
+  assert.equal(lane.rowCount, 1); // one compound, one row
+  const seg = lane.intervals.find((s) => s.label === "MOTS-C");
+  // union spans min start (May 2) → max end (May 26)
+  assert.ok(close(seg.x0, scale.frac(+new Date("2026-05-02T00:00:00"))));
+  assert.ok(close(seg.x1, scale.frac(+new Date("2026-05-26T00:00:00"))));
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

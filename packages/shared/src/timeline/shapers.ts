@@ -50,7 +50,8 @@ const num = (v: number, d = 0) => v.toLocaleString(undefined, { maximumFractionD
 // y-normalization: 0 = domain min, 1 = domain max. Renderers invert for screen y.
 function vFracOf(v: number, min: number, max: number): number {
   const span = max - min;
-  return span <= 0 ? 0.5 : (v - min) / span;
+  if (!Number.isFinite(span) || span <= 0) return 0.5;
+  return (v - min) / span;
 }
 
 function nearestByDay<T extends { dateISO: string }>(items: T[], dateISO: string): T | null {
@@ -69,14 +70,18 @@ function nearestByDay<T extends { dateISO: string }>(items: T[], dateISO: string
 }
 
 export function shapeWeightLane(rows: WeightRow[], scale: TimeScale): TimelineLane {
-  const sorted = [...rows].sort((a, b) => a.logged_at.localeCompare(b.logged_at));
-  const vals = sorted.map((r) => Number(r.value_lb));
+  // Coerce each row's value once; drop non-finite rows so they can't poison the domain.
+  const sorted = rows
+    .map((r) => ({ ...r, n: Number(r.value_lb) }))
+    .filter((r) => Number.isFinite(r.n))
+    .sort((a, b) => a.logged_at.localeCompare(b.logged_at));
+  const vals = sorted.map((r) => r.n);
   const min = vals.length ? Math.min(...vals) : null;
   const max = vals.length ? Math.max(...vals) : null;
   const line: LinePoint[] = sorted.map((r) => ({
     frac: scale.frac(toMs(r.logged_at)),
-    v: Number(r.value_lb),
-    vFrac: min !== null && max !== null ? vFracOf(Number(r.value_lb), min, max) : 0.5,
+    v: r.n,
+    vFrac: min !== null && max !== null ? vFracOf(r.n, min, max) : 0.5,
     dateISO: r.logged_at,
   }));
   const first = sorted[0];
@@ -89,7 +94,7 @@ export function shapeWeightLane(rows: WeightRow[], scale: TimeScale): TimelineLa
     min,
     max,
     line,
-    summary: first && last ? `${num(Number(first.value_lb), 1)}→${num(Number(last.value_lb), 1)} lb` : "—",
+    summary: first && last ? `${num(first.n, 1)}→${num(last.n, 1)} lb` : "—",
     readAt: (d) => {
       const p = nearestByDay(line, d);
       return p ? `${num(p.v, 1)} lb` : null;
@@ -102,8 +107,11 @@ export function shapeFoodLanes(rows: FoodRow[], scale: TimeScale): [TimelineLane
   const proByDay = new Map<string, number>();
   for (const r of rows) {
     const day = dayOf(r.logged_at);
-    calByDay.set(day, (calByDay.get(day) ?? 0) + Number(r.calories_kcal));
-    proByDay.set(day, (proByDay.get(day) ?? 0) + Number(r.protein_g));
+    const cal = Number(r.calories_kcal);
+    const pro = Number(r.protein_g);
+    // Skip non-finite values so one bad row can't make the day's total "NaN".
+    if (Number.isFinite(cal)) calByDay.set(day, (calByDay.get(day) ?? 0) + cal);
+    if (Number.isFinite(pro)) proByDay.set(day, (proByDay.get(day) ?? 0) + pro);
   }
   const toBars = (m: Map<string, number>): { bars: BarPoint[]; min: number | null; max: number | null } => {
     const days = [...m.keys()].sort();
@@ -212,16 +220,21 @@ export function shapeGoalMetricLanes(rows: GoalMetricRow[], scale: TimeScale): T
     byKey.set(r.metric_key, arr);
   }
   const out: TimelineLane[] = [];
-  for (const [key, arr] of byKey) {
-    arr.sort((a, b) => a.logged_at.localeCompare(b.logged_at));
+  for (const [key, rawArr] of byKey) {
+    // Coerce each row's value once; drop non-finite rows so they can't poison the domain.
+    const arr = rawArr
+      .map((r) => ({ ...r, n: Number(r.value) }))
+      .filter((r) => Number.isFinite(r.n))
+      .sort((a, b) => a.logged_at.localeCompare(b.logged_at));
+    if (!arr.length) continue;
     const def = METRIC_BY_KEY[key];
-    const vals = arr.map((r) => Number(r.value));
+    const vals = arr.map((r) => r.n);
     const min = Math.min(...vals);
     const max = Math.max(...vals);
     const line: LinePoint[] = arr.map((r) => ({
       frac: scale.frac(toMs(r.logged_at)),
-      v: Number(r.value),
-      vFrac: vFracOf(Number(r.value), min, max),
+      v: r.n,
+      vFrac: vFracOf(r.n, min, max),
       dateISO: r.logged_at,
     }));
     const unit = def?.unit === "rating" ? "/10" : (arr[0]?.unit ?? def?.unit ?? null);
@@ -235,7 +248,7 @@ export function shapeGoalMetricLanes(rows: GoalMetricRow[], scale: TimeScale): T
       min,
       max,
       line,
-      summary: first && last ? `${num(Number(first.value), 1)}→${num(Number(last.value), 1)}` : "—",
+      summary: first && last ? `${num(first.n, 1)}→${num(last.n, 1)}` : "—",
       readAt: (d) => {
         const p = nearestByDay(line, d);
         return p ? `${num(p.v, 1)}${unit ?? ""}` : null;
@@ -259,7 +272,10 @@ export function shapeLabsLane(rows: LabRow[], scale: TimeScale): TimelineLane {
   const events: EventDot[] = days.map((d) => {
     const flagged = byDay.get(d)!.some((r) => {
       const range = effectiveRange(r.marker_key, r.ref_low, r.ref_high);
-      return rangeStatus(r.value, range.low, range.high) !== "in";
+      const st = rangeStatus(r.value, range.low, range.high);
+      // Flag ONLY out-of-range. "unknown" (no reference at all) is not a flag —
+      // we have nothing to discuss against, and must never imply otherwise.
+      return st === "low" || st === "high";
     });
     return { frac: scale.frac(toMs(d)), dateISO: d, label: "labs", tone: flagged ? "warn" : "neutral" };
   });
@@ -283,7 +299,8 @@ export function shapeLabsLane(rows: LabRow[], scale: TimeScale): TimelineLane {
       });
       const anyFlag = draw.some((r) => {
         const range = effectiveRange(r.marker_key, r.ref_low, r.ref_high);
-        return rangeStatus(r.value, range.low, range.high) !== "in";
+        const st = rangeStatus(r.value, range.low, range.high);
+        return st === "low" || st === "high";
       });
       return `${parts.join(", ")}${anyFlag ? " — discuss flags with a clinician" : ""}`;
     },
@@ -291,11 +308,13 @@ export function shapeLabsLane(rows: LabRow[], scale: TimeScale): TimelineLane {
 }
 
 export function shapeSpendLane(rows: PurchaseRow[], scale: TimeScale): TimelineLane {
-  const total = rows.reduce((a, r) => a + Number(r.price_usd), 0);
+  // Skip non-finite prices so one bad row can't make the total "$NaN".
+  const finite = (v: number) => (Number.isFinite(v) ? v : 0);
+  const total = rows.reduce((a, r) => a + finite(Number(r.price_usd)), 0);
   const events: EventDot[] = rows.map((r) => ({
     frac: scale.frac(toMs(r.purchased_on)),
     dateISO: r.purchased_on,
-    label: `$${num(Number(r.price_usd))}`,
+    label: `$${num(finite(Number(r.price_usd)))}`,
     tone: "neutral",
   }));
   return {
@@ -309,7 +328,7 @@ export function shapeSpendLane(rows: PurchaseRow[], scale: TimeScale): TimelineL
     summary: `$${num(total)}`,
     readAt: (d) => {
       const day = rows.filter((r) => r.purchased_on === d);
-      return day.length ? `$${num(day.reduce((a, r) => a + Number(r.price_usd), 0))}` : null;
+      return day.length ? `$${num(day.reduce((a, r) => a + finite(Number(r.price_usd)), 0))}` : null;
     },
   };
 }
