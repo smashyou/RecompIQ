@@ -3,6 +3,7 @@ import {
   chat as gatewayChat,
   embed as gatewayEmbed,
   parseFoodFromImage as gatewayParseFood,
+  parseLabsFromContent as gatewayParseLabs,
   generateStack as gatewayGenerateStack,
   type AiCallLog,
   type GenerateStackOpts,
@@ -17,6 +18,8 @@ import {
   type ModelRow,
   type ParseFoodFromImageOpts,
   type ParseFoodFromImageResult,
+  type ParseLabsOpts,
+  type ParseLabsResult,
 } from "@peptide/agent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redactedLogger } from "@peptide/shared";
@@ -127,6 +130,10 @@ export function parseFoodFromImage(
   opts: ParseFoodFromImageOpts,
 ): Promise<ParseFoodFromImageResult> {
   return gatewayParseFood(opts, deps);
+}
+
+export function parseLabsFromContent(opts: ParseLabsOpts): Promise<ParseLabsResult> {
+  return gatewayParseLabs(opts, deps);
 }
 
 export function generateStack(opts: GenerateStackOpts): Promise<GenerateStackResult> {

@@ -501,6 +501,54 @@ async function seedPurchases(uid) {
 }
 
 // ---------------------------------------------------------------------------
+// Demo labs — two blood draws (baseline ~120d ago + recent ~14d ago) showing
+// realistic improvement on GLP-1 + fat loss for a T2D/HTN profile. Ref ranges
+// mirror the shared LAB_MARKER catalog so highlighting works. Educational demo
+// data — tagged is_demo, never a real protocol or diagnosis.
+// ---------------------------------------------------------------------------
+const DEMO_LABS = [
+  // marker_key, marker (label), panel, unit, ref_low, ref_high, [baseline, recent]
+  ["hba1c", "Hemoglobin A1c", "metabolic", "%", 4.0, 5.6, [8.1, 7.2]],
+  ["glucose_fasting", "Glucose (fasting)", "metabolic", "mg/dL", 70, 99, [152, 124]],
+  ["total_cholesterol", "Total cholesterol", "lipids", "mg/dL", 100, 199, [214, 188]],
+  ["ldl", "LDL cholesterol", "lipids", "mg/dL", 0, 99, [138, 109]],
+  ["hdl", "HDL cholesterol", "lipids", "mg/dL", 40, 100, [38, 43]],
+  ["triglycerides", "Triglycerides", "lipids", "mg/dL", 0, 149, [230, 165]],
+  ["alt", "ALT", "cmp", "U/L", 9, 46, [52, 38]],
+  ["creatinine", "Creatinine", "cmp", "mg/dL", 0.6, 1.3, [1.0, 0.95]],
+  ["egfr", "eGFR", "cmp", "mL/min/1.73", 60, 120, [84, 90]],
+  ["tsh", "TSH", "thyroid", "mIU/L", 0.45, 4.5, [2.1, 1.9]],
+  ["vitamin_d", "Vitamin D (25-OH)", "vitamins", "ng/mL", 30, 100, [24, 31]],
+  ["hs_crp", "hs-CRP", "inflammation", "mg/L", 0, 3.0, [4.2, 2.1]],
+];
+const LAB_DRAW_DAYS = [120, 14]; // baseline, recent
+
+async function seedLabs(uid) {
+  await del("lab_results", `user_id=eq.${uid}&is_demo=eq.true`);
+  const rows = [];
+  LAB_DRAW_DAYS.forEach((daysAgo, drawIdx) => {
+    const collectedOn = new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10);
+    for (const [key, marker, panel, unit, low, high, vals] of DEMO_LABS) {
+      rows.push({
+        user_id: uid,
+        panel,
+        marker,
+        marker_key: key,
+        value: vals[drawIdx],
+        unit,
+        ref_low: low,
+        ref_high: high,
+        collected_on: collectedOn,
+        source: "manual",
+        is_demo: true,
+      });
+    }
+  });
+  await insert("lab_results", rows);
+  console.log(`✓ ${rows.length} lab results (${LAB_DRAW_DAYS.length} draws)`);
+}
+
+// ---------------------------------------------------------------------------
 // Demo workouts — 6 Phase-1 sessions across 14 days
 // ---------------------------------------------------------------------------
 async function seedWorkouts(uid) {
@@ -576,6 +624,7 @@ try {
   await seedPurchases(uid);
   await seedGoals(uid);
   await seedGoalMetrics(uid);
+  await seedLabs(uid);
   await seedWorkouts(uid);
   console.log("");
   console.log("=== Demo User A ready ===");

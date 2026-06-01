@@ -11,7 +11,9 @@
     "./logger": "./src/logger.ts",
     "./legal": "./src/legal/index.ts",
     "./goals": "./src/goals/taxonomy.ts",
-    "./goals/metrics": "./src/goals/metrics.ts"
+    "./goals/metrics": "./src/goals/metrics.ts",
+    "./labs": "./src/labs/catalog.ts",
+    "./labs/shape": "./src/labs/shape.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
