@@ -15,7 +15,15 @@ function initialsFor(email: string): string {
   return letters.toUpperCase();
 }
 
-export function Topbar({ email, title = "RecompIQ" }: { email: string; title?: string }) {
+export function Topbar({
+  email,
+  title = "RecompIQ",
+  isAdmin,
+}: {
+  email: string;
+  title?: string;
+  isAdmin?: boolean;
+}) {
   const router = useRouter();
 
   async function signOut() {
@@ -27,7 +35,7 @@ export function Topbar({ email, title = "RecompIQ" }: { email: string; title?: s
 
   return (
     <header className="sticky top-0 z-10 flex h-[60px] shrink-0 items-center gap-4 border-b border-border px-6 backdrop-blur-md [background:color-mix(in_oklab,var(--bg)_80%,transparent)]">
-      <MobileNav />
+      <MobileNav isAdmin={isAdmin} />
       <h1 className="font-[family-name:var(--font-display)] text-[18px] font-semibold tracking-[-0.015em] text-[var(--fg)]">
         {title}
       </h1>

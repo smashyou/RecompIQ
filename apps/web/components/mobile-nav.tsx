@@ -10,7 +10,7 @@ import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
 
 // Hamburger + slide-out drawer for screens below md, where the desktop sidebar
 // is hidden. Closes on route change and on backdrop / link tap.
-export function MobileNav() {
+export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -64,7 +64,7 @@ export function MobileNav() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <NavLinks onNavigate={() => setOpen(false)} />
+            <NavLinks onNavigate={() => setOpen(false)} isAdmin={isAdmin} />
             <div className="shrink-0 border-t border-border p-3">
               <SafetyDisclaimer variant="compact" />
             </div>

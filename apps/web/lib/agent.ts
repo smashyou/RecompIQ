@@ -22,6 +22,7 @@ import {
   type ParseLabsResult,
 } from "@peptide/agent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { redactedLogger } from "@peptide/shared";
 
 interface FeatureConfigRow {
@@ -93,7 +94,9 @@ function envKey(name: string): string | null {
 
 async function logCall(record: AiCallLog): Promise<void> {
   try {
-    const supabase = await createSupabaseServerClient();
+    // ai_calls has no INSERT policy (logging is service-role only by design),
+    // so the user-scoped client is denied by RLS. Use the admin client.
+    const supabase = createSupabaseAdminClient();
     await supabase.from("ai_calls").insert({
       user_id: record.user_id,
       feature: record.feature,

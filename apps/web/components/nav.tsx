@@ -15,6 +15,7 @@ import {
   Library,
   MessageCircle,
   Settings,
+  Shield,
   Syringe,
   Target,
   Utensils,
@@ -48,23 +49,27 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+// Admin-only entry, appended to the nav for users with profiles.is_admin.
+export const ADMIN_ITEM: NavItem = { href: "/admin", label: "Admin", icon: Shield };
+
 export const BRAND = { href: "/dashboard", label: "RecompIQ", icon: Activity };
 
 // Active = the nav item whose href is the LONGEST prefix of the current path,
 // so /peptides and /peptides/protocols don't both highlight.
-function activeHrefFor(pathname: string): string {
-  return NAV_ITEMS.reduce<string>((best, item) => {
+function activeHrefFor(items: NavItem[], pathname: string): string {
+  return items.reduce<string>((best, item) => {
     const matches = pathname === item.href || pathname.startsWith(`${item.href}/`);
     return matches && item.href.length > best.length ? item.href : best;
   }, "");
 }
 
-export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+export function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin?: boolean }) {
   const pathname = usePathname();
-  const activeHref = activeHrefFor(pathname);
+  const items = isAdmin ? [...NAV_ITEMS, ADMIN_ITEM] : NAV_ITEMS;
+  const activeHref = activeHrefFor(items, pathname);
   return (
     <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
         const active = item.href === activeHref;
         return (

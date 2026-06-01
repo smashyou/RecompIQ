@@ -13,17 +13,18 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createSupabaseServerClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("onboarding_done")
+    .select("onboarding_done, is_admin")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!profile?.onboarding_done) redirect("/onboarding");
+  const isAdmin = Boolean(profile?.is_admin);
 
   return (
     <ToastProvider>
       <div className="flex min-h-screen">
-        <Sidebar />
+        <Sidebar isAdmin={isAdmin} />
         <div className="flex flex-1 flex-col">
-          <Topbar email={user.email ?? ""} />
+          <Topbar email={user.email ?? ""} isAdmin={isAdmin} />
           <main className="flex-1 px-6 py-6">
             <div className="mx-auto w-full max-w-[1120px]">{children}</div>
           </main>
