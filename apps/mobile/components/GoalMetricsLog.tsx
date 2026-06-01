@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { metricsForGoals, type GoalKey, type MetricDef } from "@peptide/shared";
+import { metricsForGoals, METRIC_BY_KEY, type GoalKey, type MetricDef } from "@peptide/shared";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
@@ -19,6 +19,8 @@ export function GoalMetricsLog() {
   const { colors } = useTheme();
   const [goalKeys, setGoalKeys] = useState<GoalKey[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [showNeuro, setShowNeuro] = useState(false);
+  const [showNausea, setShowNausea] = useState(false);
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [circ, setCirc] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -36,10 +38,52 @@ export function GoalMetricsLog() {
       });
   }, [uid]);
 
-  const metrics = useMemo<MetricDef[]>(
-    () => metricsForGoals(goalKeys).filter((m) => m.kind !== "objective"),
-    [goalKeys],
-  );
+  // Self-check gating: neuro_severity when the user has a nerve injury/condition,
+  // nausea_severity when on any active compound. These 0–10 self-checks feed the
+  // safety-alert engine — never doses, never free-text.
+  useEffect(() => {
+    if (!uid) return;
+    const NEURO = /neuro|foot|numb|nerve|drop/i;
+    Promise.all([
+      supabase.from("injuries").select("name").eq("user_id", uid).eq("active", true),
+      supabase.from("conditions").select("name").eq("user_id", uid).eq("active", true),
+      supabase
+        .from("regimen_items")
+        .select("id, regimens!inner(is_active)")
+        .eq("user_id", uid)
+        .is("ends_on", null)
+        .eq("regimens.is_active", true)
+        .limit(1),
+    ]).then(([inj, cond, items]) => {
+      const names = [
+        ...((inj.data ?? []) as any[]).map((r) => String(r.name ?? "")),
+        ...((cond.data ?? []) as any[]).map((r) => String(r.name ?? "")),
+      ];
+      setShowNeuro(names.some((n) => NEURO.test(n)));
+      setShowNausea(((items.data ?? []) as any[]).length > 0);
+    });
+  }, [uid]);
+
+  const metrics = useMemo<MetricDef[]>(() => {
+    const base = metricsForGoals(goalKeys).filter((m) => m.kind !== "objective");
+    const have = new Set(base.map((m) => m.key));
+    const extra: MetricDef[] = [];
+    if (showNeuro && !have.has("neuro_severity") && METRIC_BY_KEY.neuro_severity)
+      extra.push(METRIC_BY_KEY.neuro_severity);
+    if (showNausea && !have.has("nausea_severity") && METRIC_BY_KEY.nausea_severity)
+      extra.push(METRIC_BY_KEY.nausea_severity);
+    return [...base, ...extra];
+  }, [goalKeys, showNeuro, showNausea]);
+
+  // Nearest anchor label for the current value (helper text under self-checks).
+  function anchorFor(m: MetricDef, value: number): string | null {
+    if (!m.anchors || m.anchors.length === 0) return null;
+    let best = m.anchors[0];
+    for (const a of m.anchors) {
+      if (Math.abs(a.value - value) < Math.abs(best.value - value)) best = a;
+    }
+    return best.label;
+  }
 
   function rate(m: MetricDef, delta: number) {
     setRatings((prev) => {
@@ -107,6 +151,17 @@ export function GoalMetricsLog() {
               </Pressable>
               <Text style={{ color: colors.fgSubtle, fontSize: 11 }}>/ {m.max}</Text>
             </View>
+            {m.anchors
+              ? (() => {
+                  const v = ratings[m.key] ?? Math.round((m.min + m.max) / 2);
+                  const label = anchorFor(m, v);
+                  return label ? (
+                    <Text style={{ color: colors.fgFaint, fontSize: 11, fontStyle: "italic" }}>
+                      {label}
+                    </Text>
+                  ) : null;
+                })()
+              : null}
           </View>
         ) : (
           <Field key={m.key} label={`${m.label} (${m.unit})`}>

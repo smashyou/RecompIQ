@@ -41,6 +41,7 @@ export default function More() {
       <ListRow title="Workouts" subtitle="Sessions + templates" icon="barbell-outline" onPress={() => router.push("/(tabs)/more/workouts")} />
       <ListRow title="Body Shots" subtitle="Progress photos" icon="camera-outline" onPress={() => router.push("/(tabs)/more/body-shots")} />
       <ListRow title="Labs & Biomarkers" subtitle="A1c, lipids, CBC/CMP & more" icon="flask-outline" onPress={() => router.push("/(tabs)/more/labs")} />
+      <ListRow title="Safety Alerts" subtitle="Patterns to discuss with your clinician" icon="alert-circle-outline" onPress={() => router.push("/(tabs)/more/alerts")} />
       <ListRow title="Projections" subtitle="Weight trajectory" icon="trending-down-outline" onPress={() => router.push("/(tabs)/more/projections")} />
       <ListRow title="Timeline" subtitle="Everything, one date range" icon="pulse-outline" onPress={() => router.push("/(tabs)/more/timeline")} />
       <ListRow title="Watch & Scale Sync" subtitle="Apple Health / Health Connect" icon="watch-outline" onPress={() => router.push("/(tabs)/more/health")} />
