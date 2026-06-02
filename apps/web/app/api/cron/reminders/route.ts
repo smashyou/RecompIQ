@@ -293,9 +293,10 @@ export async function GET(req: Request) {
         } catch {
           redactedLogger.warn(`[cron/reminders] safety-alert dispatch failed for ${user.id}`);
         }
-      } catch (userErr) {
-        // One user's failure must not abort the whole run.
-        console.error(`[cron/reminders] user ${user.id} failed`, userErr);
+      } catch {
+        // One user's failure must not abort the whole run. Drop the raw error —
+        // Supabase error messages can embed PII (safety rule 5).
+        redactedLogger.error(`[cron/reminders] user ${user.id} failed`);
       }
     }
 
@@ -311,10 +312,9 @@ export async function GET(req: Request) {
           .eq("sent_on", e.sentOn)
           .maybeSingle();
         if (!existing) toSend.push(e);
-      } catch (dedupeErr) {
-        console.error(
+      } catch {
+        redactedLogger.error(
           `[cron/reminders] dedupe check failed for ${e.userId}/${e.kind}`,
-          dedupeErr,
         );
       }
     }
@@ -331,8 +331,9 @@ export async function GET(req: Request) {
         .from("notification_sends")
         .insert(rows);
       if (insertErr) {
-        // Sends already went out; surface for ops but don't fail hard.
-        console.error("[cron/reminders] recording sends failed", insertErr);
+        // Sends already went out; surface for ops but don't fail hard. Drop the
+        // raw error — it can embed PII (safety rule 5).
+        redactedLogger.error("[cron/reminders] recording sends failed");
       }
     }
 
@@ -368,8 +369,8 @@ export async function GET(req: Request) {
           exportsDeleted = stale.length;
         }
       }
-    } catch (cleanupErr) {
-      console.error("[cron/reminders] export cleanup failed", cleanupErr);
+    } catch {
+      redactedLogger.error("[cron/reminders] export cleanup failed");
     }
 
     return jsonOk({ ...counts, exportsDeleted, scannedUsers: users.length });

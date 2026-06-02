@@ -7,6 +7,7 @@
  *
  * GROUP B (lifecycle) — sent by our app via Resend with real per-user data.
  */
+import type { EvidenceLevel } from "@peptide/shared";
 
 // ---- Group A: Supabase auth -------------------------------------------------
 
@@ -95,7 +96,7 @@ export interface SafetyAlertEmailProps {
     title: string;
     message: string;
     severity: "critical" | "warn";
-    evidenceLevel: string;
+    evidenceLevel: EvidenceLevel;
     citation: string;
   }[];
   alertsUrl: string; // absolute link to /alerts

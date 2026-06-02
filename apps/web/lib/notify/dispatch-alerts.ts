@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { selectAlertsToNotify, type NotifyChannel, type NotifiableAlert } from "@peptide/peptides/alerts";
+import type { EvidenceLevel } from "@peptide/shared";
 import { sendEmail } from "@peptide/email/send";
 import { serverEnv } from "@/lib/env";
 import { sendPush } from "@/lib/notify/push";
@@ -35,8 +36,14 @@ export async function dispatchAlertNotifications(
       .select("notification_channel, notify_safety_alerts")
       .eq("user_id", userId)
       .maybeSingle();
-    channel = (data?.notification_channel as NotifyChannel) ?? "both";
-    enabled = Boolean(data?.notify_safety_alerts ?? true);
+    if (!data) {
+      // No settings row → user never finished setup → not opted in (fail closed).
+      channel = "off";
+      enabled = false;
+    } else {
+      channel = (data.notification_channel as NotifyChannel) ?? "both";
+      enabled = Boolean(data.notify_safety_alerts ?? true);
+    }
   }
 
   const { data: rows } = await supabase
@@ -69,7 +76,7 @@ export async function dispatchAlertNotifications(
               title: a.title,
               message: a.message,
               severity: a.severity as "critical" | "warn",
-              evidenceLevel: a.evidence_level,
+              evidenceLevel: a.evidence_level as EvidenceLevel,
               citation: a.citation,
             })),
             alertsUrl: `${APP_URL}/alerts`,

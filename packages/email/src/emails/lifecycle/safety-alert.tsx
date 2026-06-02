@@ -128,7 +128,7 @@ SafetyAlert.PreviewProps = {
       message:
         "Your most recent reading (166/99) is in the stage 2 range. Consider sharing this trend with your clinician.",
       severity: "critical",
-      evidenceLevel: "FDA-approved guidance",
+      evidenceLevel: "FDA_APPROVED",
       citation: "ACC/AHA 2017 BP guideline",
     },
     {
@@ -136,7 +136,7 @@ SafetyAlert.PreviewProps = {
       message:
         "Several recent fasting glucose entries are above your set target. This is an observation to review with your care team.",
       severity: "warn",
-      evidenceLevel: "Observational",
+      evidenceLevel: "HUMAN_OBS",
       citation: "ADA Standards of Care 2025",
     },
   ],
