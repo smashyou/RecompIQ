@@ -6,15 +6,26 @@ import { View } from "react-native";
 import { vars } from "nativewind";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { SessionProvider } from "@/lib/session";
+import { SessionProvider, useSession } from "@/lib/session";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
 import { ConsentProvider, useConsent } from "@/lib/consent";
 import { ConsentGate } from "@/components/ConsentGate";
 import { BrandSplash } from "@/components/BrandSplash";
+import { registerPushToken } from "@/lib/push";
 
 function ThemedApp() {
   const { colors, scheme, cssVars } = useTheme();
   const { accepted, accept } = useConsent();
+  const { session } = useSession();
+
+  // Register this device's Expo push token once a session is available, so the
+  // server can deliver immediate critical safety alerts. Fire-and-forget; the
+  // helper no-ops on simulators / when permission is denied.
+  const userId = session?.user.id;
+  useEffect(() => {
+    if (!userId) return;
+    void registerPushToken(userId);
+  }, [userId]);
 
   // Hold the branded splash long enough for its draw-on animation to play out
   // (~2.2s) on cold launch. The native app.json splash doesn't render in Expo
