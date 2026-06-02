@@ -1,5 +1,5 @@
 import "server-only";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadActiveRegimen } from "@/lib/queries/regimen";
 import type { AlertScanInput } from "@peptide/shared/alerts";
 
@@ -10,9 +10,10 @@ import type { AlertScanInput } from "@peptide/shared/alerts";
 const OZ_TO_ML = 29.5735;
 const dayOf = (iso: string) => iso.slice(0, 10);
 
-export async function buildAlertScanInput(userId: string): Promise<AlertScanInput> {
-  const supabase = await createSupabaseServerClient();
-
+export async function buildAlertScanInput(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<AlertScanInput> {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const thirtyDaysAgo = new Date();

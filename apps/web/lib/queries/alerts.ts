@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { scanRecentLogs, reconcileAlerts, type ExistingAlertRow } from "@peptide/peptides/alerts";
 import { buildAlertScanInput } from "@/lib/alerts-input";
@@ -42,12 +43,20 @@ export async function countOpenAlerts(userId: string): Promise<number> {
   return count ?? 0;
 }
 
-export async function loadAlerts(userId: string): Promise<AlertsView> {
-  const supabase = await createSupabaseServerClient();
+/**
+ * Reconcile the user's recent logged data into stored alert rows: scan → diff
+ * against stored rows → insert new (status 'open'), bump last_detected_at on
+ * still-present ones, resolve gone ones. Takes the client so both the per-request
+ * web loader and the cron's admin client can run the identical reconcile.
+ */
+export async function reconcileUserAlerts(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<void> {
   const nowIso = new Date().toISOString();
 
   // 1. scan
-  const input = await buildAlertScanInput(userId);
+  const input = await buildAlertScanInput(supabase, userId);
   const findings = scanRecentLogs(input);
 
   // 2. reconcile against stored rows
@@ -87,6 +96,14 @@ export async function loadAlerts(userId: string): Promise<AlertsView> {
         plan.toResolve.map((r) => r.id),
       );
   }
+}
+
+export async function loadAlerts(userId: string): Promise<AlertsView> {
+  const supabase = await createSupabaseServerClient();
+  const nowIso = new Date().toISOString();
+
+  // 1+2. scan + reconcile (insert/bump/resolve)
+  await reconcileUserAlerts(supabase, userId);
 
   // 3. read back for display
   const { data: fresh } = await supabase
