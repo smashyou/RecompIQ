@@ -5,6 +5,7 @@ import {
 } from "@peptide/peptides/alerts";
 import type { AlertScanInput } from "@peptide/shared/alerts";
 import { supabase } from "@/lib/supabase";
+import { apiFetch } from "@/lib/api";
 import { loadActiveRegimen } from "@/lib/regimen";
 
 // Mobile mirror of apps/web/lib/alerts-input.ts + lib/queries/alerts.ts.
@@ -247,6 +248,15 @@ export async function loadAlerts(userId: string): Promise<AlertsView> {
         "id",
         plan.toResolve.map((r) => r.id),
       );
+  }
+
+  // Best-effort: tell the server to fire immediate-critical email/push for any
+  // un-notified critical alerts just reconciled. Bearer is attached by apiFetch
+  // and validated by requireUser on the route. Never blocks the UI.
+  try {
+    await apiFetch("/api/alerts/dispatch", { method: "POST", body: "{}" });
+  } catch {
+    /* best-effort */
   }
 
   // 3. read back for display
