@@ -88,3 +88,15 @@ export interface DataExportReadyProps extends LifecycleBase {
   expiresAt: string;
   formats?: string; // "JSON + CSV"
 }
+
+export interface SafetyAlertEmailProps {
+  firstName?: string;
+  alerts: {
+    title: string;
+    message: string;
+    severity: "critical" | "warn";
+    evidenceLevel: string;
+    citation: string;
+  }[];
+  alertsUrl: string; // absolute link to /alerts
+}

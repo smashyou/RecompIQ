@@ -11,6 +11,7 @@ import BodyShotReminder, { subject as bodyShotSubject } from "./emails/lifecycle
 import DoseWeighInReminder, { subject as doseSubject } from "./emails/lifecycle/dose-weigh-in-reminder";
 import AccountDeletion, { subject as deletionSubject } from "./emails/lifecycle/account-deletion";
 import DataExportReady, { subject as exportSubject } from "./emails/lifecycle/data-export-ready";
+import SafetyAlert, { subject as safetyAlertSubject } from "./emails/lifecycle/safety-alert";
 
 import type {
   ConfirmSignupProps,
@@ -23,6 +24,7 @@ import type {
   DoseWeighInReminderProps,
   AccountDeletionProps,
   DataExportReadyProps,
+  SafetyAlertEmailProps,
 } from "./types";
 
 /** Channel: Group A is sent by Supabase; Group B is sent by our app via Resend. */
@@ -40,6 +42,7 @@ export interface TemplatePropsMap {
   "dose-weigh-in-reminder": DoseWeighInReminderProps;
   "account-deletion": AccountDeletionProps;
   "data-export-ready": DataExportReadyProps;
+  "safety-alert": SafetyAlertEmailProps;
 }
 
 export type TemplateName = keyof TemplatePropsMap;
@@ -67,6 +70,7 @@ export const templates: Registry = {
   "dose-weigh-in-reminder": { group: "lifecycle", subject: doseSubject, Component: DoseWeighInReminder },
   "account-deletion": { group: "lifecycle", subject: deletionSubject, Component: AccountDeletion },
   "data-export-ready": { group: "lifecycle", subject: exportSubject, Component: DataExportReady },
+  "safety-alert": { group: "lifecycle", subject: safetyAlertSubject, Component: SafetyAlert },
 };
 
 export const TEMPLATE_NAMES = Object.keys(templates) as TemplateName[];

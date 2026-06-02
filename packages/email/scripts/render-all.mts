@@ -57,6 +57,28 @@ const samples: { [K in keyof TemplatePropsMap]: TemplatePropsMap[K] } = {
     expiresAt: "June 7, 2026",
     formats: "JSON + CSV",
   },
+  "safety-alert": {
+    firstName: "Alex",
+    alerts: [
+      {
+        title: "Elevated blood pressure logged",
+        message:
+          "Your most recent reading (166/99) is in the stage 2 range. Consider sharing this trend with your clinician.",
+        severity: "critical",
+        evidenceLevel: "FDA-approved guidance",
+        citation: "ACC/AHA 2017 BP guideline",
+      },
+      {
+        title: "Fasting glucose above target range",
+        message:
+          "Several recent fasting glucose entries are above your set target. This is an observation to review with your care team.",
+        severity: "warn",
+        evidenceLevel: "Observational",
+        citation: "ADA Standards of Care 2025",
+      },
+    ],
+    alertsUrl: "https://recompiq.vercel.app/alerts",
+  },
 };
 
 async function main() {
