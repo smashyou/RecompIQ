@@ -122,7 +122,9 @@ async function seedProfile(uid) {
   );
   await upsert(
     "user_settings",
-    [{ user_id: uid, vision_provider: "anthropic" }],
+    // channel 'both' + safety alerts on so the demo showcases off-app alert
+    // notifications (email + push). Illustrative demo preference.
+    [{ user_id: uid, vision_provider: "anthropic", notification_channel: "both", notify_safety_alerts: true }],
     "user_id",
   );
   console.log("✓ profile + user_settings");
@@ -295,15 +297,17 @@ async function seedLogs(uid) {
   }
 
   // A recent "rough day" reading (later today) so it's the LATEST vital the alerts
-  // engine evaluates — a realistic BP/glucose flare for a T2D/HTN profile. Trips
-  // bp_high + glucose_high so the demo's /alerts page shows real, current alerts.
+  // engine evaluates — an acute, plausible flare for a T2D/HTN profile. These cross
+  // the CRITICAL thresholds (BP >=180/120 hypertensive emergency; glucose >300 ER),
+  // so the demo trips critical bp_high + glucose_high — exercising the immediate
+  // email/push path, not just the daily warn digest. Illustrative demo data only.
   vitals.push({
     user_id: uid,
     logged_at: atTime(today, 19, 30),
-    bp_systolic: 166,
-    bp_diastolic: 99,
-    hr: 82,
-    glucose_mgdl: 264,
+    bp_systolic: 186,
+    bp_diastolic: 124,
+    hr: 92,
+    glucose_mgdl: 312,
     is_demo: true,
   });
 
