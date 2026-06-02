@@ -19,7 +19,7 @@ export function AdherenceCard({
       <Card title="Peptide adherence">
         <Empty>
           No active stack. Create one in{" "}
-          <Link href="/peptides/stacks/new" className="underline-offset-2 hover:underline">
+          <Link href="/peptides" className="underline-offset-2 hover:underline">
             /peptides
           </Link>
           .

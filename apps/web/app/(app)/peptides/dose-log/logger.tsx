@@ -31,7 +31,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
     return (
       <p className="rounded-[var(--r-md)] border border-dashed border-[var(--border)] bg-[var(--surface-1)] p-6 text-center font-[family-name:var(--font-sans)] text-sm text-[var(--fg-subtle)]">
         No compounds with a set dose in your regimen yet. Add one in{" "}
-        <a href="/peptides/stacks/new" className="text-[var(--primary)] underline">
+        <a href="/peptides" className="text-[var(--primary)] underline">
           your regimen
         </a>{" "}
         before logging doses.

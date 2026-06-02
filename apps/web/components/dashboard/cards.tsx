@@ -409,7 +409,7 @@ export function AdherenceCard({ snapshot }: { snapshot: DashboardSnapshot }) {
         <p className="font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
           No active stack. Create one in{" "}
           <Link
-            href="/peptides/stacks/new"
+            href="/peptides"
             className="underline-offset-2 hover:underline"
           >
             /peptides
