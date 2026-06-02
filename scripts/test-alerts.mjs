@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Test harness for the safety-alert engine. Runs via `pnpm test:alerts`.
 import assert from "node:assert/strict";
-import { scanRecentLogs, fingerprintOf, reconcileAlerts } from "../packages/peptides/src/alerts.ts";
+import { scanRecentLogs, fingerprintOf, reconcileAlerts, selectAlertsToNotify } from "../packages/peptides/src/alerts.ts";
 
 let passed = 0, failed = 0;
 function it(name, fn) {
@@ -129,6 +129,31 @@ it("reconcile inserts a finding with no existing row", () => {
     [{ kind: "bp_low", severity: "warn", title: "t", message: "m", evidence: {}, evidenceLevel: "ANECDOTAL", citation: "c", fingerprint: "bp_low:low" }],
     [], "2026-06-01T12:00:00Z");
   assert.equal(plan.toInsert.length, 1);
+});
+
+const A = (severity, notified_at = null, status = "open") => ({
+  id: severity + (notified_at ?? ""), severity, status, notified_at,
+  title: "t", message: "m", kind: "bp_high", evidence_level: "FDA_APPROVED", citation: "c",
+});
+
+it("selectAlertsToNotify: disabled when toggle off or channel off/in_app", () => {
+  const alerts = [A("critical")];
+  assert.equal(selectAlertsToNotify(alerts, { mode: "immediate", channel: "both", enabled: false }).toSend.length, 0);
+  assert.equal(selectAlertsToNotify(alerts, { mode: "immediate", channel: "off", enabled: true }).toSend.length, 0);
+  assert.equal(selectAlertsToNotify(alerts, { mode: "immediate", channel: "in_app", enabled: true }).toSend.length, 0);
+});
+
+it("selectAlertsToNotify: immediate = critical only; digest = critical+warn; never info", () => {
+  const alerts = [A("critical"), A("warn"), A("info")];
+  const imm = selectAlertsToNotify(alerts, { mode: "immediate", channel: "email", enabled: true });
+  assert.deepEqual(imm.toSend.map((a) => a.severity), ["critical"]);
+  const dig = selectAlertsToNotify(alerts, { mode: "digest", channel: "email", enabled: true });
+  assert.deepEqual(dig.toSend.map((a) => a.severity).sort(), ["critical", "warn"]);
+});
+
+it("selectAlertsToNotify: skips already-notified and non-open", () => {
+  const alerts = [A("critical", "2026-06-01T00:00:00Z"), A("warn", null, "acknowledged")];
+  assert.equal(selectAlertsToNotify(alerts, { mode: "digest", channel: "both", enabled: true }).toSend.length, 0);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -3,6 +3,7 @@
 // framing. Thresholds come from the shared ALERT_RULES catalog.
 
 import { ALERT_RULES, type AlertRule, type AlertScanInput, type AlertFinding } from "@peptide/shared/alerts";
+import type { AlertSeverity } from "@peptide/shared/enums";
 import { evaluateContraindications } from "./contraindications";
 
 const DAY = 86_400_000;
@@ -265,4 +266,29 @@ export function reconcileAlerts(
   }
   const toResolve = existing.filter((r) => r.status === "open" && !foundFps.has(r.fingerprint));
   return { toInsert, toBump, toResolve };
+}
+
+export type NotifyChannel = "off" | "in_app" | "email" | "both";
+
+export interface NotifiableAlert {
+  id: string;
+  severity: AlertSeverity;
+  status: "open" | "acknowledged" | "resolved";
+  notified_at: string | null;
+}
+
+/** Pure: choose which un-notified open alerts to send for a mode + channel. */
+export function selectAlertsToNotify<T extends NotifiableAlert>(
+  alerts: T[],
+  opts: { mode: "immediate" | "digest"; channel: NotifyChannel; enabled: boolean },
+): { toSend: T[]; wouldSend: boolean } {
+  const externalOn = opts.enabled && (opts.channel === "email" || opts.channel === "both");
+  if (!externalOn) return { toSend: [], wouldSend: false };
+  const allowed = opts.mode === "immediate"
+    ? new Set(["critical"])
+    : new Set(["critical", "warn"]);
+  const toSend = alerts.filter(
+    (a) => a.status === "open" && a.notified_at === null && allowed.has(a.severity),
+  );
+  return { toSend, wouldSend: toSend.length > 0 };
 }
