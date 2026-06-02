@@ -19,9 +19,13 @@ import {
   type DueItem,
 } from "@peptide/email";
 import { sendEmailBatch, type BatchEmailMessage } from "@peptide/email/send";
+import { redactedLogger } from "@peptide/shared/logger";
+import type { NotifyChannel } from "@peptide/peptides/alerts";
 import { list, del } from "@vercel/blob";
 import { serverEnv } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { reconcileUserAlerts } from "@/lib/queries/alerts";
+import { dispatchAlertNotifications } from "@/lib/notify/dispatch-alerts";
 import { jsonOk, jsonError } from "@/lib/api";
 
 export const runtime = "nodejs";
@@ -272,6 +276,22 @@ export async function GET(req: Request) {
               message: { to: user.email, subject, html, text, unsubscribeUrl },
             });
           }
+        }
+
+        // ---- safety alerts (digest) --------------------------------------
+        // Reconciles inactive users too (so off-app alerts fire without an app
+        // visit) and dispatches the critical+warn digest. The dispatcher handles
+        // its own idempotency (alerts.notified_at + the ledger), so it does NOT
+        // go through the EligibleEmail/notification_sends dedupe batch above.
+        try {
+          await reconcileUserAlerts(supabase, user.id);
+          await dispatchAlertNotifications(supabase, user.id, "digest", {
+            email: user.email,
+            channel: settings.notification_channel as NotifyChannel,
+            enabled: settings.notify_safety_alerts,
+          });
+        } catch {
+          redactedLogger.warn(`[cron/reminders] safety-alert dispatch failed for ${user.id}`);
         }
       } catch (userErr) {
         // One user's failure must not abort the whole run.
