@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AlertsPage() {
   const user = await requireUser();
-  const { active, history } = await loadAlerts(user.id);
+  const { active, history } = await loadAlerts(user.id, user.email ?? undefined);
   return (
     <div>
       <SectionHeader

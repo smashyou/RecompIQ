@@ -41,7 +41,7 @@ export default async function DashboardPage() {
   const fullName = snapshot.profile?.display_name ?? user.email ?? "there";
   const firstName = fullName.split(/[\s@]/)[0] || fullName;
 
-  const { active: activeAlerts } = await loadAlerts(user.id);
+  const { active: activeAlerts } = await loadAlerts(user.id, user.email ?? undefined);
   // Banner surfaces only the actionable critical/warn alerts (top few by severity).
   const bannerAlerts = activeAlerts
     .filter((a) => a.severity === "critical" || a.severity === "warn")

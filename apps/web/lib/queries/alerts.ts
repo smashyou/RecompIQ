@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { scanRecentLogs, reconcileAlerts, type ExistingAlertRow } from "@peptide/peptides/alerts";
 import { buildAlertScanInput } from "@/lib/alerts-input";
+import { dispatchAlertNotifications } from "@/lib/notify/dispatch-alerts";
 
 export interface AlertRow {
   id: string;
@@ -98,12 +99,21 @@ export async function reconcileUserAlerts(
   }
 }
 
-export async function loadAlerts(userId: string): Promise<AlertsView> {
+export async function loadAlerts(userId: string, email?: string): Promise<AlertsView> {
   const supabase = await createSupabaseServerClient();
   const nowIso = new Date().toISOString();
 
   // 1+2. scan + reconcile (insert/bump/resolve)
   await reconcileUserAlerts(supabase, userId);
+
+  // 2b. fire off-app notifications for immediate-critical alerts. The per-request
+  // server client lacks auth.admin, so pass the session email through explicitly.
+  // Best-effort: a notify failure must never break rendering the alerts page.
+  try {
+    await dispatchAlertNotifications(supabase, userId, "immediate", { email });
+  } catch {
+    /* best-effort */
+  }
 
   // 3. read back for display
   const { data: fresh } = await supabase
