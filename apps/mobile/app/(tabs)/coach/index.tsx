@@ -60,13 +60,11 @@ export default function Coach() {
   const [loadingThread, setLoadingThread] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
-  // Load conversation list on mount.
+  // Load conversation list on mount. Stay on the "New chat" main view by default
+  // (like claude.ai) — past threads are opened from the chips, not auto-resumed.
   useEffect(() => {
     apiFetch<Conversation[]>("/api/coach/conversations")
-      .then((data) => {
-        setThreads(data ?? []);
-        if (data?.[0]) setActiveId(data[0].id);
-      })
+      .then((data) => setThreads(data ?? []))
       .catch(() => {});
   }, []);
 
@@ -137,9 +135,26 @@ export default function Coach() {
       {/* Thread chips */}
       <View className="border-b border-border">
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-3 py-2">
-          <Pressable onPress={newThread} className="flex-row items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 active:opacity-70">
-            <Ionicons name="add" size={14} color={colors.primary} />
-            <Text className="text-xs font-medium text-primary">New</Text>
+          <Pressable
+            onPress={newThread}
+            className={cn(
+              "flex-row items-center gap-1 rounded-full border px-3 py-1.5 active:opacity-70",
+              activeId === null ? "border-primary bg-primary" : "border-border bg-card",
+            )}
+          >
+            <Ionicons
+              name="add"
+              size={14}
+              color={activeId === null ? colors.primaryForeground : colors.primary}
+            />
+            <Text
+              className={cn(
+                "text-xs font-medium",
+                activeId === null ? "text-primary-foreground" : "text-primary",
+              )}
+            >
+              New chat
+            </Text>
           </Pressable>
           {threads.map((t) => {
             const active = t.id === activeId;

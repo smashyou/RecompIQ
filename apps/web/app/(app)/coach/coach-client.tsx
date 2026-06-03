@@ -66,7 +66,9 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
   const router = useRouter();
   const toast = useFireToast();
   const [threadList, setThreadList] = useState(conversations);
-  const [activeId, setActiveId] = useState<string | null>(conversations[0]?.id ?? null);
+  // Land on the "new chat" main view by default (like claude.ai) rather than
+  // auto-opening the most recent thread. Past threads are opened from the rail.
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -170,11 +172,11 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
       <aside className="flex w-full shrink-0 flex-col gap-2 lg:w-[196px]">
         <Button
           onClick={newThread}
-          variant="outline"
+          variant={activeId === null ? "default" : "outline"}
           size="sm"
           className="w-full justify-start"
         >
-          <Plus size={15} /> New thread
+          <Plus size={15} /> New chat
         </Button>
         {threadList.map((t) => {
           const active = t.id === activeId;
