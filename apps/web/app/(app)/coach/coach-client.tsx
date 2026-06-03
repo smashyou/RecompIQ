@@ -119,57 +119,87 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
     setSending(true);
     setInput("");
 
-    // Optimistic user message
+    // Optimistic user message + an empty assistant bubble to stream into.
     const tempId = `temp-${Date.now()}`;
+    const streamId = `stream-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
-      {
-        id: tempId,
-        role: "user",
-        content: text,
-        citations: [],
-        created_at: new Date().toISOString(),
-      },
+      { id: tempId, role: "user", content: text, citations: [], created_at: new Date().toISOString() },
+      { id: streamId, role: "assistant", content: "", citations: [], created_at: new Date().toISOString() },
     ]);
 
-    const res = await fetch("/api/coach/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversation_id: activeId, message: text }),
-    });
-    setSending(false);
-    if (res.status === 401) {
-      router.replace("/signin?next=/coach");
-      return;
-    }
-    if (!res.ok) {
-      const body = (await res.json()) as { error?: { message: string } };
-      toast.error(body.error?.message ?? "Coach call failed");
-      // Remove the optimistic message
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      return;
-    }
-    const body = (await res.json()) as {
-      data: { conversation_id: string; message: Message; ai_error: string | null };
-    };
+    const clearStreamBubble = () =>
+      setMessages((prev) => prev.filter((m) => m.id !== streamId && m.id !== tempId));
 
-    // If this was a fresh thread, lift the new id into state + thread list
-    if (!activeId) {
-      setActiveId(body.data.conversation_id);
-      setThreadList((prev) => [
-        {
-          id: body.data.conversation_id,
-          title: text.slice(0, 60),
-          updated_at: new Date().toISOString(),
-        },
-        ...prev,
-      ]);
+    try {
+      const res = await fetch("/api/coach/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversation_id: activeId, message: text, stream: true }),
+      });
+      if (res.status === 401) {
+        router.replace("/signin?next=/coach");
+        return;
+      }
+      if (!res.ok || !res.body) {
+        const body = (await res.json().catch(() => ({}))) as { error?: { message: string } };
+        toast.error(body.error?.message ?? "Coach call failed");
+        clearStreamBubble();
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let acc = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let idx: number;
+        while ((idx = buf.indexOf("\n\n")) !== -1) {
+          const evt = buf.slice(0, idx);
+          buf = buf.slice(idx + 2);
+          const line = evt.split("\n").find((l) => l.startsWith("data:"));
+          if (!line) continue;
+          let payload: {
+            conversation_id?: string;
+            delta?: string;
+            done?: boolean;
+            message?: Message | null;
+            ai_error?: string | null;
+          };
+          try {
+            payload = JSON.parse(line.slice(5).trim());
+          } catch {
+            continue;
+          }
+          if (payload.delta) {
+            acc += payload.delta;
+            setMessages((prev) => prev.map((m) => (m.id === streamId ? { ...m, content: acc } : m)));
+          }
+          if (payload.done) {
+            if (!activeId && payload.conversation_id) {
+              setActiveId(payload.conversation_id);
+              setThreadList((prev) => [
+                { id: payload.conversation_id!, title: text.slice(0, 60), updated_at: new Date().toISOString() },
+                ...prev,
+              ]);
+            }
+            if (payload.message) {
+              const finalMsg = payload.message;
+              setMessages((prev) => prev.map((m) => (m.id === streamId ? finalMsg : m)));
+            }
+            if (payload.ai_error) toast.error(`AI unavailable: ${payload.ai_error}`);
+          }
+        }
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Coach call failed");
+      clearStreamBubble();
+    } finally {
+      setSending(false);
     }
-    // Refetch full thread so the user's persisted message replaces the temp
-    const reload = await fetch(`/api/coach/conversations/${body.data.conversation_id}/messages`);
-    const reloadBody = (await reload.json()) as { data?: Message[] };
-    setMessages(reloadBody.data ?? []);
-    if (body.data.ai_error) toast.error(`AI unavailable: ${body.data.ai_error}`);
   }
 
   return (

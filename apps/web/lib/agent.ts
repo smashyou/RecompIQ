@@ -1,6 +1,7 @@
 import "server-only";
 import {
   chat as gatewayChat,
+  chatStream as gatewayChatStream,
   embed as gatewayEmbed,
   parseFoodFromImage as gatewayParseFood,
   parseLabsFromContent as gatewayParseLabs,
@@ -123,6 +124,10 @@ const deps: GatewayDeps = { loadFeatureConfig, envKey, logCall };
 
 export function chat(req: ChatRequest): Promise<ChatResponse> {
   return gatewayChat(req, deps);
+}
+
+export function chatStream(req: ChatRequest): AsyncGenerator<string, ChatResponse, void> {
+  return gatewayChatStream(req, deps);
 }
 
 export function embed(req: EmbeddingRequest): Promise<EmbeddingResponse> {

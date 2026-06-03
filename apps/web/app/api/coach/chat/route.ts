@@ -3,7 +3,7 @@ import { wrapDoseLike } from "@peptide/peptides";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { jsonOk, jsonError, parseJson } from "@/lib/api";
-import { chat } from "@/lib/agent";
+import { chat, chatStream } from "@/lib/agent";
 import {
   retrieveKb,
   userActiveCompoundSlugs,
@@ -18,6 +18,8 @@ export const maxDuration = 60;
 const chatInput = z.object({
   conversation_id: z.string().uuid().nullable().optional(),
   message: z.string().trim().min(1).max(4000),
+  // When true, respond as an SSE token stream (web). Omitted = JSON (mobile).
+  stream: z.boolean().optional(),
 });
 
 const COACH_SYSTEM = `You are RecompIQ Coach — an educational research assistant for body recomposition, peptides, nutrition, training, and biomarkers.
@@ -170,6 +172,89 @@ export async function POST(req: Request) {
       content: data.message,
     });
 
+    const llmMessages = [
+      { role: "system" as const, content: systemPrompt },
+      ...priorMessages.map((m) => ({
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content,
+      })),
+      { role: "user" as const, content: data.message },
+    ];
+    const citations = kbHits.map((h, i) => ({
+      n: i + 1,
+      compound: h.compound_slug,
+      section: h.section,
+      title: h.title,
+      source_type: h.source_type,
+      source_url: h.source_url,
+      evidence_level: h.evidence_level,
+    }));
+
+    // --- Streaming branch (web) -------------------------------------------
+    if (data.stream) {
+      const cid = conversationId;
+      const enc = new TextEncoder();
+      const sse = (o: unknown) => enc.encode(`data: ${JSON.stringify(o)}\n\n`);
+      const body = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          controller.enqueue(sse({ conversation_id: cid }));
+          let fullText = "";
+          let modelStr = "";
+          let streamErr: string | null = null;
+          try {
+            const gen = chatStream({
+              feature: "coach",
+              userId: user.id,
+              messages: llmMessages,
+              max_tokens: 1024,
+              temperature: 0.4,
+            });
+            let next = await gen.next();
+            while (!next.done) {
+              fullText += next.value;
+              controller.enqueue(sse({ delta: next.value }));
+              next = await gen.next();
+            }
+            modelStr = next.value.model;
+          } catch (err) {
+            streamErr = err instanceof Error ? err.message : String(err);
+          }
+          const finalText = streamErr
+            ? `_AI is currently unavailable: ${streamErr}. Try again once API keys are configured in /admin → Feature config._`
+            : wrapDoseLike(fullText).wrappedText;
+          const { data: row } = await supabase
+            .from("ai_messages")
+            .insert({
+              conversation_id: cid,
+              user_id: user.id,
+              role: "assistant",
+              content: finalText,
+              citations,
+              tool_calls: [],
+              model_string: modelStr || null,
+            })
+            .select()
+            .single();
+          await supabase
+            .from("ai_conversations")
+            .update({ updated_at: new Date().toISOString() })
+            .eq("id", cid);
+          controller.enqueue(
+            sse({ done: true, conversation_id: cid, message: row ?? null, ai_error: streamErr }),
+          );
+          controller.close();
+        },
+      });
+      return new Response(body, {
+        headers: {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          Connection: "keep-alive",
+          "X-Accel-Buffering": "no",
+        },
+      });
+    }
+
     // Call the gateway
     let aiText = "";
     let modelString = "";
@@ -183,14 +268,7 @@ export async function POST(req: Request) {
       const result = await chat({
         feature: "coach",
         userId: user.id,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...priorMessages.map((m) => ({
-            role: m.role as "user" | "assistant" | "system",
-            content: m.content,
-          })),
-          { role: "user", content: data.message },
-        ],
+        messages: llmMessages,
         max_tokens: 1024,
         temperature: 0.4,
       });
@@ -217,15 +295,7 @@ export async function POST(req: Request) {
         user_id: user.id,
         role: "assistant",
         content: finalText,
-        citations: kbHits.map((h, i) => ({
-          n: i + 1,
-          compound: h.compound_slug,
-          section: h.section,
-          title: h.title,
-          source_type: h.source_type,
-          source_url: h.source_url,
-          evidence_level: h.evidence_level,
-        })),
+        citations,
         tool_calls: [],
         model_string: modelString || null,
         provider_slug: providerSlug || null,

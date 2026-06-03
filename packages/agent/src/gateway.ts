@@ -10,7 +10,7 @@
 // a feature key. Direct provider SDK imports elsewhere are forbidden by
 // convention (and called out in CLAUDE.md).
 
-import { CHAT_PROVIDERS, EMBEDDING_PROVIDERS } from "./providers/index";
+import { CHAT_PROVIDERS, CHAT_STREAM_PROVIDERS, EMBEDDING_PROVIDERS } from "./providers/index";
 import type {
   ChatRequest,
   ChatResponse,
@@ -150,6 +150,86 @@ export async function chat(
     }
   }
   throw lastError ?? new Error(`All chat providers failed for feature ${req.feature}`);
+}
+
+// ---------------------------------------------------------------------------
+// chatStream — streaming text generation. Yields text deltas, returns the final
+// ChatResponse. Falls back to the next model only BEFORE the first token; once
+// streaming has started it commits (a mid-stream failure throws).
+// ---------------------------------------------------------------------------
+export async function* chatStream(
+  req: ChatRequest,
+  deps: GatewayDeps,
+): AsyncGenerator<string, ChatResponse, void> {
+  const config = await deps.loadFeatureConfig(req.feature);
+  if (!config) throw new Error(`No feature config for ${req.feature}`);
+
+  const chain: { model: ModelRow; isPrimary: boolean }[] = [
+    { model: config.primary, isPrimary: true },
+    ...config.fallbacks.map((m) => ({ model: m, isPrimary: false })),
+  ];
+
+  let lastError: Error | null = null;
+  for (const { model, isPrimary } of chain) {
+    const exec = CHAT_STREAM_PROVIDERS[model.provider_kind as keyof typeof CHAT_STREAM_PROVIDERS];
+    if (!exec) {
+      lastError = new Error(`No chat-stream adapter for provider kind ${model.provider_kind}`);
+      continue;
+    }
+    const apiKey = deps.envKey(model.env_key_var);
+    if (!apiKey) {
+      lastError = new Error(`Missing API key (${model.env_key_var}) for ${model.provider_slug}`);
+      continue;
+    }
+
+    const t0 = Date.now();
+    let started = false;
+    try {
+      const gen = exec(req, model, apiKey);
+      let next = await gen.next();
+      while (!next.done) {
+        started = true;
+        yield next.value;
+        next = await gen.next();
+      }
+      const final = next.value;
+      const latency_ms = Date.now() - t0;
+      await deps.logCall({
+        user_id: req.userId ?? null,
+        feature: req.feature,
+        model_id: model.id,
+        provider_slug: model.provider_slug,
+        model_string: model.model_id,
+        input_tokens: final.input_tokens,
+        output_tokens: final.output_tokens,
+        total_cost_usd: costFor(model, final.input_tokens, final.output_tokens),
+        latency_ms,
+        status: isPrimary ? "ok" : "fallback",
+        error_message: null,
+        request_excerpt: excerpt(req),
+      });
+      return { ...final, latency_ms, used_fallback: !isPrimary };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      lastError = err instanceof Error ? err : new Error(message);
+      await deps.logCall({
+        user_id: req.userId ?? null,
+        feature: req.feature,
+        model_id: model.id,
+        provider_slug: model.provider_slug,
+        model_string: model.model_id,
+        input_tokens: 0,
+        output_tokens: 0,
+        total_cost_usd: null,
+        latency_ms: Date.now() - t0,
+        status: "error",
+        error_message: message.slice(0, 500),
+        request_excerpt: excerpt(req),
+      });
+      if (started) throw lastError; // mid-stream — cannot restart on a fallback
+    }
+  }
+  throw lastError ?? new Error(`All chat-stream providers failed for feature ${req.feature}`);
 }
 
 // ---------------------------------------------------------------------------
