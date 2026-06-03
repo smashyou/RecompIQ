@@ -143,10 +143,48 @@ const CURATED = {
   ],
 };
 
+// Map a citation URL to one of peptide_kb's allowed source_type values.
+function classifySourceType(url, fallback) {
+  const u = (url ?? "").toLowerCase();
+  if (/fda\.gov|accessdata|dailymed/.test(u)) return "fda_label";
+  if (/clinicaltrials\.gov/.test(u)) return "clinical_trial";
+  if (/pubmed|ncbi\.nlm|nejm|jamanetwork|thelancet|lancet|sciencedirect|wiley|springer|frontiersin|mdpi|cell\.com|nature\.com/.test(u))
+    return "pubmed";
+  if (/investor|lilly|novonordisk|novo-nordisk|press-release|news-release/.test(u)) return "manufacturer";
+  return fallback;
+}
+
+const EV_RANK = {
+  FDA_APPROVED: 6,
+  HUMAN_RCT: 5,
+  HUMAN_OBS: 4,
+  ANIMAL: 3,
+  MECHANISTIC: 2,
+  ANECDOTAL: 1,
+};
+
+function formatDoseRange(low, high, unit) {
+  const u = unit ?? "";
+  if (low != null && high != null) return low === high ? `${low} ${u}` : `${low}–${high} ${u}`;
+  if (low != null) return `${low} ${u}`;
+  if (high != null) return `up to ${high} ${u}`;
+  return "(range not specified)";
+}
+
 async function seedKb() {
-  // 1. Load the compound catalog
+  // 1. Load the compound catalog + the curated literature dose references.
   const compounds = await api("/rest/v1/compounds?select=*");
   console.log(`compounds in catalog: ${compounds.length}`);
+  const doseRefs = await api("/rest/v1/compound_dose_reference?select=*");
+  const idToSlug = new Map(compounds.map((c) => [c.id, c.slug]));
+  const refsBySlug = new Map();
+  for (const r of doseRefs ?? []) {
+    const slug = idToSlug.get(r.compound_id);
+    if (!slug) continue;
+    if (!refsBySlug.has(slug)) refsBySlug.set(slug, []);
+    refsBySlug.get(slug).push(r);
+  }
+  console.log(`dose references: ${(doseRefs ?? []).length} across ${refsBySlug.size} compounds`);
 
   // 2. Wipe + rebuild peptide_kb for each compound
   for (const c of compounds) {
@@ -236,6 +274,61 @@ async function seedKb() {
         source_type: e.source_type,
         source_url: e.source_url ?? null,
         evidence_level: e.evidence_level,
+      });
+    }
+
+    // Literature dose references (real curated ranges + citations from
+    // compound_dose_reference). Framed as educational literature — the coach's
+    // system prompt forbids turning these into individualized prescriptions.
+    // Prefer human data + stronger evidence; cap at 4 distinct contexts per compound.
+    const refs = (refsBySlug.get(c.slug) ?? [])
+      .slice()
+      .sort(
+        (a, b) =>
+          (b.is_human_data ? 1 : 0) - (a.is_human_data ? 1 : 0) ||
+          (EV_RANK[b.evidence_level] ?? 0) - (EV_RANK[a.evidence_level] ?? 0),
+      );
+    const seenContext = new Set();
+    for (const r of refs) {
+      const ctxKey = (r.context ?? "").toLowerCase();
+      if (seenContext.has(ctxKey)) continue;
+      seenContext.add(ctxKey);
+      if (seenContext.size > 4) break;
+      const range = formatDoseRange(r.low_value, r.high_value, r.unit);
+      const freqRoute = [r.frequency, r.route].filter(Boolean).join(" ");
+      const humanFlag = r.is_human_data ? "" : " (non-human / mechanistic data — not a human dose)";
+      const note = r.notes ? ` ${r.notes}` : "";
+      const url = Array.isArray(r.citation) && r.citation[0]?.url ? r.citation[0].url : null;
+      rows.push({
+        compound_slug: c.slug,
+        section: "dosing",
+        title: `${c.name} — literature dose${r.context ? ` (${r.context})` : ""}`,
+        text: `Literature dose reference${r.context ? ` — ${r.context}` : ""}: ${range}${freqRoute ? ` ${freqRoute}` : ""}.${note}${humanFlag} Educational summary of published/observed ranges — not a recommendation; discuss any protocol with a clinician.`,
+        source_type: classifySourceType(url, r.is_human_data ? "clinical_trial" : "pubmed"),
+        source_url: url,
+        evidence_level: r.evidence_level,
+      });
+    }
+
+    // Key references row — surfaces the compound's real citations (research links)
+    // so the coach can cite actual sources in its <context> block.
+    if (Array.isArray(c.citations) && c.citations.length > 0) {
+      const cites = c.citations
+        .slice(0, 6)
+        .map((ci) => {
+          const venue = ci.journal ?? ci.source ?? "";
+          const meta = [venue, ci.year].filter(Boolean).join(", ");
+          return `${ci.title}${meta ? ` (${meta})` : ""}${ci.url ? ` — ${ci.url}` : ""}`;
+        })
+        .join("; ");
+      rows.push({
+        compound_slug: c.slug,
+        section: "evidence",
+        title: `${c.name} — key references`,
+        text: `Key references for ${c.name}: ${cites}.`,
+        source_type: classifySourceType(c.citations[0]?.url, "pubmed"),
+        source_url: c.citations[0]?.url ?? null,
+        evidence_level: c.evidence_level,
       });
     }
 

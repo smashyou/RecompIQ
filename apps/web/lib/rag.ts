@@ -56,10 +56,15 @@ export async function retrieveKb(opts: RetrieveOptions): Promise<KbHit[]> {
 
   // Blends → include their components, so KLOW etc. surface component evidence.
   const slugs = await expandBlendSlugs(opts.compoundSlugs);
-  // When specific compounds are in play, widen the budget so a blend's
-  // composition + each component's key rows can all come through.
+  // Each compound now carries ~8-9 curated rows (mechanism, contraindications,
+  // literature doses + citations, key references…). Budget enough to cover a
+  // compound's key rows, and widen when a blend pulls in components.
   const limit =
-    slugs && slugs.length > 1 ? Math.min(15, Math.max(baseLimit, slugs.length * 3)) : baseLimit;
+    slugs && slugs.length > 1
+      ? Math.min(18, slugs.length * 4)
+      : slugs && slugs.length === 1
+        ? Math.max(baseLimit, 8)
+        : baseLimit;
 
   // Check if we have any embeddings populated at all.
   const { count } = await supabase
@@ -99,9 +104,32 @@ export async function retrieveKb(opts: RetrieveOptions): Promise<KbHit[]> {
       .from("peptide_kb")
       .select(select)
       .in("compound_slug", slugs)
-      .order("compound_slug")
-      .limit(limit);
-    return (data ?? []) as KbHit[];
+      .limit(200);
+    const rows = (data ?? []) as KbHit[];
+    // Rank so the most useful rows survive the budget: the originally-queried
+    // compound(s) over expanded blend components, then by section usefulness,
+    // then cited rows first.
+    const wanted = new Set(opts.compoundSlugs ?? []);
+    const SECTION_RANK: Record<string, number> = {
+      // Contraindications rank highest so they always survive the budget — even
+      // a blend's component cautions must not be squeezed out by dosing rows.
+      contraindications: 10,
+      mechanism: 9,
+      dosing: 8,
+      evidence: 7,
+      use_pattern: 6,
+      clinician_discussion: 6,
+      side_effects: 4,
+      monitoring: 3,
+      interactions: 3,
+    };
+    rows.sort(
+      (a, b) =>
+        (wanted.has(b.compound_slug) ? 1 : 0) - (wanted.has(a.compound_slug) ? 1 : 0) ||
+        (SECTION_RANK[b.section] ?? 0) - (SECTION_RANK[a.section] ?? 0) ||
+        (b.source_url ? 1 : 0) - (a.source_url ? 1 : 0),
+    );
+    return rows.slice(0, limit);
   }
 
   // No compound detected — crude ILIKE keyword search across the corpus.
