@@ -54,6 +54,42 @@ export async function addManualLab(userId: string, input: ManualLabInput): Promi
   if (error) throw error;
 }
 
+export interface OcrLabRow {
+  markerKey: string | null;
+  marker: string;
+  panel: string | null;
+  value: number;
+  unit: string | null;
+  refLow: number | null;
+  refHigh: number | null;
+}
+
+// Bulk insert of OCR-reviewed markers. One lab_results row per included marker,
+// mirroring addManualLab's shape but tagged source: "ocr" with the report blob
+// URL. The caller has already let the user review/edit/skip every row.
+export async function addOcrLabs(
+  userId: string,
+  rows: OcrLabRow[],
+  opts: { collectedOn: string; photoUrl: string | null },
+): Promise<void> {
+  if (rows.length === 0) return;
+  const payload = rows.map((r) => ({
+    user_id: userId,
+    panel: r.panel,
+    marker: r.marker,
+    marker_key: r.markerKey,
+    value: r.value,
+    unit: r.unit,
+    ref_low: r.refLow,
+    ref_high: r.refHigh,
+    collected_on: opts.collectedOn,
+    source: "ocr",
+    photo_url: opts.photoUrl,
+  }));
+  const { error } = await supabase.from("lab_results").insert(payload);
+  if (error) throw error;
+}
+
 export async function deleteLab(userId: string, id: string): Promise<void> {
   const { error } = await supabase
     .from("lab_results")
