@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { GOAL_TAXONOMY } from "@peptide/shared";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
@@ -9,9 +11,14 @@ import { Input } from "@/components/ui/Input";
 import { Segmented } from "@/components/ui/Segmented";
 import { apiFetch } from "@/lib/api";
 import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
 import { useResponsive } from "@/lib/responsive";
 
-const STEPS = ["welcome", "profile", "goal", "conditions", "medications", "injuries", "done"] as const;
+// Consent + 18 gate is enforced at the root layout (device-local ConsentGate)
+// and recorded server-side at sign-up (educational_consent_at), so it is NOT an
+// onboarding step here — only on web. This flow mirrors the remaining web steps,
+// including the multi-goal selection step before "done".
+const STEPS = ["welcome", "profile", "goal", "conditions", "medications", "injuries", "goals", "done"] as const;
 type Step = (typeof STEPS)[number];
 
 interface ListItem { name: string; detail: string }
@@ -39,6 +46,8 @@ export default function Onboarding() {
   const [conditions, setConditions] = useState<ListItem[]>([]);
   const [medications, setMedications] = useState<ListItem[]>([]);
   const [injuries, setInjuries] = useState<ListItem[]>([]);
+  // goals (multi-select taxonomy)
+  const [goalKeys, setGoalKeys] = useState<string[]>([]);
 
   function onStartWeight(v: string) {
     setStartW(v);
@@ -47,6 +56,10 @@ export default function Onboarding() {
       if (!proteinMin) setProteinMin(String(Math.round(sw * 0.6)));
       if (!proteinMax) setProteinMax(String(Math.round(sw * 0.8)));
     }
+  }
+
+  function toggleGoal(key: string) {
+    setGoalKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
   }
 
   async function saveStep(): Promise<boolean> {
@@ -63,6 +76,13 @@ export default function Onboarding() {
         await apiFetch("/api/onboarding/medications", { method: "POST", body: JSON.stringify({ items: medications.filter((m) => m.name.trim()).map((m) => ({ name: m.name, dose: m.detail || null })) }) });
       } else if (step === "injuries") {
         await apiFetch("/api/onboarding/injuries", { method: "POST", body: JSON.stringify({ items: injuries.filter((i) => i.name.trim()).map((i) => ({ name: i.name, detail: i.detail || null })) }) });
+      } else if (step === "goals") {
+        // Goals are OPTIONAL — proceed regardless of a transient save error.
+        try {
+          await apiFetch("/api/goals", { method: "PUT", body: JSON.stringify({ goals: goalKeys.map((goal_key, i) => ({ goal_key, priority: i + 1, status: "active" })) }) });
+        } catch {
+          // swallow — optional step
+        }
       }
       return true;
     } catch (e) {
@@ -138,6 +158,8 @@ export default function Onboarding() {
             <ListStep title="Medications" hint="Current medications (optional)." items={medications} setItems={setMedications} detailLabel="Dose" />
           ) : step === "injuries" ? (
             <ListStep title="Injuries" hint="Injury history that affects training (optional)." items={injuries} setItems={setInjuries} detailLabel="Detail" />
+          ) : step === "goals" ? (
+            <GoalsStep selected={goalKeys} toggle={toggleGoal} />
           ) : (
             <View className="gap-3">
               <Text className="font-bold text-foreground" style={{ fontSize: type["3xl"] }}>You're all set</Text>
@@ -153,6 +175,55 @@ export default function Onboarding() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+// Multi-goal selection — mirrors the web onboarding "goals" step and the mobile
+// More → Goals screen. Optional; priority follows selection order.
+function GoalsStep({ selected, toggle }: { selected: string[]; toggle: (key: string) => void }) {
+  const { colors } = useTheme();
+  const { type } = useResponsive();
+  return (
+    <Card className="gap-3">
+      <Text className="font-semibold text-foreground" style={{ fontSize: type.xl }}>What are your goals?</Text>
+      <Text className="text-sm text-muted-foreground">
+        Pick the outcomes you care about — they decide what we track and project, and guide the AI.
+        Priority follows selection order. You can change these anytime. (Optional.)
+      </Text>
+      {GOAL_TAXONOMY.map((g) => {
+        const on = selected.includes(g.key);
+        const rank = selected.indexOf(g.key) + 1;
+        return (
+          <Pressable
+            key={g.key}
+            onPress={() => toggle(g.key)}
+            style={{
+              borderWidth: 1,
+              borderRadius: 14,
+              padding: 14,
+              borderColor: on ? colors.primary : colors.border,
+              backgroundColor: on ? colors.surface2 : colors.card,
+              gap: 6,
+            }}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <View style={{ flex: 1 }}>
+                <Text numberOfLines={1} style={{ fontSize: 14.5, fontWeight: "600", color: colors.foreground }}>{g.label}</Text>
+                <Text style={{ fontSize: 12, color: colors.fgSubtle, marginTop: 2 }}>{g.blurb}</Text>
+              </View>
+              <Ionicons
+                name={on ? "checkmark-circle" : "ellipse-outline"}
+                size={20}
+                color={on ? colors.primary : colors.border}
+              />
+            </View>
+            {on && rank > 0 ? (
+              <Text style={{ fontSize: 10.5, color: colors.fgSubtle }}>priority {rank}</Text>
+            ) : null}
+          </Pressable>
+        );
+      })}
+    </Card>
   );
 }
 
