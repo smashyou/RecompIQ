@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import type { EvidenceLevel } from "@peptide/shared";
 import { syringeModel, SYRINGE_BARRELS } from "@peptide/peptides/reconstitution";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -13,6 +14,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import { StatBox } from "@/components/ui/StatBox";
 import { Syringe } from "@/components/peptides/Syringe";
 import { CompoundPicker } from "@/components/peptides/CompoundPicker";
+import { EvidenceBadge } from "@/components/ui/EvidenceBadge";
 import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api";
 import { usePeptideSelection } from "@/lib/peptide-selection";
@@ -26,7 +28,7 @@ interface Option {
   is_blend: boolean;
   typical_vial_mg: number | null;
   component_mg: { label: string; mg: number | null }[];
-  ref_dose: { low: number; high: number; unit: string } | null;
+  ref_dose: { low: number; high: number; unit: string; evidence_level: EvidenceLevel } | null;
 }
 
 const CALIBRATIONS = [
@@ -78,14 +80,14 @@ export default function Reconstitution() {
     (async () => {
       const [{ data: comps }, { data: refs }] = await Promise.all([
         supabase.from("compounds").select("id, slug, name, is_blend, typical_vial_mg, component_mg").order("name"),
-        supabase.from("compound_dose_reference").select("compound_id, low_value, high_value, unit, is_human_data"),
+        supabase.from("compound_dose_reference").select("compound_id, low_value, high_value, unit, is_human_data, evidence_level"),
       ]);
-      const refDose = new Map<string, { low: number; high: number; unit: string }>();
+      const refDose = new Map<string, { low: number; high: number; unit: string; evidence_level: EvidenceLevel }>();
       for (const r of (refs ?? []) as any[]) {
         if (r.low_value == null) continue;
         const existing = refDose.get(r.compound_id);
         if (!existing || r.is_human_data) {
-          refDose.set(r.compound_id, { low: Number(r.low_value), high: Number(r.high_value ?? r.low_value), unit: r.unit });
+          refDose.set(r.compound_id, { low: Number(r.low_value), high: Number(r.high_value ?? r.low_value), unit: r.unit, evidence_level: r.evidence_level });
         }
       }
       const opts: Option[] = ((comps ?? []) as any[]).map((c) => ({
@@ -210,14 +212,17 @@ export default function Reconstitution() {
         </Field>
 
         {selected?.ref_dose ? (
-          <Text className="text-xs text-muted-foreground">
-            Reference:{" "}
-            <Text className="font-medium text-foreground">
-              {selected.ref_dose.low}
-              {selected.ref_dose.high !== selected.ref_dose.low ? `–${selected.ref_dose.high}` : ""} {selected.ref_dose.unit}
-            </Text>{" "}
-            — educational start, override freely.
-          </Text>
+          <View className="flex-row flex-wrap items-center gap-2">
+            <Text className="text-xs text-muted-foreground">
+              Reference:{" "}
+              <Text className="font-medium text-foreground">
+                {selected.ref_dose.low}
+                {selected.ref_dose.high !== selected.ref_dose.low ? `–${selected.ref_dose.high}` : ""} {selected.ref_dose.unit}
+              </Text>{" "}
+              — educational start, override freely.
+            </Text>
+            <EvidenceBadge level={selected.ref_dose.evidence_level} />
+          </View>
         ) : null}
         {selected?.is_blend && selected.component_mg.length > 0 ? (
           <Text className="text-xs text-muted-foreground">
@@ -283,6 +288,7 @@ export default function Reconstitution() {
             {quickFills ? (
               <View className="flex-row flex-wrap items-center gap-2">
                 <Text className="text-xs text-muted-foreground">Quick fill:</Text>
+                {selected?.ref_dose ? <EvidenceBadge level={selected.ref_dose.evidence_level} /> : null}
                 {quickFills.map((v) => {
                   const u = selected!.ref_dose!.unit;
                   const rounded = Number(v.toFixed(u === "mcg" ? 0 : 3));
