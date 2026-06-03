@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Activity, Check, Plus, Send, Shield } from "lucide-react";
 import type { EvidenceLevel } from "@peptide/shared";
+import { wrapDoseLike } from "@peptide/peptides";
 import { Button } from "@/components/ui/button";
 import { useFireToast } from "@/components/ui/toast";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
@@ -176,7 +177,10 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
           }
           if (payload.delta) {
             acc += payload.delta;
-            setMessages((prev) => prev.map((m) => (m.id === streamId ? { ...m, content: acc } : m)));
+            // Wrap dose mentions live so the [edu] highlight + disclaimer footer
+            // show during streaming too (partial doses don't match until complete).
+            const shown = wrapDoseLike(acc).wrappedText;
+            setMessages((prev) => prev.map((m) => (m.id === streamId ? { ...m, content: shown } : m)));
           }
           if (payload.done) {
             if (!activeId && payload.conversation_id) {
