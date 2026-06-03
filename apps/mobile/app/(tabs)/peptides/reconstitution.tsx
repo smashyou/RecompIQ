@@ -4,6 +4,7 @@ import { Alert, Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { EvidenceLevel } from "@peptide/shared";
 import { syringeModel, SYRINGE_BARRELS } from "@peptide/peptides/reconstitution";
+import { evaluateContraindications, type ContraindicationFinding } from "@peptide/peptides";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Content } from "@/components/ui/Content";
@@ -14,9 +15,11 @@ import { Segmented } from "@/components/ui/Segmented";
 import { StatBox } from "@/components/ui/StatBox";
 import { Syringe } from "@/components/peptides/Syringe";
 import { CompoundPicker } from "@/components/peptides/CompoundPicker";
+import { ContraindicationBanner } from "@/components/peptides/ContraindicationBanner";
 import { EvidenceBadge } from "@/components/ui/EvidenceBadge";
 import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api";
+import { useSession } from "@/lib/session";
 import { usePeptideSelection } from "@/lib/peptide-selection";
 import { colors } from "@/lib/theme";
 import { useResponsive } from "@/lib/responsive";
@@ -29,6 +32,8 @@ interface Option {
   typical_vial_mg: number | null;
   component_mg: { label: string; mg: number | null }[];
   ref_dose: { low: number; high: number; unit: string; evidence_level: EvidenceLevel } | null;
+  absolute_contraindications: string[];
+  relative_contraindications: string[];
 }
 
 const CALIBRATIONS = [
@@ -50,6 +55,15 @@ function num(s: string): number {
   const v = Number(s);
   return Number.isFinite(v) ? v : 0;
 }
+function ageFromDob(dob: string | null): number | null {
+  if (!dob) return null;
+  const d = new Date(dob);
+  const now = new Date();
+  let a = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) a--;
+  return a;
+}
 function fmtMg(mg: number): string {
   return mg >= 1 ? `${mg.toFixed(2)} mg` : `${(mg * 1000).toFixed(0)} mcg`;
 }
@@ -58,8 +72,16 @@ export default function Reconstitution() {
   const { compound: compoundSlug } = useLocalSearchParams<{ compound?: string }>();
   const router = useRouter();
   const { type } = useResponsive();
+  const { session } = useSession();
+  const uid = session?.user.id;
   const sel = usePeptideSelection();
   const [options, setOptions] = useState<Option[]>([]);
+  // User's recorded health snapshot — drives the contraindication check.
+  const [health, setHealth] = useState<{
+    conditions: string[];
+    medications: string[];
+    age: number | null;
+  }>({ conditions: [], medications: [], age: null });
   // Selected compound is the shared peptide-section selection (by slug).
   const compoundId = useMemo(() => options.find((o) => o.slug === sel.slug)?.id ?? "", [options, sel.slug]);
 
@@ -79,7 +101,7 @@ export default function Reconstitution() {
   useEffect(() => {
     (async () => {
       const [{ data: comps }, { data: refs }] = await Promise.all([
-        supabase.from("compounds").select("id, slug, name, is_blend, typical_vial_mg, component_mg").order("name"),
+        supabase.from("compounds").select("id, slug, name, is_blend, typical_vial_mg, component_mg, absolute_contraindications, relative_contraindications").order("name"),
         supabase.from("compound_dose_reference").select("compound_id, low_value, high_value, unit, is_human_data, evidence_level"),
       ]);
       const refDose = new Map<string, { low: number; high: number; unit: string; evidence_level: EvidenceLevel }>();
@@ -98,10 +120,30 @@ export default function Reconstitution() {
         typical_vial_mg: c.typical_vial_mg,
         component_mg: c.component_mg ?? [],
         ref_dose: refDose.get(c.id) ?? null,
+        absolute_contraindications: c.absolute_contraindications ?? [],
+        relative_contraindications: c.relative_contraindications ?? [],
       }));
       setOptions(opts);
     })();
   }, []);
+
+  // Load the user's health snapshot (conditions/meds active + dob→age) for the
+  // contraindication check. Conditions/medications are RLS-scoped to the user.
+  useEffect(() => {
+    if (!uid) return;
+    (async () => {
+      const [{ data: condData }, { data: medData }, { data: profile }] = await Promise.all([
+        supabase.from("conditions").select("name").eq("active", true),
+        supabase.from("medications").select("name").eq("active", true),
+        supabase.from("profiles").select("dob").eq("user_id", uid).maybeSingle(),
+      ]);
+      setHealth({
+        conditions: ((condData ?? []) as { name: string }[]).map((c) => c.name),
+        medications: ((medData ?? []) as { name: string }[]).map((m) => m.name),
+        age: ageFromDob((profile as { dob: string | null } | null)?.dob ?? null),
+      });
+    })();
+  }, [uid]);
 
   // Deep-link (?compound=slug) initializes the shared selection.
   useEffect(() => {
@@ -110,6 +152,22 @@ export default function Reconstitution() {
   }, [compoundSlug]);
 
   const selected = options.find((o) => o.id === compoundId) ?? null;
+
+  // Contraindication findings for the selected compound vs the user's recorded
+  // conditions/medications. Empty when no real compound is selected. Loose
+  // matcher — false positives are intentional on this safety-critical surface.
+  const findings: ContraindicationFinding[] = useMemo(() => {
+    if (!selected) return [];
+    return evaluateContraindications(
+      {
+        slug: selected.slug,
+        name: selected.name,
+        absolute_contraindications: selected.absolute_contraindications,
+        relative_contraindications: selected.relative_contraindications,
+      },
+      health,
+    );
+  }, [selected, health]);
 
   // On selection, load typical vial + reference dose (mirrors web).
   useEffect(() => {
@@ -210,6 +268,8 @@ export default function Reconstitution() {
             onChange={(id) => sel.setSlug(options.find((o) => o.id === id)?.slug ?? null)}
           />
         </Field>
+
+        {findings.length > 0 ? <ContraindicationBanner findings={findings} /> : null}
 
         {selected?.ref_dose ? (
           <View className="flex-row flex-wrap items-center gap-2">

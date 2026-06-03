@@ -10,6 +10,8 @@ import {
   SYRINGE_BARRELS,
   SYRINGE_CALIBRATIONS,
 } from "@peptide/peptides/reconstitution";
+import { evaluateContraindications } from "@peptide/peptides";
+import { ContraindicationBanner } from "@/components/peptides/contraindication-banner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,8 @@ export interface CompoundOption {
   typical_vial_mg: number | null;
   component_mg: { label: string; mg: number | null }[];
   ref_dose: { low: number; high: number; unit: string; evidence_level: EvidenceLevel } | null;
+  absolute_contraindications: string[];
+  relative_contraindications: string[];
 }
 
 const CALIBRATIONS = SYRINGE_CALIBRATIONS.map((c) => ({
@@ -58,15 +62,33 @@ function fmtMg(mg: number): string {
 export function ReconstitutionCalculator({
   options,
   initialSlug,
+  health,
 }: {
   options: CompoundOption[];
   initialSlug: string | null;
+  health: { conditions: string[]; medications: string[]; age: number | null };
 }) {
   const toast = useFireToast();
 
   const [slug, setSlug] = useState<string | null>(initialSlug);
   const selected = useMemo(() => options.find((o) => o.slug === slug) ?? null, [options, slug]);
   const compoundId = selected?.id ?? "";
+
+  // Contraindication check against the user's recorded conditions/medications.
+  // Only runs for a real selected compound (not the "no compound / custom"
+  // option). Loose matcher — false positives are intentional for safety.
+  const findings = useMemo(() => {
+    if (!selected) return [];
+    return evaluateContraindications(
+      {
+        slug: selected.slug,
+        name: selected.name,
+        absolute_contraindications: selected.absolute_contraindications,
+        relative_contraindications: selected.relative_contraindications,
+      },
+      health,
+    );
+  }, [selected, health]);
 
   const [vialMg, setVialMg] = useState("10");
   const [bac, setBac] = useState("2");
@@ -238,6 +260,8 @@ export function ReconstitutionCalculator({
               </p>
             ) : null}
           </div>
+
+          {findings.length > 0 ? <ContraindicationBanner findings={findings} /> : null}
 
           {selected?.ref_dose ? (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

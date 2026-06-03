@@ -14,6 +14,18 @@ interface CompoundRow {
   is_blend: boolean | null;
   typical_vial_mg: number | null;
   component_mg: { label: string; mg: number | null }[] | null;
+  absolute_contraindications: string[] | null;
+  relative_contraindications: string[] | null;
+}
+
+function ageFromDob(dob: string | null): number | null {
+  if (!dob) return null;
+  const d = new Date(dob);
+  const now = new Date();
+  let a = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) a--;
+  return a;
 }
 interface DoseRefRow {
   compound_id: string;
@@ -29,22 +41,35 @@ export default async function ReconstitutionPage({
 }: {
   searchParams: Promise<{ compound?: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const supabase = await createSupabaseServerClient();
   const { compound: initialSlug } = await searchParams;
 
-  // Mirror the mobile loader: compounds (vial size + composition) + reference
-  // doses (prefer human-data rows). Doses here are factual literature ranges
-  // used only for quick-fill — the calculator does math, it does not prescribe.
-  const [compoundsRes, refsRes] = await Promise.all([
+  // Mirror the mobile loader: compounds (vial size + composition + contra rules)
+  // + reference doses (prefer human-data rows). Doses here are factual
+  // literature ranges used only for quick-fill — the calculator does math, it
+  // does not prescribe. The health snapshot (conditions/meds/age) is loaded the
+  // same way as the stacker so we can run contraindication checks on selection.
+  const [compoundsRes, refsRes, condRes, medRes, profileRes] = await Promise.all([
     supabase
       .from("compounds")
-      .select("id, slug, name, is_blend, typical_vial_mg, component_mg")
+      .select(
+        "id, slug, name, is_blend, typical_vial_mg, component_mg, absolute_contraindications, relative_contraindications",
+      )
       .order("name"),
     supabase
       .from("compound_dose_reference")
       .select("compound_id, low_value, high_value, unit, is_human_data, evidence_level"),
+    supabase.from("conditions").select("name").eq("user_id", user.id).eq("active", true),
+    supabase.from("medications").select("name").eq("user_id", user.id).eq("active", true),
+    supabase.from("profiles").select("dob").eq("user_id", user.id).maybeSingle(),
   ]);
+
+  const health: { conditions: string[]; medications: string[]; age: number | null } = {
+    conditions: (condRes.data ?? []).map((c) => c.name as string),
+    medications: (medRes.data ?? []).map((m) => m.name as string),
+    age: ageFromDob((profileRes.data?.dob as string | null) ?? null),
+  };
 
   const refDose = new Map<
     string,
@@ -71,6 +96,8 @@ export default async function ReconstitutionPage({
     typical_vial_mg: c.typical_vial_mg,
     component_mg: (c.component_mg ?? []).filter((x) => x && typeof x.label === "string"),
     ref_dose: refDose.get(c.id) ?? null,
+    absolute_contraindications: c.absolute_contraindications ?? [],
+    relative_contraindications: c.relative_contraindications ?? [],
   }));
 
   return (
@@ -83,7 +110,7 @@ export default async function ReconstitutionPage({
         per-component breakdown for blends. It does math on the numbers you enter — it does not
         recommend doses.
       </p>
-      <ReconstitutionCalculator options={options} initialSlug={initialSlug ?? null} />
+      <ReconstitutionCalculator options={options} initialSlug={initialSlug ?? null} health={health} />
       <div className="mt-6">
         <SafetyDisclaimer />
       </div>

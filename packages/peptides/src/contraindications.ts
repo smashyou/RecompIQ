@@ -73,7 +73,14 @@ export function evaluateContraindications(
   const findings: ContraindicationFinding[] = [];
   const haystack = [...snapshot.conditions, ...snapshot.medications];
 
-  if (snapshot.pregnant) {
+  // Pregnancy is checked on a dedicated path because the loose keyword matcher
+  // won't equate a free-text condition like "pregnant" with a compound's
+  // "pregnancy" rule. Honor an explicit flag when callers supply one, otherwise
+  // infer it from a disclosed condition so every call site (stacker, recon, …)
+  // catches pregnancy contraindications without threading a separate field.
+  const pregnant = snapshot.pregnant ?? snapshot.conditions.some((c) => /pregnan/i.test(c));
+
+  if (pregnant) {
     const pregRule =
       compound.absolute_contraindications.find((r) => /pregnan/i.test(r)) ||
       compound.relative_contraindications.find((r) => /pregnan/i.test(r));
