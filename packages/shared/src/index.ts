@@ -6,5 +6,6 @@ export * from "./goals/taxonomy";
 export * from "./goals/metrics";
 export * from "./goals/projection-rates";
 export * from "./goals/protein";
+export * from "./markdown";
 export * from "./labs/catalog";
 export * from "./labs/shape";
