@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { GOAL_TAXONOMY } from "@peptide/shared";
+import { GOAL_TAXONOMY, proteinDirection, proteinTargetGrams, goalWeightMidpoint } from "@peptide/shared";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
@@ -49,14 +49,47 @@ export default function Onboarding() {
   // goals (multi-select taxonomy)
   const [goalKeys, setGoalKeys] = useState<string[]>([]);
 
+  // Protein target is goal-aware (fat loss / GLP-1 ~0.6–0.8, muscle gain
+  // ~0.8–1.0, recomp ~0.7–1.0 g/lb — evidence-graded bands in @peptide/shared).
+  // Re-derive from start + goal direction unless the user edits it by hand.
+  const proteinTouched = useRef(false);
+  function recomputeProtein(sw: string, gMin: string, gMax: string) {
+    if (proteinTouched.current) return;
+    const start = Number(sw);
+    if (!(start > 0)) return;
+    const mid = goalWeightMidpoint(Number(gMin), Number(gMax));
+    const { low, high } = proteinTargetGrams(start, proteinDirection(start, mid));
+    setProteinMin(String(low));
+    setProteinMax(String(high));
+  }
   function onStartWeight(v: string) {
     setStartW(v);
-    const sw = Number(v);
-    if (sw > 0) {
-      if (!proteinMin) setProteinMin(String(Math.round(sw * 0.6)));
-      if (!proteinMax) setProteinMax(String(Math.round(sw * 0.8)));
-    }
+    recomputeProtein(v, goalMin, goalMax);
   }
+  function onGoalMin(v: string) {
+    setGoalMin(v);
+    recomputeProtein(startW, v, goalMax);
+  }
+  function onGoalMax(v: string) {
+    setGoalMax(v);
+    recomputeProtein(startW, goalMin, v);
+  }
+  function onProteinMin(v: string) {
+    proteinTouched.current = true;
+    setProteinMin(v);
+  }
+  function onProteinMax(v: string) {
+    proteinTouched.current = true;
+    setProteinMax(v);
+  }
+  const proteinBand = (() => {
+    const start = Number(startW);
+    if (!(start > 0)) return null;
+    return proteinTargetGrams(
+      start,
+      proteinDirection(start, goalWeightMidpoint(Number(goalMin), Number(goalMax))),
+    ).band;
+  })();
 
   function toggleGoal(key: string) {
     setGoalKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -143,13 +176,13 @@ export default function Onboarding() {
               <Text className="font-semibold text-foreground" style={{ fontSize: type.xl }}>Your goal</Text>
               <Field label="Start weight (lb)"><Input value={startW} onChangeText={onStartWeight} keyboardType="decimal-pad" placeholder="265" /></Field>
               <View className="flex-row gap-3">
-                <View className="flex-1"><Field label="Goal min (lb)"><Input value={goalMin} onChangeText={setGoalMin} keyboardType="decimal-pad" placeholder="190" /></Field></View>
-                <View className="flex-1"><Field label="Goal max (lb)"><Input value={goalMax} onChangeText={setGoalMax} keyboardType="decimal-pad" placeholder="200" /></Field></View>
+                <View className="flex-1"><Field label="Goal min (lb)"><Input value={goalMin} onChangeText={onGoalMin} keyboardType="decimal-pad" placeholder="190" /></Field></View>
+                <View className="flex-1"><Field label="Goal max (lb)"><Input value={goalMax} onChangeText={onGoalMax} keyboardType="decimal-pad" placeholder="200" /></Field></View>
               </View>
               <Field label="Timeline (weeks)"><Input value={weeks} onChangeText={setWeeks} keyboardType="number-pad" /></Field>
               <View className="flex-row gap-3">
-                <View className="flex-1"><Field label="Protein min (g)" hint="auto 0.6 g/lb"><Input value={proteinMin} onChangeText={setProteinMin} keyboardType="number-pad" /></Field></View>
-                <View className="flex-1"><Field label="Protein max (g)" hint="auto 0.8 g/lb"><Input value={proteinMax} onChangeText={setProteinMax} keyboardType="number-pad" /></Field></View>
+                <View className="flex-1"><Field label="Protein min (g)" hint={proteinBand ? `${proteinBand.minGPerLb} g/lb · ${proteinBand.label}` : "auto"}><Input value={proteinMin} onChangeText={onProteinMin} keyboardType="number-pad" /></Field></View>
+                <View className="flex-1"><Field label="Protein max (g)" hint={proteinBand ? `${proteinBand.maxGPerLb} g/lb` : "auto"}><Input value={proteinMax} onChangeText={onProteinMax} keyboardType="number-pad" /></Field></View>
               </View>
             </Card>
           ) : step === "conditions" ? (

@@ -1,25 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { goalStepSchema, type GoalStep } from "@peptide/shared";
+import {
+  goalStepSchema,
+  proteinDirection,
+  proteinTargetGrams,
+  goalWeightMidpoint,
+  type GoalStep,
+} from "@peptide/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// Protein recommendation: 0.6 g/lb (low) to 0.8 g/lb (high) of starting weight.
-// Bounded by Zod (20–400 g/day) so extreme inputs don't break submission.
-function clampProtein(g: number) {
-  return Math.min(400, Math.max(20, Math.round(g)));
-}
-function proteinFromStartWeight(lb: number) {
-  return {
-    low: clampProtein(lb * 0.6),
-    high: clampProtein(lb * 0.8),
-  };
-}
+// Protein target is goal-aware (g/lb of bodyweight, by weight-goal direction):
+// fat loss / GLP-1 ~0.6–0.8, muscle gain ~0.8–1.0, recomposition ~0.7–1.0.
+// Evidence-graded defaults live in @peptide/shared (goals/protein). Bounded by
+// Zod (20–400 g/day) so extreme inputs don't break submission.
 
 export function GoalStepForm({
   initial,
@@ -34,13 +33,19 @@ export function GoalStepForm({
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const initialStart = (initial?.["start_weight_lb"] as number) ?? 200;
-  const initialProtein =
-    initial?.["protein_target_g_min"] !== undefined
-      ? {
-          low: initial["protein_target_g_min"] as number,
-          high: initial["protein_target_g_max"] as number,
-        }
-      : proteinFromStartWeight(initialStart);
+  const initialGoalMid = goalWeightMidpoint(
+    (initial?.["goal_weight_lb_min"] as number) ?? 180,
+    (initial?.["goal_weight_lb_max"] as number) ?? 190,
+  );
+  const hasSavedProtein = initial?.["protein_target_g_min"] !== undefined;
+  const initialProtein = hasSavedProtein
+    ? {
+        low: initial!["protein_target_g_min"] as number,
+        high: initial!["protein_target_g_max"] as number,
+      }
+    : proteinTargetGrams(initialStart, proteinDirection(initialStart, initialGoalMid));
+  // Don't auto-overwrite a protein target the user (or a prior session) set.
+  const proteinTouched = useRef(hasSavedProtein);
 
   const {
     register,
@@ -62,23 +67,26 @@ export function GoalStepForm({
   });
 
   const start = watch("start_weight_lb");
+  const goalMin = watch("goal_weight_lb_min");
+  const goalMax = watch("goal_weight_lb_max");
   const proteinLow = watch("protein_target_g_min");
   const proteinHigh = watch("protein_target_g_max");
 
-  function handleStartWeightChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const v = e.target.valueAsNumber;
-    if (!isNaN(v) && v > 0) {
-      const { low, high } = proteinFromStartWeight(v);
-      setValue("protein_target_g_min", low, { shouldValidate: true });
-      setValue("protein_target_g_max", high, { shouldValidate: true });
-    }
-  }
+  const goalMid = goalWeightMidpoint(goalMin, goalMax);
+  const direction = proteinDirection(start, goalMid);
+  const auto = !isNaN(start) && start > 0 ? proteinTargetGrams(start, direction) : null;
 
-  const proteinMatchesFormula =
-    !isNaN(start) &&
-    start > 0 &&
-    proteinLow === proteinFromStartWeight(start).low &&
-    proteinHigh === proteinFromStartWeight(start).high;
+  // Re-derive the protein range from start weight + goal direction whenever
+  // either changes — unless the user has manually edited the target.
+  useEffect(() => {
+    if (proteinTouched.current || auto === null) return;
+    setValue("protein_target_g_min", auto.low, { shouldValidate: true });
+    setValue("protein_target_g_max", auto.high, { shouldValidate: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [start, goalMid, direction]);
+
+  const proteinIsAuto =
+    auto !== null && proteinLow === auto.low && proteinHigh === auto.high;
 
   async function onSubmit(values: GoalStep) {
     setServerError(null);
@@ -120,10 +128,7 @@ export function GoalStepForm({
           id="start_weight_lb"
           type="number"
           step="0.1"
-          {...register("start_weight_lb", {
-            valueAsNumber: true,
-            onChange: handleStartWeightChange,
-          })}
+          {...register("start_weight_lb", { valueAsNumber: true })}
         />
         {errors.start_weight_lb && (
           <p className="text-xs text-[var(--color-destructive)]">
@@ -179,8 +184,8 @@ export function GoalStepForm({
         <div className="flex items-center justify-between">
           <Label>Protein target (g/day)</Label>
           <span className="text-2xs uppercase tracking-wider text-[var(--color-muted-foreground)]">
-            {proteinMatchesFormula
-              ? "Auto · 0.6–0.8 g/lb"
+            {proteinIsAuto && auto
+              ? `Auto · ${auto.band.minGPerLb}–${auto.band.maxGPerLb} g/lb · ${auto.band.label}`
               : "Custom"}
           </span>
         </div>
@@ -189,7 +194,12 @@ export function GoalStepForm({
             <Input
               id="protein_target_g_min"
               type="number"
-              {...register("protein_target_g_min", { valueAsNumber: true })}
+              {...register("protein_target_g_min", {
+                valueAsNumber: true,
+                onChange: () => {
+                  proteinTouched.current = true;
+                },
+              })}
             />
             <p className="text-2xs text-[var(--color-muted-foreground)]">Low</p>
             {errors.protein_target_g_min && (
@@ -202,7 +212,12 @@ export function GoalStepForm({
             <Input
               id="protein_target_g_max"
               type="number"
-              {...register("protein_target_g_max", { valueAsNumber: true })}
+              {...register("protein_target_g_max", {
+                valueAsNumber: true,
+                onChange: () => {
+                  proteinTouched.current = true;
+                },
+              })}
             />
             <p className="text-2xs text-[var(--color-muted-foreground)]">High</p>
             {errors.protein_target_g_max && (
@@ -213,8 +228,10 @@ export function GoalStepForm({
           </div>
         </div>
         <p className="text-2xs text-[var(--color-muted-foreground)]">
-          Auto-calculated from starting weight (0.6–0.8 g/lb body weight). Edit if your clinician
-          recommends a different target.
+          {auto
+            ? `Auto-calculated for ${auto.band.label} from your start + goal weight (${auto.band.minGPerLb}–${auto.band.maxGPerLb} g/lb body weight). `
+            : "Auto-calculated from your start + goal weight. "}
+          Edit if your clinician recommends a different target.
         </p>
       </div>
 
