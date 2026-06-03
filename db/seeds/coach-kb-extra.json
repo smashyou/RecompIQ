@@ -223,5 +223,140 @@
       "evidence_level": "HUMAN_OBS",
       "source_url": "https://pubmed.ncbi.nlm.nih.gov/10528131/"
     }
+  },
+  {
+    "slug": "epitalon",
+    "use_pattern": {
+      "title": "Epitalon — usage & evidence",
+      "text": "Epitalon (Ala-Glu-Asp-Gly) is a synthetic tetrapeptide derived from the bovine pineal extract epithalamin, developed by Vladimir Khavinson's group at the St. Petersburg Institute of Bioregulation and Gerontology. Research interest centers on two proposed mechanisms: restoration of melatonin secretion by the aging pineal gland, and activation of telomerase with consequent telomere lengthening. In-vitro work has reported dose-dependent hTERT upregulation and telomere extension in normal human cell lines. Human evidence consists of small, older Russian observational and quasi-controlled studies — none meeting contemporary RCT standards. Epitalon is not FDA-approved, not commercially available as a licensed drug, and remains a research compound.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/40141333/"
+    },
+    "clinician_discussion": {
+      "title": "Epitalon — what to discuss with your clinician",
+      "text": "The available human data derives almost exclusively from one research group in Russia, with sample sizes under 100 and limited independent replication in peer-reviewed Western journals; no long-term controlled human safety data exists. A 2025 in-vitro study raised a signal worth discussing: epitalon activated the Alternative Lengthening of Telomeres (ALT) pathway in cancer cell lines, a finding whose clinical relevance in humans is unknown. Most commercial sources are research-only vendors with no pharmaceutical quality assurance. Key questions to raise: personal or family cancer history, current oncologic surveillance, any hormonal or circadian-rhythm disorders, and the sourcing channel.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12411320/"
+    }
+  },
+  {
+    "slug": "na-epitalon-amidate",
+    "use_pattern": {
+      "title": "N-Acetyl Epitalon Amidate — usage & evidence",
+      "text": "N-Acetyl Epitalon Amidate is a chemically modified analog of epitalon with an N-terminal acetyl group and a C-terminal amidation, intended to increase proteolytic stability and possibly bioavailability — though no published human pharmacokinetic study confirms this. The compound has no independent human clinical-trial record; all longevity and telomerase-related claims are extrapolated by analogy from the parent epitalon literature, which is itself predominantly animal and small observational data. No PubMed-indexed publications specific to the N-acetyl amidate form could be identified as of mid-2026 (the citation below points to the parent epitalon literature, not this analog). It is strictly a research compound with no regulatory status and no licensed indication.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/40141333/"
+    },
+    "clinician_discussion": {
+      "title": "N-Acetyl Epitalon Amidate — what to discuss with your clinician",
+      "text": "There is no published human safety or efficacy data specific to this analog. Users interested in it are reasoning from the epitalon parent compound by analogy, without direct evidence that the modification produces equivalent or superior effects in people, and without human pharmacokinetic data — so any dosing rationale is speculative. Concerns to raise include the absence of human toxicity studies, unknown immunogenicity of the modified termini, vendor quality variability, and the unanswered question of whether telomerase-activation signals (seen in vitro for the parent) carry cancer risk in susceptible individuals. Treat as investigational with no established safety floor.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/40141333/"
+    }
+  },
+  {
+    "slug": "pinealon",
+    "use_pattern": {
+      "title": "Pinealon — usage & evidence",
+      "text": "Pinealon (Glu-Asp-Arg, the EDR peptide) is a Khavinson-group synthetic tripeptide proposed as a neuroprotective brain bioregulator. Preclinical evidence shows antioxidant activity in rat cerebellar neuron cultures, reduced ROS in PC12 cells, suppression of caspase-3 and p53 in brain tissue, and restored synaptic architecture in mouse models of Alzheimer's and Huntington's disease, with proposed epigenetic regulation of SOD2, GPX1, and TPH1. Human data is extremely limited — a small report of cognitive improvement in elderly patients with traumatic-brain-injury sequelae — and no controlled human RCT has been published or registered. Pinealon has no FDA or EMA approval and no licensed indication.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7795577/"
+    },
+    "clinician_discussion": {
+      "title": "Pinealon — what to discuss with your clinician",
+      "text": "All mechanistic data originates in cell culture and rodent models from a single Russian research group, with no independently replicated human RCT. Patients interested in pinealon for cognitive aging or neuroprotection should be screened for existing neurological diagnoses, since the absence of clinical pharmacology means interactions, CNS adverse effects, and appropriate populations are undefined. Given proposed modulation of antioxidant and serotonergic enzymes (SOD2, TPH1), anyone on MAOIs, antidepressants, or antioxidant-heavy regimens warrants extra caution. Sourcing is exclusively from research peptide vendors; pharmaceutical-grade formulations do not exist.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7795577/"
+    }
+  },
+  {
+    "slug": "thymalin",
+    "use_pattern": {
+      "title": "Thymalin — usage & evidence",
+      "text": "Thymalin is a polypeptide extract from bovine thymic tissue, used in Russian clinical gerontology since the 1970s as an immune bioregulator. The most cited human evidence is a Khavinson and Morozov 2003 prospective cohort (n=266 elderly, 6–8 year follow-up) reporting a ~2-fold reduction in mortality in the thymalin arm (and ~4-fold combined with the pineal peptide epithalamin), plus normalization of T-lymphocyte counts, CD4/CD8 ratios, and NK activity in age-associated immune decline. Critical limitations: single-institute origin, not conducted under ICH-GCP standards, and no independent double-blind placebo-controlled replication in high-impact journals. Thymalin is not FDA-approved.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/14523363/"
+    },
+    "clinician_discussion": {
+      "title": "Thymalin — what to discuss with your clinician",
+      "text": "The 6–8-year survival data, while striking in magnitude, derives from a non-blinded single-center study without modern randomization verification, limiting its clinical weight. Probe for any history of autoimmune disease, active malignancy, or ongoing immunosuppressive therapy before considering thymalin, as non-targeted immune upregulation carries theoretical risk of autoimmune flare or transplant graft issues. The bovine-tissue origin raises theoretical prion-safety considerations historically noted with thymic extracts; manufacturing practices and sourcing country should be verified. No FDA-recognized compounding pathway exists in the US.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/14523363/"
+    }
+  },
+  {
+    "slug": "humanin",
+    "use_pattern": {
+      "title": "Humanin — usage & evidence",
+      "text": "Humanin is an endogenous 24-amino-acid peptide encoded within the mitochondrial 16S rRNA region, discovered in 2001 in Alzheimer's research. Cytoprotective mechanisms include BAX inhibition, STAT3 activation, IGFBP-3 binding, and signaling through the CNTFR/WSX-1/gp130 receptor complex. Circulating humanin declines with age in humans and rhesus macaques, while offspring of centenarians show higher levels; transgenic mice overexpressing humanin show reduced visceral adiposity and lower IGF-I, and C. elegans overexpression extends lifespan via daf-16/FOXO. No completed human efficacy or dose-finding RCT exists for exogenous humanin administration.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://www.jci.org/articles/view/158449"
+    },
+    "clinician_discussion": {
+      "title": "Humanin — what to discuss with your clinician",
+      "text": "Human data is entirely observational — correlations between circulating peptide levels, longevity, and metabolic markers — with no interventional trial showing that exogenous humanin reproduces the protective effects of animal overexpression. More potent analogs (HNG, S14G-humanin) exist as research tools but have never entered clinical trials. Patients with metabolic syndrome, insulin resistance, or cognitive concerns may ask about humanin given the IGF-I and Alzheimer's associations; mechanistic plausibility does not equal clinical proof of benefit, human safety data is absent, and vendor sources are research-only. Its anti-apoptotic mechanism (BAX inhibition) also raises a theoretical oncologic question for anyone with occult or prior malignancy — discuss personal cancer history with a clinician.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7343442/"
+    }
+  },
+  {
+    "slug": "foxo4-dri",
+    "use_pattern": {
+      "title": "FOXO4-DRI — usage & evidence",
+      "text": "FOXO4-DRI is a D-retro-inverso peptide engineered to disrupt the FOXO4–p53 interaction inside senescent cells, re-activating the p53 apoptotic program to clear 'zombie cells' while sparing healthy tissue. The foundational study (de Keizer et al., Cell, 2017) showed roughly 11-fold selectivity for senescent over normal cells and restored fur density, improved kidney/liver function, and increased voluntary activity in fast-aging and naturally aged mice; later mouse work confirmed senolytic activity in other models. All published efficacy data is preclinical. As of mid-2026 no human clinical trial has been registered or published. It is strictly an animal research tool with no FDA designation and no licensed formulation.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/28340339/"
+    },
+    "clinician_discussion": {
+      "title": "FOXO4-DRI — what to discuss with your clinician",
+      "text": "The senolytic hypothesis is scientifically credible and an active research frontier, but the gap between murine models and human application is entirely unbridged. Inducing targeted apoptosis via a systemic peptide carries uncharacterized human risks: off-target cell death, immune activation from senescent-cell debris (SASP), and disruption of wound-healing processes that rely on transient senescence. Anyone sourcing this from research vendors is self-experimenting without human pharmacokinetic, immunogenicity, or safety-floor data. Oncology history is particularly relevant — p53-pathway manipulation in a patient with occult or prior malignancy is a theoretical risk that must be discussed.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/28340339/"
+    }
+  },
+  {
+    "slug": "ss-31",
+    "use_pattern": {
+      "title": "SS-31 (Elamipretide) — usage & evidence",
+      "text": "SS-31 (elamipretide, branded FORZINITY) is a four-amino-acid cell-penetrating peptide that targets cardiolipin on the inner mitochondrial membrane, stabilizing respiratory-chain supercomplexes and reducing reactive oxygen species. In September 2025 the FDA granted accelerated approval to elamipretide for improving muscle strength in patients (≥30 kg) with Barth syndrome — the first mitochondria-targeted peptide to receive any FDA approval — based on the TAZPOWER program (the randomized crossover phase missed its 6-minute-walk primary endpoint, but sustained knee-extensor strength gains were seen over a long open-label extension). Broader anti-aging, metabolic, or body-recomposition uses are investigational, unsupported by approved labeling, and not validated by completed RCTs.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/41260682/"
+    },
+    "clinician_discussion": {
+      "title": "SS-31 (Elamipretide) — what to discuss with your clinician",
+      "text": "Distinguish two very different contexts: (1) FDA-approved use for Barth syndrome under accelerated approval, where prescribing follows the FORZINITY label and confirmatory trials are mandated; and (2) investigational off-label use for mitochondrial aging, metabolic health, or body recomposition, for which no completed human RCT shows efficacy. The MMPOWER-3 trial in primary mitochondrial myopathy failed its primary endpoint, underscoring that cardiolipin targeting does not generalize across mitochondrial conditions. Patients asking about SS-31 for anti-aging should know it is not available through normal pharmacy channels for non-Barth indications, vendor sourcing carries no quality guarantee, and injection-site reactions were the main documented adverse effect in trials.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/41260682/"
+    }
+  },
+  {
+    "slug": "ara-290",
+    "use_pattern": {
+      "title": "ARA-290 (Cibinetide) — usage & evidence",
+      "text": "ARA-290 (cibinetide) is a synthetic 11-amino-acid peptide derived from the helical structure of erythropoietin, designed to selectively activate the innate repair receptor (an EPO-receptor / beta-common-receptor heterodimer) without hematopoietic effects. It is NOT FDA-approved. Phase 2 randomized, double-blind, placebo-controlled trials in sarcoidosis-related small-fiber neuropathy (Heij 2012; Dahan 2013) and type-2-diabetic neuropathy (Brines 2015) reported improvements in neuropathic symptom scores, corneal nerve-fiber density, and — in the diabetic cohort — HbA1c and lipids. Trial regimens used 2–4 mg subcutaneous or IV over 28 days (published research observations, not dosing instructions). No Phase 3 trial or regulatory approval exists to date.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/25387363/"
+    },
+    "clinician_discussion": {
+      "title": "ARA-290 (Cibinetide) — what to discuss with your clinician",
+      "text": "ARA-290 has no FDA or EMA approval and exists only as an investigational compound. Individuals with sarcoidosis-associated or diabetic small-fiber neuropathy may ask a neurologist or endocrinologist whether they qualify for an ongoing trial (search ClinicalTrials.gov for 'cibinetide'). Discussion points: current neuropathy severity and established first-line treatments; the absence of long-term safety data beyond short Phase 2 windows; unknown sterility/purity of research-grade sources; potential interactions with erythropoiesis-stimulating agents or immunosuppressants; and whether corneal confocal microscopy (the trial surrogate endpoint) is available for baseline assessment. This should never be self-sourced or self-administered outside a supervised clinical or research setting.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/23168581/"
+    }
+  },
+  {
+    "slug": "pentadeca-arginate",
+    "use_pattern": {
+      "title": "Pentadeca Arginate (PDA) — usage & evidence",
+      "text": "Pentadeca Arginate (PDA) is a 15-amino-acid peptide marketed as an arginate-salt analog of BPC-157, sharing the same core sequence. It is NOT FDA-approved and has no published peer-reviewed human efficacy or safety trials as a distinct compound. Its tissue-repair claims are entirely extrapolated from BPC-157's preclinical rodent literature — a 2025 systematic review found 35 animal studies and only one small retrospective human case series for BPC-157, and NO human data exists specifically for PDA. Animal models suggest upregulation of growth-factor signaling and accelerated tendon, ligament, and gut-wall healing, but rodent pharmacokinetics do not reliably translate to humans. Marketing claims exceed the available science.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/40756949/"
+    },
+    "clinician_discussion": {
+      "title": "Pentadeca Arginate (PDA) — what to discuss with your clinician",
+      "text": "Because PDA has no peer-reviewed human trial data and no regulatory approval, clinicians cannot offer evidence-based guidance on dosing, safety, or efficacy. Patients interested in tissue-repair peptides should ask about approved or well-evidenced alternatives for their specific condition (e.g., physical therapy, PRP for tendinopathy, established pharmacotherapy for gut disorders). Discussion points: the complete absence of human pharmacokinetic data for PDA specifically; the risks of unregulated compounding sources (sterility, endotoxin, unlabeled contaminants); the uncharacterized growth-factor-pathway (theoretical oncogenic) considerations shared with BPC-157; and that no regulatory body has reviewed a safety dossier. Begin any clinician conversation with full disclosure that this is a research-only, unscheduled peptide sourced outside standard pharmaceutical channels.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/40756949/"
+    }
   }
 ]
