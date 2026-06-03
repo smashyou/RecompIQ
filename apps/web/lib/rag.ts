@@ -27,9 +27,39 @@ interface RetrieveOptions {
 // 2. Otherwise, falls back to ILIKE text search against title + text.
 // 3. compoundSlugs narrows the search to specific compounds when known
 //    (e.g. extracted from the user's active stack or detected in the query).
+// Expand any blend slugs to also include their component slugs, so a query
+// about e.g. KLOW pulls in GHK-Cu / BPC-157 / TB-500 / KPV evidence too.
+async function expandBlendSlugs(slugs: string[] | undefined): Promise<string[] | undefined> {
+  if (!slugs || slugs.length === 0) return slugs;
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("compounds")
+    .select("slug,is_blend,component_slugs")
+    .in("slug", slugs);
+  const rows = (data ?? []) as {
+    slug: string;
+    is_blend: boolean | null;
+    component_slugs: string[] | null;
+  }[];
+  const out = new Set(slugs);
+  for (const r of rows) {
+    if (r.is_blend && Array.isArray(r.component_slugs)) {
+      for (const cs of r.component_slugs) if (cs) out.add(cs);
+    }
+  }
+  return Array.from(out);
+}
+
 export async function retrieveKb(opts: RetrieveOptions): Promise<KbHit[]> {
   const supabase = await createSupabaseServerClient();
-  const limit = opts.matchCount ?? 6;
+  const baseLimit = opts.matchCount ?? 6;
+
+  // Blends → include their components, so KLOW etc. surface component evidence.
+  const slugs = await expandBlendSlugs(opts.compoundSlugs);
+  // When specific compounds are in play, widen the budget so a blend's
+  // composition + each component's key rows can all come through.
+  const limit =
+    slugs && slugs.length > 1 ? Math.min(15, Math.max(baseLimit, slugs.length * 3)) : baseLimit;
 
   // Check if we have any embeddings populated at all.
   const { count } = await supabase
@@ -49,7 +79,7 @@ export async function retrieveKb(opts: RetrieveOptions): Promise<KbHit[]> {
         const { data } = await supabase.rpc("search_peptide_kb", {
           query_embedding: queryVec,
           match_count: limit,
-          filter_slugs: opts.compoundSlugs ?? null,
+          filter_slugs: slugs ?? null,
         });
         if (data && data.length > 0) return data as KbHit[];
       }
@@ -60,15 +90,22 @@ export async function retrieveKb(opts: RetrieveOptions): Promise<KbHit[]> {
   }
 
   // Text-fallback path
-  let query = supabase
-    .from("peptide_kb")
-    .select(
-      "id,compound_slug,section,title,text,source_type,source_url,evidence_level",
-    );
-  if (opts.compoundSlugs && opts.compoundSlugs.length > 0) {
-    query = query.in("compound_slug", opts.compoundSlugs);
+  const select = "id,compound_slug,section,title,text,source_type,source_url,evidence_level";
+  if (slugs && slugs.length > 0) {
+    // Compound(s) known — return their curated rows directly. Do NOT AND-gate on
+    // query keywords (that previously suppressed valid rows when the user's
+    // wording didn't literally appear in the curated text, e.g. "what is KLOW").
+    const { data } = await supabase
+      .from("peptide_kb")
+      .select(select)
+      .in("compound_slug", slugs)
+      .order("compound_slug")
+      .limit(limit);
+    return (data ?? []) as KbHit[];
   }
-  // Crude ILIKE on title + text concatenation
+
+  // No compound detected — crude ILIKE keyword search across the corpus.
+  let query = supabase.from("peptide_kb").select(select);
   const words = opts.query
     .toLowerCase()
     .split(/\s+/)

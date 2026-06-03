@@ -205,6 +205,26 @@ async function seedKb() {
       });
     }
 
+    // Blend composition: enumerate the components (+ mg) so a query for the
+    // blend's own slug surfaces what it actually is. Retrieval also expands a
+    // blend to its component slugs, so each component's mechanism / evidence /
+    // contraindication rows come through too.
+    if (c.is_blend && Array.isArray(c.component_mg) && c.component_mg.length > 0) {
+      const parts = c.component_mg
+        .map((x) => `${x.label}${x.mg ? ` ${x.mg} mg` : ""}`)
+        .join(" + ");
+      rows.push({
+        compound_slug: c.slug,
+        // Filed under "dosing" (an allowed section): the key message is that a
+        // blend has no combined-product dose — each component is dosed separately.
+        section: "dosing",
+        title: `${c.name} — blend composition`,
+        text: `${c.name} is a multi-peptide blend of: ${parts}. It carries no established combined-product dose — each component is dosed per its own literature. See the individual components for mechanism, evidence grade, and contraindications.`,
+        source_type: "curated_synthesis",
+        evidence_level: c.evidence_level,
+      });
+    }
+
     // Add the curated extras (use patterns / clinician discussion)
     const extras = CURATED[c.slug] ?? [];
     for (const e of extras) {
