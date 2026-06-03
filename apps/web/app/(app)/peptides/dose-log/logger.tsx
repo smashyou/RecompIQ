@@ -25,6 +25,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [injectionSite, setInjectionSite] = useState("");
   const [adherence, setAdherence] = useState<"taken" | "skipped" | "partial">("taken");
+  const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   if (items.length === 0) {
@@ -56,6 +57,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
         injection_site: injectionSite || null,
         adherence,
         side_effects: [],
+        notes: notes.trim() || null,
       }),
     });
     setSubmitting(false);
@@ -72,6 +74,7 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
     setSelectedId(null);
     setInjectionSite("");
     setAdherence("taken");
+    setNotes("");
     router.refresh();
   }
 
@@ -131,6 +134,14 @@ export function DoseLogger({ items }: { items: StackItemLite[] }) {
                 <option value="skipped">Skipped</option>
               </select>
             </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-2xs uppercase">Notes</Label>
+            <Input
+              value={notes}
+              placeholder="anything notable (optional)"
+              onChange={(e) => setNotes(e.target.value)}
+            />
           </div>
           <Button onClick={logDose} disabled={submitting} className="w-full">
             {submitting ? "Logging…" : `Log ${Number(selected.dose_value)} ${selected.dose_unit} ${selected.compounds.name}`}
