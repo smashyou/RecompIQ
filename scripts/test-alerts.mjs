@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Test harness for the safety-alert engine. Runs via `pnpm test:alerts`.
 import assert from "node:assert/strict";
-import { scanRecentLogs, fingerprintOf, reconcileAlerts, selectAlertsToNotify } from "../packages/peptides/src/alerts.ts";
+import { scanRecentLogs, fingerprintOf, reconcileAlerts, selectAlertsToNotify, didEscalate } from "../packages/peptides/src/alerts.ts";
 
 let passed = 0, failed = 0;
 function it(name, fn) {
@@ -114,14 +114,36 @@ it("reconcile inserts new, bumps existing-open, resolves missing, skips acknowle
     { kind: "glucose_high", severity: "critical", title: "t", message: "m", evidence: {}, evidenceLevel: "FDA_APPROVED", citation: "c", fingerprint: "glucose_high:high" },
   ];
   const existing = [
-    { id: "1", fingerprint: "bp_high:stage2", status: "open" },        // still present → bump
-    { id: "2", fingerprint: "rapid_weight_loss:rate", status: "open" }, // gone → resolve
-    { id: "3", fingerprint: "glucose_high:high", status: "acknowledged" }, // present + acked → leave (no re-nag)
+    { id: "1", fingerprint: "bp_high:stage2", status: "open", severity: "warn" },        // still present → bump
+    { id: "2", fingerprint: "rapid_weight_loss:rate", status: "open", severity: "warn" }, // gone → resolve
+    { id: "3", fingerprint: "glucose_high:high", status: "acknowledged", severity: "critical" }, // present + acked → leave (no re-nag)
   ];
   const plan = reconcileAlerts(findings, existing, "2026-06-01T12:00:00Z");
   assert.deepEqual(plan.toInsert.map((f) => f.fingerprint), []); // glucose already exists (acked), bp already open
-  assert.deepEqual(plan.toBump.map((r) => r.id).sort(), ["1", "3"]);
+  assert.deepEqual(plan.toBump.map((b) => b.row.id).sort(), ["1", "3"]);
   assert.deepEqual(plan.toResolve.map((r) => r.id), ["2"]);
+});
+
+it("didEscalate is true only when severity increases", () => {
+  assert.equal(didEscalate("warn", "critical"), true);
+  assert.equal(didEscalate("critical", "warn"), false);
+  assert.equal(didEscalate("warn", "warn"), false);
+  assert.equal(didEscalate("info", "warn"), true);
+});
+
+it("reconcile carries the finding so an escalation (warn→critical) is detectable", () => {
+  const findings = [
+    { kind: "glucose_high", severity: "critical", title: "t", message: "m", evidence: {}, evidenceLevel: "FDA_APPROVED", citation: "c", fingerprint: "glucose_high:high" },
+  ];
+  const existing = [
+    { id: "9", fingerprint: "glucose_high:high", status: "open", severity: "warn" },
+  ];
+  const plan = reconcileAlerts(findings, existing, "2026-06-01T12:00:00Z");
+  assert.equal(plan.toBump.length, 1);
+  const { row, finding } = plan.toBump[0];
+  assert.equal(finding.severity, "critical");
+  assert.equal(row.severity, "warn");
+  assert.equal(didEscalate(row.severity, finding.severity), true);
 });
 
 it("reconcile inserts a finding with no existing row", () => {

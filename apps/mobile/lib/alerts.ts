@@ -1,6 +1,7 @@
 import {
   scanRecentLogs,
   reconcileAlerts,
+  didEscalate,
   type ExistingAlertRow,
 } from "@peptide/peptides/alerts";
 import type { AlertScanInput } from "@peptide/shared/alerts";
@@ -215,7 +216,7 @@ export async function loadAlerts(userId: string): Promise<AlertsView> {
   // 2. reconcile against stored rows
   const { data: rows } = await supabase
     .from("alerts")
-    .select("id,fingerprint,status")
+    .select("id,fingerprint,status,severity")
     .eq("user_id", userId);
   const existing = ((rows ?? []) as any[]) as ExistingAlertRow[];
   const plan = reconcileAlerts(findings, existing, nowIso);
@@ -237,8 +238,17 @@ export async function loadAlerts(userId: string): Promise<AlertsView> {
       })),
     );
   }
-  for (const r of plan.toBump) {
-    await supabase.from("alerts").update({ last_detected_at: nowIso }).eq("id", r.id);
+  for (const { row, finding } of plan.toBump) {
+    await supabase.from("alerts").update({
+      last_detected_at: nowIso,
+      severity: finding.severity,
+      title: finding.title,
+      message: finding.message,
+      evidence: finding.evidence,
+      evidence_level: finding.evidenceLevel,
+      citation: finding.citation,
+      ...(didEscalate(row.severity, finding.severity) ? { notified_at: null } : {}),
+    }).eq("id", row.id);
   }
   if (plan.toResolve.length) {
     await supabase

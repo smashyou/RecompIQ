@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { scanRecentLogs, reconcileAlerts, type ExistingAlertRow } from "@peptide/peptides/alerts";
+import { scanRecentLogs, reconcileAlerts, didEscalate, type ExistingAlertRow } from "@peptide/peptides/alerts";
 import { buildAlertScanInput } from "@/lib/alerts-input";
 import { dispatchAlertNotifications } from "@/lib/notify/dispatch-alerts";
 
@@ -63,7 +63,7 @@ export async function reconcileUserAlerts(
   // 2. reconcile against stored rows
   const { data: rows } = await supabase
     .from("alerts")
-    .select("id,fingerprint,status")
+    .select("id,fingerprint,status,severity")
     .eq("user_id", userId);
   const existing = (rows ?? []) as ExistingAlertRow[];
   const plan = reconcileAlerts(findings, existing, nowIso);
@@ -85,8 +85,17 @@ export async function reconcileUserAlerts(
       })),
     );
   }
-  for (const r of plan.toBump) {
-    await supabase.from("alerts").update({ last_detected_at: nowIso }).eq("id", r.id);
+  for (const { row, finding } of plan.toBump) {
+    await supabase.from("alerts").update({
+      last_detected_at: nowIso,
+      severity: finding.severity,
+      title: finding.title,
+      message: finding.message,
+      evidence: finding.evidence,
+      evidence_level: finding.evidenceLevel,
+      citation: finding.citation,
+      ...(didEscalate(row.severity, finding.severity) ? { notified_at: null } : {}),
+    }).eq("id", row.id);
   }
   if (plan.toResolve.length) {
     await supabase
