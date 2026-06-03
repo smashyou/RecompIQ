@@ -58,6 +58,7 @@ interface ItemDraft {
   amountG: number;
   unit: FoodUnit;
   mealType: MealType;
+  note: string;
 }
 
 type FlowState =
@@ -128,6 +129,7 @@ function makeDraft(item: ParsedItemWithSuggestions, fallbackMeal: MealType): Ite
     amountG: Math.round(item.estimated_grams),
     unit: "g",
     mealType: item.meal_type_hint ?? fallbackMeal,
+    note: "",
   };
 }
 
@@ -231,6 +233,7 @@ export default function FoodPhoto() {
           sugar_g: m.sugar_g,
           sodium_mg: m.sodium_mg,
           meal_type: d.mealType,
+          note: d.note?.trim() || null,
         };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
@@ -476,6 +479,16 @@ function ItemCard({
             options={MEAL_OPTIONS}
             value={draft.mealType}
             onChange={(mt) => onPatch({ mealType: mt as MealType })}
+          />
+        </Field>
+      ) : null}
+
+      {!skipped && draft.selectedSourceId ? (
+        <Field label="Note">
+          <Input
+            placeholder="Note (optional)"
+            value={draft.note}
+            onChangeText={(t) => onPatch({ note: t })}
           />
         </Field>
       ) : null}

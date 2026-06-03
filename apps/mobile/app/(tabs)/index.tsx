@@ -13,6 +13,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Loading } from "@/components/ui/States";
 import { supabase } from "@/lib/supabase";
 import { loadSpendSnapshot } from "@/lib/inventory";
+import { loadAlerts, type AlertRow } from "@/lib/alerts";
 import { loadGoalCards, type GoalCardData } from "@/lib/goal-cards";
 import { useSession } from "@/lib/session";
 import { useTheme } from "@/lib/theme-context";
@@ -43,6 +44,7 @@ interface Snap {
   spend: { last30Usd: number; allTimeUsd: number };
   goalCards: GoalCardData[];
   bodyShot: { lastCapturedAt: string | null; frequencyDays: number; overdue: boolean } | null;
+  safetyAlerts: AlertRow[];
 }
 
 function todayStr() {
@@ -122,6 +124,19 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
   const spend = await loadSpendSnapshot(uid);
   const goalCards = await loadGoalCards(uid);
 
+  // Safety alerts: reconcile-on-load, then surface only actionable critical/warn
+  // (critical-first ordering already applied by loadAlerts), top 3. Best-effort:
+  // a reconcile failure must not blank the dashboard.
+  let safetyAlerts: AlertRow[] = [];
+  try {
+    const { active } = await loadAlerts(uid);
+    safetyAlerts = active
+      .filter((a) => a.severity === "critical" || a.severity === "warn")
+      .slice(0, 3);
+  } catch {
+    /* ignore — banner just hides */
+  }
+
   return {
     name: (profile.data as any)?.display_name ?? email ?? "there",
     isDemo: Boolean((profile.data as any)?.is_demo),
@@ -141,6 +156,7 @@ async function loadDashboard(uid: string, email: string): Promise<Snap> {
     spend,
     goalCards,
     bodyShot: { lastCapturedAt: lastCap, frequencyDays: freqDays, overdue },
+    safetyAlerts,
   };
 }
 
@@ -208,6 +224,35 @@ export default function Dashboard() {
         </View>
 
         <View style={{ paddingHorizontal: 16, gap: 12 }}>
+          {/* Safety-alert banner — pointer to the alerts page. The alerts
+              themselves carry the clinician-discussion framing. */}
+          {snap.safetyAlerts.length > 0
+            ? (() => {
+                const anyCritical = snap.safetyAlerts.some((a) => a.severity === "critical");
+                const line = anyCritical ? colors.dangerLine : colors.warnLine;
+                const wash = anyCritical ? colors.dangerWash : colors.warnWash;
+                const tint = anyCritical ? colors.danger : colors.warn;
+                const n = snap.safetyAlerts.length;
+                return (
+                  <Pressable
+                    onPress={() => router.push("/(tabs)/more/alerts")}
+                    style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 11, paddingHorizontal: 13, borderRadius: radius.md, borderWidth: 1, borderColor: line, backgroundColor: wash }}
+                  >
+                    <Ionicons name="warning-outline" size={18} color={tint} style={{ marginTop: 1 }} />
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ fontSize: 13, fontWeight: "600", color: tint }}>
+                        {n} alert{n === 1 ? "" : "s"} need review
+                      </Text>
+                      <Text style={{ fontSize: 11.5, color: colors.mutedForeground, marginTop: 2 }} numberOfLines={2}>
+                        {snap.safetyAlerts.map((a) => a.title).join(" · ")}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={15} color={colors.fgSubtle} />
+                  </Pressable>
+                );
+              })()
+            : null}
+
           {/* Body-shot reminder (real alert) */}
           {snap.bodyShot?.overdue ? (
             <Pressable

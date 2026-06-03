@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Content } from "@/components/ui/Content";
@@ -8,21 +9,39 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
+import { useTheme } from "@/lib/theme-context";
+import { countOpenAlerts } from "@/lib/alerts";
 
 export default function More() {
   const router = useRouter();
   const { session, signOut } = useSession();
+  const { colors } = useTheme();
+  const uid = session?.user.id;
   const [isAdmin, setIsAdmin] = useState(false);
+  const [alertCount, setAlertCount] = useState(0);
 
   useEffect(() => {
-    if (!session?.user.id) return;
+    if (!uid) return;
     supabase
       .from("profiles")
       .select("is_admin")
-      .eq("user_id", session.user.id)
+      .eq("user_id", uid)
       .maybeSingle()
       .then(({ data }) => setIsAdmin(Boolean(data?.is_admin)));
-  }, [session?.user.id]);
+  }, [uid]);
+
+  const loadAlertCount = useCallback(async () => {
+    if (!uid) {
+      setAlertCount(0);
+      return;
+    }
+    setAlertCount(await countOpenAlerts(uid));
+  }, [uid]);
+
+  useEffect(() => {
+    loadAlertCount();
+  }, [loadAlertCount]);
+  useFocusEffect(useCallback(() => { loadAlertCount(); }, [loadAlertCount]));
 
   async function onSignOut() {
     await signOut();
@@ -41,7 +60,37 @@ export default function More() {
       <ListRow title="Workouts" subtitle="Sessions + templates" icon="barbell-outline" onPress={() => router.push("/(tabs)/more/workouts")} />
       <ListRow title="Body Shots" subtitle="Progress photos" icon="camera-outline" onPress={() => router.push("/(tabs)/more/body-shots")} />
       <ListRow title="Labs & Biomarkers" subtitle="A1c, lipids, CBC/CMP & more" icon="flask-outline" onPress={() => router.push("/(tabs)/more/labs")} />
-      <ListRow title="Safety Alerts" subtitle="Patterns to discuss with your clinician" icon="alert-circle-outline" onPress={() => router.push("/(tabs)/more/alerts")} />
+      <ListRow
+        title="Safety Alerts"
+        subtitle="Patterns to discuss with your clinician"
+        icon="alert-circle-outline"
+        onPress={() => router.push("/(tabs)/more/alerts")}
+        right={
+          alertCount > 0 ? (
+            <View className="flex-row items-center gap-2">
+              <View
+                style={{
+                  minWidth: 22,
+                  paddingHorizontal: 7,
+                  paddingVertical: 2,
+                  borderRadius: 999,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: colors.danger,
+                }}
+              >
+                <Text
+                  className="text-[11px] font-semibold"
+                  style={{ color: colors.dangerForeground }}
+                >
+                  {alertCount > 99 ? "99+" : alertCount}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.fgSubtle} />
+            </View>
+          ) : undefined
+        }
+      />
       <ListRow title="Projections" subtitle="Weight trajectory" icon="trending-down-outline" onPress={() => router.push("/(tabs)/more/projections")} />
       <ListRow title="Timeline" subtitle="Everything, one date range" icon="pulse-outline" onPress={() => router.push("/(tabs)/more/timeline")} />
       <ListRow title="Watch & Scale Sync" subtitle="Apple Health / Health Connect" icon="watch-outline" onPress={() => router.push("/(tabs)/more/health")} />
