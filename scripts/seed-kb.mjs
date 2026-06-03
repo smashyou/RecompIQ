@@ -143,6 +143,31 @@ const CURATED = {
   ],
 };
 
+// Merge the externalized curated synthesis batch (use_pattern + clinician_discussion
+// per compound, evidence-graded + cited) from db/seeds/coach-kb-extra.json. Keeps the
+// large prose out of this script and lets the batch grow without code churn.
+{
+  const extraFile = resolve(__dirname, "..", "db/seeds/coach-kb-extra.json");
+  const extra = JSON.parse(readFileSync(extraFile, "utf8"));
+  for (const e of extra) {
+    const entries = [];
+    for (const key of ["use_pattern", "clinician_discussion"]) {
+      const s = e[key];
+      if (!s) continue;
+      entries.push({
+        section: key,
+        title: s.title,
+        text: s.text,
+        source_type: "curated_synthesis",
+        source_url: s.source_url ?? null,
+        evidence_level: s.evidence_level,
+      });
+    }
+    CURATED[e.slug] = entries;
+  }
+  console.log(`merged curated batch: +${extra.length} compounds`);
+}
+
 // Map a citation URL to one of peptide_kb's allowed source_type values.
 function classifySourceType(url, fallback) {
   const u = (url ?? "").toLowerCase();

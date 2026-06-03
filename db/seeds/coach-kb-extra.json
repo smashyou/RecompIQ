@@ -1,0 +1,227 @@
+[
+  {
+    "slug": "semaglutide",
+    "use_pattern": {
+      "title": "Semaglutide — usage & evidence",
+      "text": "Semaglutide is a GLP-1 receptor agonist approved by the FDA as Wegovy (2.4 mg subcutaneous weekly) for chronic weight management and as Ozempic (up to 2 mg weekly) for type 2 diabetes. The STEP program (STEP 1–5, NEJM 2021–2022) demonstrated 15–17% mean body-weight reduction over 68–104 weeks versus placebo in adults with obesity. The SELECT trial (n>17,000, NEJM 2023) showed a 20% reduction in major adverse cardiovascular events in adults with obesity or overweight and established CVD. A critical body-recomposition note: in the STEP 1 substudy, roughly 39% of total weight lost was lean mass; adequate protein intake and supervised resistance training are consistently recommended by obesity societies to mitigate this.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=f5e548d0-cc79-4c34-a3f5-e20a5b8b6564"
+    },
+    "clinician_discussion": {
+      "title": "Semaglutide — what to discuss with your clinician",
+      "text": "Key discussion points include personal or family history of medullary thyroid carcinoma (MTC) or MEN 2 syndrome (absolute contraindications per FDA label), history of pancreatitis or gallbladder disease, and suicidal ideation (a labeled precaution). Patients using insulin or sulfonylureas need hypoglycemia-risk counseling. Gastric-emptying delay may affect oral medication absorption, particularly oral contraceptives and anticoagulants, warranting a full medication review. From a body-recomposition standpoint, clinicians should discuss resistance-training programming and protein targets to preserve lean mass during active weight loss, a concern documented in the STEP 1 DXA substudy. Wegovy is also contraindicated in pregnancy.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=f5e548d0-cc79-4c34-a3f5-e20a5b8b6564"
+    }
+  },
+  {
+    "slug": "tirzepatide",
+    "use_pattern": {
+      "title": "Tirzepatide — usage & evidence",
+      "text": "Tirzepatide is a dual GIP/GLP-1 receptor agonist approved as Mounjaro (up to 15 mg weekly) for type 2 diabetes (May 2022) and as Zepbound (up to 15 mg weekly) for chronic weight management (November 2023) and moderate-to-severe obstructive sleep apnea in adults with obesity (December 2024). The SURMOUNT-1 trial (n=2,539, NEJM 2022) reported mean weight reduction of 16.0%–22.5% over 72 weeks depending on dose; the SURPASS program confirmed robust HbA1c reductions. A DXA substudy of SURMOUNT-1 found that approximately 25–30% of total weight lost was lean mass, with the fat-to-lean ratio still improving meaningfully. Resistance training and high protein intake are recommended co-interventions.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+    },
+    "clinician_discussion": {
+      "title": "Tirzepatide — what to discuss with your clinician",
+      "text": "Absolute contraindications mirror those of GLP-1 class agents: personal or family history of MTC or MEN 2. The Zepbound FDA label additionally warns of acute pancreatitis, acute gallbladder disease, acute kidney injury from dehydration, diabetic retinopathy complications, and pulmonary aspiration risk during procedures. Tirzepatide delays gastric emptying, requiring monitoring of narrow-therapeutic-index drugs; oral contraceptive efficacy may be reduced during dose escalation (the FDA label recommends a non-oral or barrier method for four weeks post-initiation or after each dose increase). For body-recomposition goals, clinicians should document baseline muscle mass or function, discuss adequate protein targets, and plan structured resistance training.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=487cd7e7-434c-4925-99fa-aa80b1cc776b"
+    }
+  },
+  {
+    "slug": "liraglutide",
+    "use_pattern": {
+      "title": "Liraglutide — usage & evidence",
+      "text": "Liraglutide is a once-daily injectable GLP-1 receptor agonist approved as Victoza (up to 1.8 mg daily) for type 2 diabetes and cardiovascular risk reduction, and as Saxenda (3 mg daily) for chronic weight management in adults and adolescents 12–17. The pivotal SCALE Obesity and Prediabetes trial (Pi-Sunyer et al., NEJM 2015, n=3,731, 56 weeks) demonstrated mean weight reduction of approximately 8% versus 2.6% for placebo with lifestyle counseling. Compared to semaglutide and tirzepatide, liraglutide produces more modest weight reduction, and its daily injection burden has contributed to clinical migration toward longer-acting agents. Lean-mass considerations are similar to those of the broader GLP-1 class.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=3946d389-0926-4f77-a708-0acb8153b143"
+    },
+    "clinician_discussion": {
+      "title": "Liraglutide — what to discuss with your clinician",
+      "text": "Contraindications are identical in structure to the GLP-1 class: personal or family history of MTC or MEN 2; hypersensitivity to liraglutide. The Saxenda label carries a boxed thyroid C-cell tumor warning. Serious adverse events documented in the SCALE program include pancreatitis, gallbladder disease, acute kidney injury, and a sustained resting heart-rate increase that warrants monitoring in patients with cardiac conditions. Liraglutide delays gastric emptying — relevant for digoxin, oral contraceptives, and other time-sensitive medications. Common gastrointestinal events (nausea, diarrhea, vomiting per the Saxenda label) are frequently dose-limiting. Clinicians should also counsel on protein optimization and resistance training to offset lean-mass reduction during the weight-loss phase.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=3946d389-0926-4f77-a708-0acb8153b143"
+    }
+  },
+  {
+    "slug": "cagrisema",
+    "use_pattern": {
+      "title": "CagriSema — usage & evidence",
+      "text": "CagriSema is an investigational fixed-dose co-formulation of cagrilintide (an amylin analogue) and semaglutide, developed by Novo Nordisk, currently in Phase 3 trials. It is NOT FDA-approved. The REDEFINE 1 trial (n=3,417, 68 weeks, NEJM June 2025) randomized adults without type 2 diabetes to CagriSema 2.4/2.4 mg weekly versus semaglutide alone, cagrilintide alone, or placebo; CagriSema produced a mean 22.7% weight reduction versus 16.1% for semaglutide and 2.3% for placebo. REDEFINE 2, in adults with obesity and type 2 diabetes, showed 13.7% reduction versus 3.4% for placebo. A prespecified DXA substudy found 67% of weight lost was fat mass, reinforcing the need for protein and resistance-training co-interventions.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2502081"
+    },
+    "clinician_discussion": {
+      "title": "CagriSema — what to discuss with your clinician",
+      "text": "CagriSema has no FDA or EMA approval as of mid-2026; any use outside a registered clinical trial is off-label and experimental. The combination contains semaglutide, so the same absolute contraindications apply: personal or family history of MTC or MEN 2. The REDEFINE trials noted that the combination did not fully meet the pre-specified weight-loss target, relevant for expectation-setting. Clinicians evaluating patients who inquire should review the REDEFINE 1 and 2 NEJM publications for the full adverse-event profile (the expected GLP-1-class GI events plus the amylin-component contributions). For body-recomposition goals, the lean-mass loss documented in the DXA substudy makes resistance training and adequate protein particularly important.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2502081"
+    }
+  },
+  {
+    "slug": "mazdutide",
+    "use_pattern": {
+      "title": "Mazdutide — usage & evidence",
+      "text": "Mazdutide (IBI362) is a dual GLP-1 receptor and glucagon receptor (GCGR) agonist developed by Innovent Biologics with Eli Lilly. It received China NMPA approval for chronic weight management (June 2025) and for type 2 diabetes (September 2025); it is NOT FDA- or EMA-approved. The GLORY Phase 3 program in Chinese adults is the primary evidence base: GLORY-1 (n=610, 48 weeks) reported 10.97%–13.38% weight reduction at 4 and 6 mg with a large exploratory reduction in liver fat; GLORY-2 (9 mg) showed up to ~18–20% mean reduction. The glucagon-receptor component theoretically enhances energy expenditure and hepatic fat oxidation beyond GLP-1 alone — of particular interest for metabolic-associated fatty liver disease.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://www.prnewswire.com/news-releases/mazdutide-9-mg-achieves-up-to-20-1-weight-loss-in-chinese-adults-with-obesity-glory-2-study-meets-primary-and-all-key-secondary-endpoints-302620471.html"
+    },
+    "clinician_discussion": {
+      "title": "Mazdutide — what to discuss with your clinician",
+      "text": "Mazdutide holds no FDA or EMA approval as of mid-2026, and all GLORY Phase 3 data originate from Chinese populations, limiting direct generalizability. The GCGR agonism introduces theoretically distinct metabolic effects — including increased hepatic glucose output — that may require additional glycemic monitoring in patients with diabetes or prediabetes, not yet fully characterized in Western trials. The published safety profile was described as favorable (predominantly mild-to-moderate GI events), but long-term cardiovascular outcome data are not yet available. Inquiring patients should understand this is a research compound outside China. Resistance training and protein optimization remain important given the GLP-1 component's lean-mass effect.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://www.prnewswire.com/news-releases/innovent-announces-mazdutide-first-dual-gcgglp-1-receptor-agonist-received-approval-from-chinas-nmpa-for-chronic-weight-management-302493152.html"
+    }
+  },
+  {
+    "slug": "survodutide",
+    "use_pattern": {
+      "title": "Survodutide — usage & evidence",
+      "text": "Survodutide (BI 456906) is an investigational dual glucagon receptor / GLP-1 receptor agonist co-developed by Boehringer Ingelheim and Zealand Pharma. It is NOT FDA- or EMA-approved. The Phase 2 MASH trial (n=293, 48 weeks, NEJM June 2024) demonstrated MASH resolution without fibrosis worsening in 47%–62% of survodutide arms versus 14% placebo, earning FDA Breakthrough Therapy Designation for noncirrhotic MASH. The Phase 3 SYNCHRONIZE-1 obesity trial (topline 2026) reported ~16.6% mean weight reduction versus ~3.2% placebo, driven predominantly by fat loss. In trials, doses ranged from 2.4–6.0 mg weekly via staged escalation — cited as literature, not instruction.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2401755"
+    },
+    "clinician_discussion": {
+      "title": "Survodutide — what to discuss with your clinician",
+      "text": "Survodutide has no approved indication in any major jurisdiction as of mid-2026; access is restricted to clinical-trial enrollment. Glucagon-receptor agonism adds a hepatic metabolic effect under active investigation for MASH, but also introduces potential risks of increased hepatic glucose output and altered lipid metabolism that require monitoring beyond the standard GLP-1 profile. The Phase 2 NEJM publication reported GI adverse events consistent with the GLP-1 class (mostly during escalation) with no novel safety signals, but Phase 3 long-term safety data are not yet peer-reviewed. Patients interested based on MASH or obesity research should be directed to ClinicalTrials.gov; resistance-training and protein counseling still apply.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2401755"
+    }
+  },
+  {
+    "slug": "tesamorelin",
+    "use_pattern": {
+      "title": "Tesamorelin — usage & evidence",
+      "text": "Tesamorelin (EGRIFTA / EGRIFTA WR) is an FDA-approved synthetic analog of GHRH(1-44), modified at the N-terminus to resist enzymatic cleavage. Its sole approved indication is reduction of excess visceral abdominal fat in HIV-infected adults with lipodystrophy. In pivotal Phase 3 trials, subcutaneous 2 mg once daily produced ~15–18% reductions in visceral adipose tissue versus placebo over 26 weeks (CT-measured), alongside IGF-1 elevation into the physiological range. A once-weekly reconstitution formulation (EGRIFTA WR) was approved in March 2025. No other indications are FDA-approved; use outside this context is investigational.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2019/022505s012s013lbl.pdf"
+    },
+    "clinician_discussion": {
+      "title": "Tesamorelin — what to discuss with your clinician",
+      "text": "Key discussion points: (1) absolute contraindications — active malignancy, pregnancy, and hypersensitivity to tesamorelin or mannitol; (2) glucose/insulin effects — GH's counter-regulatory action modestly raises HbA1c, so pre-diabetes or T2D warrants close glycemic monitoring; (3) IGF-1 surveillance — periodic measurement is recommended since supraphysiological IGF-1 carries theoretical mitogenic risk; (4) off-label context — any use outside HIV-associated lipodystrophy is investigational; (5) common adverse reactions include injection-site reactions, arthralgia, peripheral edema, and myalgia. NIH LiverTox assigns a hepatotoxicity likelihood of 'unlikely'.",
+      "evidence_level": "FDA_APPROVED",
+      "source_url": "https://www.ncbi.nlm.nih.gov/books/NBK548730/"
+    }
+  },
+  {
+    "slug": "sermorelin",
+    "use_pattern": {
+      "title": "Sermorelin — usage & evidence",
+      "text": "Sermorelin acetate is a synthetic 29-amino-acid fragment of human GHRH — GHRH(1-29)-NH2 — retaining full receptor agonism at pituitary somatotrophs. It was FDA-approved in 1997 for pediatric growth-hormone-deficiency diagnosis/treatment but voluntarily withdrawn from the U.S. market in 2008 due to manufacturing constraints (not safety). It carries no current FDA-approved indication. Small observational human studies suggest nightly subcutaneous administration in aging adults augments integrated GH secretion and raises IGF-1 over months. Published literature doses around 0.2–0.3 mg/night are cited as literature figures, not instructions. Body-composition data derive from small, uncontrolled cohorts rather than powered RCTs.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/18046908/"
+    },
+    "clinician_discussion": {
+      "title": "Sermorelin — what to discuss with your clinician",
+      "text": "Key points: (1) regulatory status — sermorelin has no active FDA-approved indication; compounded sermorelin operates in a legal gray zone after FDA's bulk-substances review, so verify sourcing; (2) GH-axis safety caveats shared by all GHRH analogs — IGF-1 monitoring is prudent, active or recent malignancy is a contraindication, and impaired glucose tolerance warrants glycemic tracking; (3) sex-hormone interactions — women on oral estrogen may show a blunted IGF-1 response; (4) evidence ceiling — human data are primarily small observational trials/case series with limited long-term safety; (5) commonly reported side effects include injection-site erythema, flushing, and transient headache.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/9360512/"
+    }
+  },
+  {
+    "slug": "cjc-1295-dac",
+    "use_pattern": {
+      "title": "CJC-1295 With DAC — usage & evidence",
+      "text": "CJC-1295 with DAC (Drug Affinity Complex) is a Mod GRF 1-29 backbone conjugated with maleimido-propionic acid that, after subcutaneous injection, covalently binds circulating albumin, extending functional half-life to an estimated 5.8–8.1 days. In the sole published Phase 1/2 human PK study (Teichman et al., JCEM 2006, n=65 healthy adults), a single injection raised mean plasma GH 2- to 10-fold for ≥6 days and IGF-1 1.5- to 3-fold for 9–11 days; weekly dosing kept mean IGF-1 above baseline for up to 28 days. CJC-1295 with DAC has no FDA-approved indication and is not approved for human therapeutic use.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/16352683/"
+    },
+    "clinician_discussion": {
+      "title": "CJC-1295 With DAC — what to discuss with your clinician",
+      "text": "Key points: (1) no approved indication — FDA declined to add CJC-1295 to the 503A bulk-drug compounding list, so lawful compounding for individual prescriptions is currently not permissible in the U.S.; (2) prolonged, non-pulsatile GH/IGF-1 elevation raises concern about sustained mitogenic signaling — active malignancy is a class contraindication; (3) glucose metabolism — GH's anti-insulin effect means insulin resistance, pre-diabetes, or T2D require glycemic surveillance; (4) evidence gap — only one small Phase 1/2 human study exists, with no human safety data beyond 28 days; (5) commonly reported effects include injection-site reactions and transient headache.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/16352683/"
+    }
+  },
+  {
+    "slug": "mod-grf-1-29",
+    "use_pattern": {
+      "title": "CJC-1295 Without DAC (Mod GRF 1-29) — usage & evidence",
+      "text": "Modified GRF 1-29 ('CJC-1295 without DAC') is GHRH(1-29)-NH2 with four stabilizing substitutions that resist DPP-IV and other proteases, extending half-life from native GHRH's ~7 minutes to roughly 30–60 minutes. Unlike the DAC variant, it produces discrete, pulsatile GH spikes intended to mimic physiological bursts. No dedicated published human RCT or PK trial exists for this formulation; its pharmacology is extrapolated from the CJC-1295 DAC literature (Teichman 2006) and basic GHRH-receptor pharmacology. The compound carries no FDA-approved indication and is classified as a research chemical.",
+      "evidence_level": "MECHANISTIC",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/16352683/"
+    },
+    "clinician_discussion": {
+      "title": "CJC-1295 Without DAC (Mod GRF 1-29) — what to discuss with your clinician",
+      "text": "Key points: (1) no approved indication and no standalone human clinical trial — the evidence base is mechanistic extrapolation plus limited observational reports; (2) GH-axis class cautions apply in full: active or recent malignancy is a contraindication, IGF-1 monitoring is advisable with chronic use, and impaired glucose tolerance warrants glycemic tracking; (3) the pulsatile-dosing rationale (mimicking physiological GH pulsatility to reduce risks of continuous elevation seen with DAC variants) remains incompletely tested in humans; (4) sourcing/legal status — like CJC-1295 DAC, it is not on FDA's approved compounding bulk-substances list; (5) commonly reported effects (flushing, transient hypoglycemia, injection-site irritation) are anecdotal.",
+      "evidence_level": "MECHANISTIC",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/16352683/"
+    }
+  },
+  {
+    "slug": "ipamorelin",
+    "use_pattern": {
+      "title": "Ipamorelin — usage & evidence",
+      "text": "Ipamorelin is a synthetic pentapeptide that acts as a selective agonist at the growth-hormone-secretagogue receptor (GHS-R1a), triggering pulsatile GH release without meaningfully raising ACTH, cortisol, or prolactin — a selectivity that distinguishes it from older GHRPs. The landmark characterization by Raun et al. (1998) was conducted in swine and established this selectivity; no peer-reviewed human RCTs have been published as of mid-2026. It remains a research-stage molecule with no FDA-approved indication. Body-recomposition interest centers on supporting pulsatile GH amplitude with a favorable hormonal side-effect profile, but that application is currently supported only by animal and mechanistic data.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/9849822/"
+    },
+    "clinician_discussion": {
+      "title": "Ipamorelin — what to discuss with your clinician",
+      "text": "Because ipamorelin has no approved human indication and no published human RCT data, any use falls outside standard-of-care medicine. Individuals considering it should discuss the complete absence of human safety/efficacy trials, the need for baseline and periodic IGF-1 and fasting-glucose monitoring (given the shared GH-axis mechanism), and the theoretical contraindication in anyone with active or suspected malignancy, since elevated GH/IGF-1 may promote tumor growth. Compounding-source purity and sterility are additional unregulated variables. Note too that ipamorelin's selective profile has never been confirmed in a controlled human trial — its apparent advantages over GHRP-2/6 rest on animal pharmacology.",
+      "evidence_level": "ANIMAL",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/9849822/"
+    }
+  },
+  {
+    "slug": "mk-677",
+    "use_pattern": {
+      "title": "MK-677 (Ibutamoren) — usage & evidence",
+      "text": "MK-677 (ibutamoren) is an orally bioavailable, non-peptide GHS-R1a agonist that mimics ghrelin to stimulate endogenous GH pulses and sustain elevated IGF-1. In a 12-month randomized, placebo-controlled trial in healthy older adults (n=65), Nass et al. (2008) found daily MK-677 raised 24-hour mean GH ~1.8-fold and IGF-1 ~1.5-fold, and increased fat-free mass by ~1.1 kg — without improving functional strength. Adverse effects included increased appetite (~67%), mild lower-extremity edema (~44%), a mean fasting-glucose rise of ~5 mg/dL, and reduced insulin sensitivity. MK-677 is not FDA-approved for any indication and has not advanced to regulatory submission.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2757071/"
+    },
+    "clinician_discussion": {
+      "title": "MK-677 (Ibutamoren) — what to discuss with your clinician",
+      "text": "Key conversation points: (1) glycemic impact — the Nass et al. RCT documented a significant rise in fasting glucose and insulin resistance, a particular concern in pre-diabetes, T2D, or metabolic syndrome; (2) fluid retention and potential edema or carpal-tunnel-type symptoms from IGF-1-driven water retention; (3) lean-mass increases in trials may reflect fluid rather than contractile muscle; (4) absolute contraindication in active or suspected malignancy given sustained IGF-1 elevation; (5) lack of FDA approval and uncharacterized long-term cardiovascular safety; (6) periodic monitoring of IGF-1, fasting glucose, and HbA1c.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2757071/"
+    }
+  },
+  {
+    "slug": "ghrp-2",
+    "use_pattern": {
+      "title": "GHRP-2 — usage & evidence",
+      "text": "GHRP-2 (pralmorelin) is a synthetic hexapeptide GHS-R1a agonist producing some of the highest acute GH pulse amplitudes in its class. It is not fully selective: Arvat et al. (1997) showed in a controlled human study that IV GHRP-2 co-stimulates ACTH and cortisol to a degree comparable to CRH, and raises prolactin. GHRP-2 is approved in Japan as a diagnostic agent (pralmorelin) for confirming severe GH deficiency — its only regulated clinical use — based on trials establishing a robust GH response to a 1 µg/kg IV provocative dose. Outside the diagnostic setting, body-recomposition use is off-label and unsupported by outcome-level RCTs.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/9285939/"
+    },
+    "clinician_discussion": {
+      "title": "GHRP-2 — what to discuss with your clinician",
+      "text": "GHRP-2's co-stimulation of the HPA axis — producing cortisol elevations similar in magnitude to CRH — is a clinically significant distinction from selective secretagogues like ipamorelin. Individuals with stress-axis dysregulation, adrenal conditions, anxiety disorders, or cortisol-sensitive conditions (e.g., insulin resistance, immune suppression) should discuss this carefully. Additional points: potential prolactin elevation with chronic high-dose use; the absence of any FDA-approved indication for body-recomposition use; monitoring of IGF-1 and fasting glucose given GH-axis activation; and contraindication in active malignancy. GHRP-2's sole approved use is a single-dose diagnostic provocative test, not chronic dosing.",
+      "evidence_level": "HUMAN_RCT",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/9285939/"
+    }
+  },
+  {
+    "slug": "ghrp-6",
+    "use_pattern": {
+      "title": "GHRP-6 — usage & evidence",
+      "text": "GHRP-6 is a first-generation synthetic hexapeptide GHS-R1a agonist, one of the most extensively studied GHRPs in human observational and mechanistic work. Like GHRP-2, it concurrently stimulates ACTH and cortisol release at pharmacological doses in humans — replicated across clinical cohorts. A distinctive feature is its pronounced orexigenic (appetite-stimulating) effect, producing intense hunger within 15–30 minutes of injection via hypothalamic ghrelin-receptor activity, more pronounced than other GHRPs. It has no FDA or EMA approved indication; human data derive from investigational, observational, and diagnostic contexts rather than outcome-powered RCTs.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/16832586/"
+    },
+    "clinician_discussion": {
+      "title": "GHRP-6 — what to discuss with your clinician",
+      "text": "GHRP-6's strong, consistent HPA-axis co-activation (ACTH and cortisol elevation across human observation studies) makes it an important topic for anyone with adrenal insufficiency, HPA dysregulation, or conditions worsened by cortisol — including blood-sugar or immune-function management. The potent appetite drive can undermine a caloric deficit, making it counterproductive in fat-loss contexts without careful dietary management. Standard GH-axis monitoring applies: baseline and follow-up IGF-1, fasting glucose, and HbA1c. Because all human data are observational/diagnostic rather than controlled outcome trials, the risk-benefit profile for chronic body-recomposition use is poorly characterized. Active or suspected malignancy is a theoretical absolute contraindication.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/16832586/"
+    }
+  },
+  {
+    "slug": "hexarelin",
+    "use_pattern": {
+      "title": "Hexarelin — usage & evidence",
+      "text": "Hexarelin is a synthetic hexapeptide GHS-R1a agonist notable for two features in human subjects. First, it shares GHRP-2's non-selective HPA co-activation, raising ACTH and cortisol at clinical doses. Second — and uniquely — it shows significant GH-response desensitization with continued use: Rahim and Shalet (2000) documented a reduction in GH area-under-the-curve by weeks 4 and 16 of twice-daily subcutaneous dosing, partially reversible after a 4-week washout. A separate body of human observational work describes direct, GH-independent cardiac effects (acute increases in left-ventricular ejection fraction via cardiac CD36 / GHS-R1a). Neither the cardiac action nor GH-axis modulation carries an approved indication in the US or EU.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/10990150/"
+    },
+    "clinician_discussion": {
+      "title": "Hexarelin — what to discuss with your clinician",
+      "text": "Hexarelin's tachyphylaxis profile is critical: human data show significant attenuation of the GH response within 4 weeks of daily dosing, undermining the premise of sustained GH-axis support. The direct cardiac receptor activity is another point — acute positive inotropic effects in small studies may sound appealing, but cardiovascular safety of chronic use in pre-existing cardiac disease, arrhythmia, or cardiomyopathy is not established. Standard GH-axis caveats apply: IGF-1 and fasting-glucose monitoring, fluid-retention and carpal-tunnel symptom surveillance, and avoidance in active or suspected malignancy. As with all GHRPs, HPA co-stimulation warrants discussion in anyone with adrenal or metabolic comorbidities.",
+      "evidence_level": "HUMAN_OBS",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/10528131/"
+    }
+  }
+]
