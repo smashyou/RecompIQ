@@ -76,6 +76,15 @@ export function AdminClient({
     return map;
   }, [models]);
 
+  // A model is selectable only if its provider's API key is set on THIS deploy
+  // (e.g. gateway/openrouter models can't be picked when their key isn't in
+  // Vercel) — prevents saving a feature config that errors at call time.
+  const configuredSlugs = useMemo(
+    () => new Set(providers.filter((p) => p.configured).map((p) => p.slug)),
+    [providers],
+  );
+  const isConfigured = (m: ModelRow) => configuredSlugs.has(m.ai_providers.slug);
+
   function modelsForFeature(feature: string) {
     const modality = FEATURE_INFO[feature]?.modality ?? "chat";
     // Vision feature draws from vision-tagged models specifically;
@@ -199,11 +208,15 @@ export function AdminClient({
                     }}
                     className={SELECT_CLASS}
                   >
-                    {available.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.display_name} — {m.ai_providers.slug}
-                      </option>
-                    ))}
+                    {available.map((m) => {
+                      const ok = isConfigured(m);
+                      return (
+                        <option key={m.id} value={m.id} disabled={!ok}>
+                          {m.display_name} — {m.ai_providers.slug}
+                          {ok ? "" : " · key not set"}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -226,11 +239,15 @@ export function AdminClient({
                           }}
                           className={`${SELECT_CLASS} h-9 flex-1`}
                         >
-                          {available.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.display_name}
-                            </option>
-                          ))}
+                          {available.map((m) => {
+                            const ok = isConfigured(m);
+                            return (
+                              <option key={m.id} value={m.id} disabled={!ok}>
+                                {m.display_name} — {m.ai_providers.slug}
+                                {ok ? "" : " · key not set"}
+                              </option>
+                            );
+                          })}
                         </select>
                         <button
                           type="button"
@@ -272,7 +289,10 @@ export function AdminClient({
                   <button
                     type="button"
                     onClick={() => {
-                      const next = available.find((m) => m.id !== primary && !fallbacks.includes(m.id));
+                      const eligible = available.filter(
+                        (m) => m.id !== primary && !fallbacks.includes(m.id),
+                      );
+                      const next = eligible.find((m) => isConfigured(m)) ?? eligible[0];
                       if (!next) return;
                       const newFbs = [...fallbacks, next.id];
                       setConfigState((prev) =>

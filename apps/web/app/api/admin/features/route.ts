@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AppError } from "@peptide/shared";
 import { requireAdmin } from "@/lib/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { jsonOk, jsonError, parseJson } from "@/lib/api";
@@ -32,6 +33,26 @@ export async function PATCH(req: Request) {
     const user = await requireAdmin();
     const data = await parseJson(req, featureUpdate);
     const supabase = await createSupabaseServerClient();
+
+    // Guard: the primary model's provider must be configured on this deploy,
+    // otherwise the feature errors at call time. (e.g. picking a gateway /
+    // openrouter model whose API key isn't set in Vercel.)
+    const { data: primaryModel } = await supabase
+      .from("ai_models")
+      .select("display_name, ai_providers(slug, env_key_var)")
+      .eq("id", data.primary_model_id)
+      .maybeSingle<{ display_name: string; ai_providers: { slug: string; env_key_var: string } }>();
+    if (primaryModel) {
+      const keyVar = primaryModel.ai_providers?.env_key_var;
+      const keyPresent = Boolean(keyVar && process.env[keyVar] && process.env[keyVar]!.trim() !== "");
+      if (!keyPresent) {
+        throw new AppError(
+          "VALIDATION_FAILED",
+          `Can't set "${primaryModel.display_name}" as the primary model: its provider (${primaryModel.ai_providers?.slug}) isn't configured on this deployment. Add ${keyVar} in Vercel, or choose a model from a configured provider.`,
+        );
+      }
+    }
+
     const { error } = await supabase
       .from("ai_feature_config")
       .upsert(
