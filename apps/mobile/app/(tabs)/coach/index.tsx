@@ -59,6 +59,12 @@ export default function Coach() {
   const [sending, setSending] = useState(false);
   const [loadingThread, setLoadingThread] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const inputRef = useRef<TextInput>(null);
+
+  function fillPrompt(p: string) {
+    setInput(p);
+    inputRef.current?.focus();
+  }
 
   // Load conversation list on mount. Stay on the "New chat" main view by default
   // (like claude.ai) — past threads are opened from the chips, not auto-resumed.
@@ -177,14 +183,19 @@ export default function Coach() {
       <ScrollView
         ref={scrollRef}
         className="flex-1"
-        contentContainerClassName="gap-4 px-4 py-4"
-        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+        contentContainerClassName={cn(
+          "gap-4 px-4 py-4",
+          messages.length === 0 && !loadingThread ? "flex-grow justify-center" : "",
+        )}
+        onContentSizeChange={() => {
+          if (messages.length > 0) scrollRef.current?.scrollToEnd({ animated: true });
+        }}
         keyboardShouldPersistTaps="handled"
       >
         {loadingThread ? (
           <Text className="text-sm text-muted-foreground">Loading…</Text>
         ) : messages.length === 0 ? (
-          <CoachEmpty />
+          <CoachEmpty onPick={fillPrompt} />
         ) : (
           messages.map((m) => <Bubble key={m.id} message={m} />)
         )}
@@ -200,6 +211,7 @@ export default function Coach() {
       <View className="px-4 pb-2 pt-3">
         <View className="flex-row items-center gap-2 rounded-full border border-border bg-muted py-1.5 pl-4 pr-1.5">
           <TextInput
+            ref={inputRef}
             value={input}
             onChangeText={setInput}
             placeholder="Ask the coach…"
@@ -284,20 +296,86 @@ function Bubble({ message }: { message: Message }) {
   );
 }
 
-function CoachEmpty() {
+const HERO_SUGGESTIONS: { label: string; hint: string; prompt: string }[] = [
+  {
+    label: "Summarize a compound",
+    hint: "mechanism · evidence · contraindications",
+    prompt: "Summarize the evidence for KLOW — mechanism, monitoring, and contraindications.",
+  },
+  {
+    label: "Explain my labs",
+    hint: "plain-language read on your markers",
+    prompt: "Explain what my most recent lab results mean in plain language.",
+  },
+  {
+    label: "Check interactions",
+    hint: "against your conditions + meds",
+    prompt: "How might my current peptides interact with my conditions and medications?",
+  },
+  {
+    label: "Prep for my clinician",
+    hint: "labs + questions to bring",
+    prompt: "What labs and questions should I bring to my clinician before starting a protocol?",
+  },
+];
+
+function CoachEmpty({ onPick }: { onPick: (prompt: string) => void }) {
   return (
-    <View className="gap-2">
-      <Text className="text-sm text-muted-foreground">Hi. Some things I can help with:</Text>
-      {[
-        "Summarize evidence for any compound in your catalog (mechanism, monitoring, contraindications).",
-        "Translate a clinical paper or lab result into plain language.",
-        "Explain how a peptide interacts with your conditions / meds.",
-        "Suggest labs to ask your clinician for before a protocol.",
-      ].map((s, i) => (
-        <Text key={i} className="pl-2 text-sm text-muted-foreground">• {s}</Text>
-      ))}
-      <Text className="pt-2 text-[10px] text-muted-foreground">
-        Dose values are educational summaries — not medical advice. Always discuss with a licensed clinician.
+    <View className="items-center gap-5">
+      <View
+        style={{
+          width: 52,
+          height: 52,
+          borderRadius: 16,
+          backgroundColor: colors.primary,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Ionicons name="pulse" size={26} color={colors.primaryForeground} />
+      </View>
+      <View className="items-center gap-1.5">
+        <Text className="text-center font-bold text-foreground" style={{ fontSize: 22 }}>
+          How can I help with your recomp?
+        </Text>
+        <Text
+          className="text-center text-sm text-muted-foreground"
+          style={{ maxWidth: 360, lineHeight: 20 }}
+        >
+          I summarize evidence, translate labs and research, and surface points to raise with your
+          clinician — I never prescribe.
+        </Text>
+      </View>
+
+      <View className="w-full gap-2.5">
+        {HERO_SUGGESTIONS.map((s) => (
+          <Pressable
+            key={s.label}
+            onPress={() => onPick(s.prompt)}
+            className="active:opacity-70"
+            style={{
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface1,
+              borderRadius: 12,
+              paddingVertical: 11,
+              paddingHorizontal: 14,
+            }}
+          >
+            <Text className="text-sm font-medium text-foreground">{s.label}</Text>
+            <Text className="text-[11px] text-muted-foreground" style={{ marginTop: 2 }}>
+              {s.hint}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <Text
+        className="text-center text-[10px] text-muted-foreground"
+        style={{ maxWidth: 320 }}
+      >
+        Dose values are educational summaries — not medical advice. Always discuss with a licensed
+        clinician.
       </Text>
     </View>
   );

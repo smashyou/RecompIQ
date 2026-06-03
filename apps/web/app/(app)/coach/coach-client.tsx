@@ -74,6 +74,12 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
   const [sending, setSending] = useState(false);
   const [loadingThread, setLoadingThread] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  function fillPrompt(text: string) {
+    setInput(text);
+    inputRef.current?.focus();
+  }
 
   // Load messages whenever the active conversation changes.
   useEffect(() => {
@@ -216,7 +222,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
               Loading…
             </p>
           ) : messages.length === 0 ? (
-            <EmptyState />
+            <Hero onPick={fillPrompt} />
           ) : (
             messages.map((m) =>
               m.role === "user" ? (
@@ -257,6 +263,7 @@ export function CoachClient({ conversations }: { conversations: Conversation[] }
           </div>
           <div className="flex items-end gap-[10px] rounded-[var(--r-md)] border border-border bg-[var(--surface-2)] py-2 pl-[14px] pr-2">
             <textarea
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -342,43 +349,78 @@ function RailCard({ title, children }: { title: string; children: React.ReactNod
   );
 }
 
-function EmptyState() {
+const HERO_SUGGESTIONS: { label: string; hint: string; prompt: string }[] = [
+  {
+    label: "Summarize a compound",
+    hint: "mechanism · evidence · contraindications",
+    prompt: "Summarize the evidence for KLOW — mechanism, monitoring, and contraindications.",
+  },
+  {
+    label: "Explain my labs",
+    hint: "plain-language read on your markers",
+    prompt: "Explain what my most recent lab results mean in plain language.",
+  },
+  {
+    label: "Check interactions",
+    hint: "against your conditions + meds",
+    prompt: "How might my current peptides interact with my conditions and medications?",
+  },
+  {
+    label: "Prep for my clinician",
+    hint: "labs + questions to bring",
+    prompt: "What labs and questions should I bring to my clinician before starting a protocol?",
+  },
+];
+
+function Hero({ onPick }: { onPick: (prompt: string) => void }) {
   return (
-    <div className="flex max-w-[86%] gap-[11px] self-start">
-      <CoachAvatar />
-      <div className="min-w-0">
-        <p className="font-[family-name:var(--font-sans)] text-sm leading-[1.6] text-[var(--fg)]">
-          Hi. I summarize evidence, track what you log, and surface discussion points for your
-          clinician &mdash; I won&apos;t prescribe a protocol. A few things I can help with:
-        </p>
-        <ul className="mt-3 flex list-none flex-col gap-2">
-          {[
-            "Summarize the evidence for any compound in your catalog — mechanism, monitoring, contraindications.",
-            "Translate a clinical paper or lab result into plain language.",
-            "Explain how a peptide interacts with your conditions and medications.",
-            "Suggest labs to ask your clinician for before starting a protocol.",
-          ].map((t) => (
-            <li
-              key={t}
-              className="flex gap-2 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]"
-            >
-              <span className="flex-none text-[var(--primary)]">&bull;</span>
-              {t}
-            </li>
-          ))}
-        </ul>
+    <div className="flex flex-1 flex-col items-center justify-center gap-[26px] px-4 py-8 text-center">
+      <div className="flex flex-col items-center gap-[14px]">
+        <CoachAvatar size={52} />
+        <div className="space-y-[6px]">
+          <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-[-0.02em] text-[var(--fg)]">
+            How can I help with your recomp?
+          </h1>
+          <p className="mx-auto max-w-[440px] font-[family-name:var(--font-sans)] text-sm leading-[1.55] text-[var(--fg-muted)]">
+            I summarize evidence, translate labs and research, and surface points to raise with your
+            clinician &mdash; I never prescribe.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid w-full max-w-[560px] grid-cols-1 gap-[10px] sm:grid-cols-2">
+        {HERO_SUGGESTIONS.map((s) => (
+          <button
+            key={s.label}
+            type="button"
+            onClick={() => onPick(s.prompt)}
+            className="group flex flex-col gap-[3px] rounded-[var(--r-md)] border border-border bg-[var(--surface-1)] px-[14px] py-[11px] text-left transition-colors hover:border-[var(--primary-line)] hover:bg-[var(--surface-2)]"
+          >
+            <span className="font-[family-name:var(--font-sans)] text-sm font-medium text-[var(--fg)]">
+              {s.label}
+            </span>
+            <span className="font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
+              {s.hint}
+            </span>
+          </button>
+        ))}
       </div>
     </div>
   );
 }
 
-function CoachAvatar() {
+function CoachAvatar({ size = 30 }: { size?: number }) {
   return (
     <span
-      className="grid h-[30px] w-[30px] flex-none place-items-center rounded-[9px] text-[var(--primary-foreground)]"
-      style={{ background: "linear-gradient(150deg,var(--primary),var(--positive))" }}
+      className="grid flex-none place-items-center text-[var(--primary-foreground)]"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size >= 44 ? 16 : 9,
+        background: "linear-gradient(150deg,var(--primary),var(--positive))",
+      }}
     >
-      <Activity size={16} />
+      <Activity size={Math.round(size * 0.5)} />
     </span>
   );
 }
