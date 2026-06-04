@@ -10,13 +10,21 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
-import type { EvidenceLevel } from "@peptide/shared";
+import { hasEduDose, type EvidenceLevel } from "@peptide/shared";
+import { wrapDoseLike } from "@peptide/peptides";
 import { DoseText } from "@/components/peptides/DoseText";
 import { EvidenceBadge } from "@/components/ui/EvidenceBadge";
 import { apiFetch } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { colors, radius } from "@/lib/theme";
 import { cn } from "@/lib/cn";
+
+// expo/fetch exposes a streaming response.body (legacy RN fetch cannot stream).
+// The coach SSE route is NOT wrapped in the {data,error} envelope, so we can't
+// use apiFetch here — attach the Bearer token manually (same as lib/api.ts).
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "https://recompiq.com";
 
 const EVIDENCE_LEVELS: ReadonlySet<string> = new Set([
   "FDA_APPROVED",
@@ -105,24 +113,85 @@ export default function Coach() {
     if (!text || sending) return;
     setSending(true);
     setInput("");
-    const tempId = `temp-${text.length}-${messages.length}`;
+
+    // Optimistic user bubble + an empty assistant bubble to stream into (mirrors
+    // the web client). On error we drop both and show an error bubble instead.
+    const tempId = `temp-${Date.now()}`;
+    const streamId = `stream-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
       { id: tempId, role: "user", content: text, citations: [], created_at: "" },
+      { id: streamId, role: "assistant", content: "", citations: [], created_at: "" },
     ]);
+    const clearStreamBubbles = () =>
+      setMessages((prev) => prev.filter((m) => m.id !== streamId && m.id !== tempId));
+
     try {
-      const data = await apiFetch<{ conversation_id: string; message: Message; ai_error: string | null }>(
-        "/api/coach/chat",
-        { method: "POST", body: JSON.stringify({ conversation_id: activeId, message: text }) },
-      );
-      const convoId = data.conversation_id;
-      if (!activeId) {
-        setActiveId(convoId);
-        setThreads((prev) => [{ id: convoId, title: text.slice(0, 60), updated_at: "" }, ...prev]);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+
+      const res = await expoFetch(`${API_BASE}/api/coach/chat`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ conversation_id: activeId, message: text, stream: true }),
+      });
+      if (!res.ok || !res.body) throw new Error(`Coach unavailable (${res.status}).`);
+
+      // Parse the SSE token stream: events separated by \n\n, each carrying a
+      // `data: <json>` line (same shape the web coach-client consumes).
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let acc = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let idx: number;
+        while ((idx = buf.indexOf("\n\n")) !== -1) {
+          const evt = buf.slice(0, idx);
+          buf = buf.slice(idx + 2);
+          const line = evt.split("\n").find((l) => l.startsWith("data:"));
+          if (!line) continue;
+          let payload: {
+            conversation_id?: string;
+            delta?: string;
+            done?: boolean;
+            message?: Message | null;
+            ai_error?: string | null;
+          };
+          try {
+            payload = JSON.parse(line.slice(5).trim());
+          } catch {
+            continue;
+          }
+          if (payload.delta) {
+            acc += payload.delta;
+            // Wrap dose mentions live so the [edu] highlight + disclaimer footer
+            // show during streaming too (partial doses don't match until complete).
+            const shown = wrapDoseLike(acc).wrappedText;
+            setMessages((prev) => prev.map((m) => (m.id === streamId ? { ...m, content: shown } : m)));
+          }
+          if (payload.done) {
+            if (!activeId && payload.conversation_id) {
+              setActiveId(payload.conversation_id);
+              setThreads((prev) => [
+                { id: payload.conversation_id!, title: text.slice(0, 60), updated_at: "" },
+                ...prev,
+              ]);
+            }
+            if (payload.message) {
+              const finalMsg = payload.message;
+              setMessages((prev) => prev.map((m) => (m.id === streamId ? finalMsg : m)));
+            }
+          }
+        }
       }
-      await loadMessages(convoId);
     } catch (e) {
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      clearStreamBubbles();
       setMessages((prev) => [
         ...prev,
         { id: `err-${tempId}`, role: "assistant", content: e instanceof Error ? e.message : "Coach unavailable.", citations: [], created_at: "" },
@@ -248,7 +317,10 @@ function Bubble({ message }: { message: Message }) {
   }
 
   // handoff MCoach: assistant row = gradient avatar glyph + content column.
-  const hasDose = /\bdose|\bmcg|\bmg\b|\bIU\b|\bunits?\b/i.test(message.content);
+  // Drive the disclaimer footer off the [edu]…[/edu] dose spans (same as the web
+  // DoseAnnotatedText via hasEduDose) instead of a hand-rolled regex — content is
+  // always wrapDoseLike-wrapped (live while streaming, server-wrapped when final).
+  const hasDose = hasEduDose(message.content);
   return (
     <View className="max-w-[92%] flex-row gap-2.5 self-start">
       <View
