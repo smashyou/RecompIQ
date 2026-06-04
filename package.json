@@ -33,7 +33,8 @@
     "test:inventory": "tsx scripts/test-inventory.mjs",
     "test:metric-projection": "tsx scripts/test-metric-projection.mjs",
     "test:timeline": "tsx scripts/test-timeline.mjs",
-    "test:alerts": "tsx scripts/test-alerts.mjs"
+    "test:alerts": "tsx scripts/test-alerts.mjs",
+    "test:markdown": "tsx scripts/test-markdown.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

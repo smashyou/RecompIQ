@@ -22,6 +22,7 @@ export type MdBlock =
   | { t: "ul"; items: MdInline[][] }
   | { t: "ol"; items: MdInline[][] }
   | { t: "code"; v: string }
+  | { t: "table"; header: MdInline[][]; rows: MdInline[][][] }
   | { t: "hr" };
 
 // edu | inline-code | **bold** | *italic* | [text](href)
@@ -46,6 +47,21 @@ export function parseInline(text: string): MdInline[] {
   }
   if (last < text.length) out.push({ t: "text", v: text.slice(last) });
   return out.length ? out : [{ t: "text", v: text }];
+}
+
+// A GFM table delimiter row, e.g. `|---|:--:|` or `--- | ---` (cells of dashes
+// with optional alignment colons; outer pipes optional; needs ≥1 internal pipe).
+const TABLE_DELIM_RE = /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?$/;
+function isTableDelim(line: string): boolean {
+  return line.includes("|") && TABLE_DELIM_RE.test(line);
+}
+// Split a `| a | b |` row into trimmed cells, dropping the outer empties that a
+// leading/trailing pipe produces. (LLM tables don't escape pipes in practice.)
+function splitTableRow(line: string): string[] {
+  let s = line.trim();
+  if (s.startsWith("|")) s = s.slice(1);
+  if (s.endsWith("|")) s = s.slice(0, -1);
+  return s.split("|").map((c) => c.trim());
 }
 
 export function parseMarkdown(src: string): MdBlock[] {
@@ -121,6 +137,23 @@ export function parseMarkdown(src: string): MdBlock[] {
         i++;
       }
       blocks.push({ t: "ol", items });
+      continue;
+    }
+
+    // GFM table: a header row, a |---|---| delimiter row, then body rows. Must be
+    // checked before the paragraph fallback (which would otherwise join the rows
+    // into one line). A still-streaming, not-yet-complete table renders as a
+    // paragraph until its delimiter row arrives, then re-renders as a table.
+    if (line.includes("|") && i + 1 < lines.length && isTableDelim(lines[i + 1]!.trim())) {
+      flushPara();
+      const header = splitTableRow(line).map(parseInline);
+      i += 2; // consume header + delimiter
+      const rows: MdInline[][][] = [];
+      while (i < lines.length && lines[i]!.trim() !== "" && lines[i]!.includes("|")) {
+        rows.push(splitTableRow(lines[i]!.trim()).map(parseInline));
+        i++;
+      }
+      blocks.push({ t: "table", header, rows });
       continue;
     }
 

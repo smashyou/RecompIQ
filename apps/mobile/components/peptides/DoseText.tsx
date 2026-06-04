@@ -57,6 +57,39 @@ function Block({ block, base }: { block: MdBlock; base: string }) {
           <Text className="text-xs text-foreground">{block.v}</Text>
         </View>
       );
+    case "table":
+      return (
+        <View className="overflow-hidden rounded-md border border-border">
+          <View className="flex-row bg-muted">
+            {block.header.map((cell, ci) => (
+              <View
+                key={ci}
+                className={`flex-1 px-2 py-1.5 ${ci > 0 ? "border-l border-border" : ""}`}
+              >
+                <Text className="text-xs font-semibold text-foreground">
+                  <Inline spans={cell} />
+                </Text>
+              </View>
+            ))}
+          </View>
+          {block.rows.map((row, ri) => (
+            // Column count is driven by the header (keeps cells aligned); short
+            // rows pad with an empty cell, over-long rows truncate.
+            <View key={ri} className="flex-row border-t border-border">
+              {block.header.map((_, ci) => (
+                <View
+                  key={ci}
+                  className={`flex-1 px-2 py-1.5 ${ci > 0 ? "border-l border-border" : ""}`}
+                >
+                  <Text className="text-xs text-foreground">
+                    <Inline spans={row[ci] ?? [{ t: "text", v: "" }]} />
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ))}
+        </View>
+      );
     case "hr":
       return <View className="my-1 h-px bg-border" />;
     default:

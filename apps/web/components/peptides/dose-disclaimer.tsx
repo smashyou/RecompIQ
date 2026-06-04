@@ -70,6 +70,41 @@ function Block({ block }: { block: MdBlock }) {
           {block.v}
         </pre>
       );
+    case "table":
+      return (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr>
+                {block.header.map((cell, ci) => (
+                  <th
+                    key={ci}
+                    className="border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5 text-left font-semibold text-[var(--fg)]"
+                  >
+                    <Inline spans={cell} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {block.rows.map((row, ri) => (
+                // Column count is driven by the header (keeps the grid square);
+                // short rows pad with an empty cell, over-long rows truncate.
+                <tr key={ri}>
+                  {block.header.map((_, ci) => (
+                    <td
+                      key={ci}
+                      className="border border-[var(--border)] px-2 py-1.5 align-top text-[var(--fg)]"
+                    >
+                      <Inline spans={row[ci] ?? [{ t: "text", v: "" }]} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
     case "hr":
       return <hr className="border-[var(--border)]" />;
     default:
