@@ -2,6 +2,7 @@
 // a normalized response. Routing decisions happen one layer up in gateway.ts.
 
 import type {
+  ChatContent,
   ChatRequest,
   ChatResponse,
   EmbeddingRequest,
@@ -162,6 +163,67 @@ const chatAnthropicDirect: ChatExec = async (req, model, apiKey) => {
 };
 
 // ---------------------------------------------------------------------------
+// Google Gemini direct — native generateContent. system → system_instruction,
+// assistant → role "model". Text-only here (the coach is text; vision uses gpt-4o).
+// ---------------------------------------------------------------------------
+function geminiText(content: ChatContent): string {
+  return typeof content === "string"
+    ? content
+    : content
+        .map((p) => (p.type === "text" ? p.text : ""))
+        .join(" ")
+        .trim();
+}
+function buildGeminiBody(req: ChatRequest, _model: ModelRow): Record<string, unknown> {
+  const systemText = req.messages
+    .filter((m) => m.role === "system")
+    .map((m) => geminiText(m.content))
+    .join("\n\n")
+    .trim();
+  const contents = req.messages
+    .filter((m) => m.role !== "system")
+    .map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: geminiText(m.content) }],
+    }));
+  return {
+    ...(systemText ? { system_instruction: { parts: [{ text: systemText }] } } : {}),
+    contents,
+    generationConfig: {
+      maxOutputTokens: req.max_tokens ?? 1024,
+      temperature: req.temperature ?? 0.7,
+    },
+  };
+}
+
+const chatGoogleDirect: ChatExec = async (req, model, apiKey) => {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model.model_id}:generateContent`,
+    {
+      method: "POST",
+      headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify(buildGeminiBody(req, model)),
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`google ${model.model_id}: ${res.status} ${text.slice(0, 300)}`);
+  }
+  const body = (await res.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+  };
+  const text = (body.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("");
+  return {
+    text,
+    model: model.model_id,
+    provider_slug: model.provider_slug,
+    input_tokens: body.usageMetadata?.promptTokenCount ?? 0,
+    output_tokens: body.usageMetadata?.candidatesTokenCount ?? 0,
+  };
+};
+
+// ---------------------------------------------------------------------------
 // Voyage AI — embeddings at https://api.voyageai.com/v1
 // ---------------------------------------------------------------------------
 const embedVoyage: EmbeddingExec = async (req, model, apiKey) => {
@@ -201,6 +263,7 @@ export const CHAT_PROVIDERS: Record<ProviderKind, ChatExec | null> = {
   direct: null,
   openai: chatOpenAIDirect,
   anthropic: chatAnthropicDirect,
+  google: chatGoogleDirect,
 };
 
 export const EMBEDDING_PROVIDERS: Record<ProviderKind, EmbeddingExec | null> = {
@@ -210,6 +273,7 @@ export const EMBEDDING_PROVIDERS: Record<ProviderKind, EmbeddingExec | null> = {
   direct: null,
   openai: null,
   anthropic: null,
+  google: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -340,6 +404,50 @@ async function* chatStreamAnthropicDirect(
   return { text: full, model: model.model_id, provider_slug: model.provider_slug, input_tokens: inTok, output_tokens: outTok };
 }
 
+// Google Gemini streaming (SSE via ?alt=sse).
+async function* chatStreamGoogleDirect(
+  req: ChatRequest,
+  model: ModelRow,
+  apiKey: string,
+): AsyncGenerator<string, ChatStreamResult, void> {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model.model_id}:streamGenerateContent?alt=sse`,
+    {
+      method: "POST",
+      headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify(buildGeminiBody(req, model)),
+    },
+  );
+  if (!res.ok || !res.body) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`google ${model.model_id}: ${res.status} ${t.slice(0, 300)}`);
+  }
+  let full = "";
+  let inTok = 0;
+  let outTok = 0;
+  for await (const data of sseData(res.body)) {
+    try {
+      const j = JSON.parse(data) as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+        usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+      };
+      for (const p of j.candidates?.[0]?.content?.parts ?? []) {
+        if (p.text) {
+          full += p.text;
+          yield p.text;
+        }
+      }
+      if (j.usageMetadata) {
+        inTok = j.usageMetadata.promptTokenCount ?? inTok;
+        outTok = j.usageMetadata.candidatesTokenCount ?? outTok;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return { text: full, model: model.model_id, provider_slug: model.provider_slug, input_tokens: inTok, output_tokens: outTok };
+}
+
 export const CHAT_STREAM_PROVIDERS: Record<ProviderKind, ChatStreamExec | null> = {
   vercel_gateway: (req, m, k) => chatStreamOpenAILike("https://gateway.ai.vercel.com/v1", req, m, k),
   openrouter: (req, m, k) =>
@@ -351,4 +459,5 @@ export const CHAT_STREAM_PROVIDERS: Record<ProviderKind, ChatStreamExec | null> 
   direct: null,
   openai: (req, m, k) => chatStreamOpenAILike("https://api.openai.com/v1", req, m, k),
   anthropic: chatStreamAnthropicDirect,
+  google: chatStreamGoogleDirect,
 };

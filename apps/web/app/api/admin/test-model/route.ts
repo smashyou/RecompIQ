@@ -2,7 +2,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { jsonOk, jsonError, parseJson } from "@/lib/api";
-import { chat, embed } from "@/lib/agent";
+import { chat, embed, resolveProviderKey } from "@/lib/agent";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,11 +31,11 @@ export async function POST(req: Request) {
     if (!model) {
       return jsonOk({ ok: false, error: "Model not found" });
     }
-    const envKey = process.env[model.ai_providers.env_key_var];
-    if (!envKey || envKey.trim() === "") {
+    const providerKey = await resolveProviderKey(model.ai_providers.env_key_var);
+    if (!providerKey) {
       return jsonOk({
         ok: false,
-        error: `Missing ${model.ai_providers.env_key_var} env var. Add it in Vercel → Settings → Environment Variables.`,
+        error: `No key for ${model.ai_providers.env_key_var} — set it in Admin → Catalog, or as a server env var.`,
       });
     }
 

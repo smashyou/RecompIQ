@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { secretsEnabled } from "@/lib/secrets";
 import { AdminClient } from "./admin-client";
 
 export const dynamic = "force-dynamic";
@@ -49,21 +51,36 @@ export default async function AdminPage() {
       .order("feature"),
   ]);
 
-  // Connection status: a provider is "configured" when its API-key env var is
-  // present on the server. (e.g. Google Gemini only routes via the gateway, so
-  // it shows as configured only if AI_GATEWAY_API_KEY is set on this deploy.)
-  const providers = (providersRes.data ?? []).map((p) => ({
-    ...p,
-    configured: Boolean(
+  // Admin-set keys (encrypted) — surface only presence + last4, never plaintext.
+  const admin = createSupabaseAdminClient();
+  const { data: secretRows } = await admin
+    .from("ai_provider_secrets")
+    .select("provider_id, last4");
+  const secretByProvider = new Map(
+    (secretRows ?? []).map((s) => [s.provider_id as string, (s.last4 as string | null) ?? null]),
+  );
+
+  // A provider is "configured" when an admin-set key OR its env var is present.
+  const providers = (providersRes.data ?? []).map((p) => {
+    const envSet = Boolean(
       p.env_key_var && process.env[p.env_key_var] && process.env[p.env_key_var]!.trim() !== "",
-    ),
-  }));
+    );
+    const hasDbKey = secretByProvider.has(p.id);
+    return {
+      ...p,
+      configured: hasDbKey || envSet,
+      key_managed: hasDbKey,
+      key_last4: secretByProvider.get(p.id) ?? null,
+      key_source: hasDbKey ? ("db" as const) : envSet ? ("env" as const) : null,
+    };
+  });
 
   return (
     <AdminClient
       providers={providers}
       models={(modelsRes.data ?? []) as unknown as ModelJoinRow[]}
       config={(configRes.data ?? []) as FeatureConfigRow[]}
+      secretsEnabled={secretsEnabled()}
     />
   );
 }

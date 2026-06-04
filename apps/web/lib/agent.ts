@@ -21,10 +21,12 @@ import {
   type ParseFoodFromImageResult,
   type ParseLabsOpts,
   type ParseLabsResult,
+  type ProviderKind,
 } from "@peptide/agent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { redactedLogger } from "@peptide/shared";
+import { decryptSecret } from "@/lib/secrets";
 
 interface FeatureConfigRow {
   feature: Feature;
@@ -42,7 +44,7 @@ interface ModelJoinRow {
   output_cost_per_1m: number | null;
   ai_providers: {
     slug: string;
-    kind: "vercel_gateway" | "openrouter" | "voyage" | "direct";
+    kind: ProviderKind;
     env_key_var: string;
   };
 }
@@ -88,9 +90,52 @@ async function loadFeatureConfig(feature: Feature): Promise<FeatureConfig | null
   return { feature, primary, fallbacks };
 }
 
-function envKey(name: string): string | null {
+// Admin-set provider keys (ai_provider_secrets, AES-encrypted) take precedence
+// over env vars. Loaded + decrypted into a short-TTL cache, then threaded into a
+// PER-REQUEST GatewayDeps (no shared mutable module state — avoids a cross-request
+// overwrite race in long-lived Fluid Compute instances).
+let secretsCache: { map: Map<string, string>; at: number } | null = null;
+
+async function loadProviderSecrets(): Promise<Map<string, string>> {
+  if (secretsCache && Date.now() - secretsCache.at < 30_000) return secretsCache.map;
+  const map = new Map<string, string>();
+  try {
+    const admin = createSupabaseAdminClient();
+    const { data } = await admin
+      .from("ai_provider_secrets")
+      .select("ciphertext, ai_providers(env_key_var)");
+    for (const row of (data ?? []) as unknown as {
+      ciphertext: string;
+      ai_providers: { env_key_var: string } | { env_key_var: string }[] | null;
+    }[]) {
+      const prov = Array.isArray(row.ai_providers) ? row.ai_providers[0] : row.ai_providers;
+      const envVar = prov?.env_key_var;
+      if (!envVar) continue;
+      const plain = decryptSecret(row.ciphertext);
+      if (plain && plain.trim() !== "") map.set(envVar, plain);
+    }
+  } catch (err) {
+    // table missing / decrypt failure (e.g. wrong AI_SECRETS_KEY) → env-var
+    // fallback only. Surface a redacted signal so a silent fallback is noticed;
+    // never log key material.
+    redactedLogger.warn("loadProviderSecrets failed — falling back to env vars", {
+      message: err instanceof Error ? err.message : String(err),
+    });
+  }
+  secretsCache = { map, at: Date.now() };
+  return map;
+}
+
+function envKeyWith(secrets: Map<string, string>, name: string): string | null {
+  const fromDb = secrets.get(name);
+  if (fromDb && fromDb.trim() !== "") return fromDb;
   const v = process.env[name];
   return v && v.trim() !== "" ? v : null;
+}
+
+// Build per-request gateway deps bound to this request's resolved secrets map.
+function makeDeps(secrets: Map<string, string>): GatewayDeps {
+  return { loadFeatureConfig, envKey: (name) => envKeyWith(secrets, name), logCall };
 }
 
 async function logCall(record: AiCallLog): Promise<void> {
@@ -120,32 +165,42 @@ async function logCall(record: AiCallLog): Promise<void> {
   }
 }
 
-const deps: GatewayDeps = { loadFeatureConfig, envKey, logCall };
-
-export function chat(req: ChatRequest): Promise<ChatResponse> {
+export async function chat(req: ChatRequest): Promise<ChatResponse> {
+  const deps = makeDeps(await loadProviderSecrets());
   return gatewayChat(req, deps);
 }
 
-export function chatStream(req: ChatRequest): AsyncGenerator<string, ChatResponse, void> {
-  return gatewayChatStream(req, deps);
+export async function* chatStream(req: ChatRequest): AsyncGenerator<string, ChatResponse, void> {
+  const deps = makeDeps(await loadProviderSecrets());
+  return yield* gatewayChatStream(req, deps);
 }
 
-export function embed(req: EmbeddingRequest): Promise<EmbeddingResponse> {
+export async function embed(req: EmbeddingRequest): Promise<EmbeddingResponse> {
+  const deps = makeDeps(await loadProviderSecrets());
   return gatewayEmbed(req, deps);
 }
 
-export function parseFoodFromImage(
+export async function parseFoodFromImage(
   opts: ParseFoodFromImageOpts,
 ): Promise<ParseFoodFromImageResult> {
+  const deps = makeDeps(await loadProviderSecrets());
   return gatewayParseFood(opts, deps);
 }
 
-export function parseLabsFromContent(opts: ParseLabsOpts): Promise<ParseLabsResult> {
+export async function parseLabsFromContent(opts: ParseLabsOpts): Promise<ParseLabsResult> {
+  const deps = makeDeps(await loadProviderSecrets());
   return gatewayParseLabs(opts, deps);
 }
 
-export function generateStack(opts: GenerateStackOpts): Promise<GenerateStackResult> {
+export async function generateStack(opts: GenerateStackOpts): Promise<GenerateStackResult> {
+  const deps = makeDeps(await loadProviderSecrets());
   return gatewayGenerateStack(opts, deps);
+}
+
+/** Resolve a provider's key (admin-set secret or env var) — for admin status/tests. */
+export async function resolveProviderKey(envKeyVar: string): Promise<string | null> {
+  const secrets = await loadProviderSecrets();
+  return envKeyWith(secrets, envKeyVar);
 }
 
 export { loadFeatureConfig };

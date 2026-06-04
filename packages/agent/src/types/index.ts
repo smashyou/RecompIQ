@@ -17,6 +17,7 @@ export const PROVIDER_KINDS = [
   "direct",
   "openai",
   "anthropic",
+  "google",
 ] as const;
 export type ProviderKind = (typeof PROVIDER_KINDS)[number];
 

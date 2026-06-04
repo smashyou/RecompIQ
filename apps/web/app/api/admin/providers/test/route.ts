@@ -6,6 +6,7 @@ import { pingProvider, type ProviderKind } from "@peptide/agent";
 import { AppError } from "@peptide/shared";
 import { requireAdmin } from "@/lib/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { resolveProviderKey } from "@/lib/agent";
 import { jsonOk, jsonError, parseJson } from "@/lib/api";
 
 export const runtime = "nodejs";
@@ -27,12 +28,12 @@ export async function POST(req: Request) {
       .maybeSingle();
     if (!provider) throw new AppError("NOT_FOUND", "Provider not found");
 
-    const apiKey = process.env[provider.env_key_var];
-    if (!apiKey || apiKey.trim() === "") {
+    const apiKey = await resolveProviderKey(provider.env_key_var);
+    if (!apiKey) {
       return jsonOk({
         ok: false,
         configured: false,
-        error: `${provider.env_key_var} is not set on the server`,
+        error: `No key for ${provider.env_key_var} — set it in Admin or as a server env var.`,
       });
     }
 

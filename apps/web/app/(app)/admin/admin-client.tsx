@@ -15,6 +15,9 @@ interface Provider {
   env_key_var: string;
   notes: string | null;
   configured: boolean;
+  key_managed: boolean;
+  key_last4: string | null;
+  key_source: "db" | "env" | null;
 }
 
 interface ModelRow {
@@ -51,10 +54,12 @@ export function AdminClient({
   providers,
   models,
   config,
+  secretsEnabled,
 }: {
   providers: Provider[];
   models: ModelRow[];
   config: FeatureConfig[];
+  secretsEnabled: boolean;
 }) {
   const router = useRouter();
   const toast = useFireToast();
@@ -65,6 +70,8 @@ export function AdminClient({
   const [testResults, setTestResults] = useState<Record<string, { ok: boolean; msg: string }>>({});
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [providerTests, setProviderTests] = useState<Record<string, { ok: boolean; msg: string }>>({});
+  const [keyDrafts, setKeyDrafts] = useState<Record<string, string>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
 
   const modelsByModality = useMemo(() => {
     const map = new Map<string, ModelRow[]>();
@@ -132,6 +139,39 @@ export function AdminClient({
       setProviderTests((prev) => ({ ...prev, [slug]: { ok: false, msg } }));
       toast.error(`${slug}: ${msg}`);
     }
+  }
+
+  async function saveProviderKey(providerId: string) {
+    const apiKey = (keyDrafts[providerId] ?? "").trim();
+    if (apiKey.length < 8) return toast.error("Enter the full API key.");
+    setSavingKey(providerId);
+    const res = await fetch("/api/admin/providers/key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider_id: providerId, api_key: apiKey }),
+    });
+    setSavingKey(null);
+    const body = (await res.json()) as { data?: { last4?: string }; error?: { message?: string } };
+    if (!res.ok) return toast.error(body.error?.message ?? "Could not save key");
+    setKeyDrafts((prev) => ({ ...prev, [providerId]: "" }));
+    toast.success(`Key saved · …${body.data?.last4 ?? ""}`);
+    router.refresh();
+  }
+
+  async function clearProviderKey(providerId: string) {
+    setSavingKey(providerId);
+    const res = await fetch("/api/admin/providers/key", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider_id: providerId }),
+    });
+    setSavingKey(null);
+    if (!res.ok) {
+      const body = (await res.json()) as { error?: { message?: string } };
+      return toast.error(body.error?.message ?? "Could not clear key");
+    }
+    toast.success("Stored key removed");
+    router.refresh();
   }
 
   async function testModel(modelId: string) {
@@ -382,12 +422,59 @@ export function AdminClient({
                     {providerTests[p.slug]!.msg}
                   </div>
                 )}
-                {!p.configured && (
-                  <p className="-mt-1 mb-3 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-subtle)]">
-                    Set <code className="font-[family-name:var(--font-mono)]">{p.env_key_var}</code> in the
-                    server environment (Vercel → Settings → Environment Variables) to enable this provider.
+                {/* API key — set in-app (encrypted) or via the env var. */}
+                <div className="-mt-1 mb-3 space-y-1.5">
+                  <p className="font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
+                    {p.key_source === "db" ? (
+                      <>Key set in-app{p.key_last4 ? ` · …${p.key_last4}` : ""}</>
+                    ) : p.key_source === "env" ? (
+                      <>
+                        Using env var{" "}
+                        <code className="font-[family-name:var(--font-mono)]">{p.env_key_var}</code>
+                      </>
+                    ) : (
+                      <>No key set</>
+                    )}
                   </p>
-                )}
+                  {secretsEnabled ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        value={keyDrafts[p.id] ?? ""}
+                        onChange={(e) =>
+                          setKeyDrafts((prev) => ({ ...prev, [p.id]: e.target.value }))
+                        }
+                        placeholder={p.key_managed ? "Replace API key…" : `Set ${p.env_key_var}…`}
+                        autoComplete="off"
+                        className={`${SELECT_CLASS} h-9 flex-1`}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => saveProviderKey(p.id)}
+                        disabled={savingKey === p.id || !(keyDrafts[p.id] ?? "").trim()}
+                      >
+                        {savingKey === p.id ? "Saving…" : "Save key"}
+                      </Button>
+                      {p.key_managed && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => clearProviderKey(p.id)}
+                          disabled={savingKey === p.id}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="font-[family-name:var(--font-sans)] text-2xs text-[var(--fg-subtle)]">
+                      Set <code className="font-[family-name:var(--font-mono)]">AI_SECRETS_KEY</code>{" "}
+                      (base64 of 32 random bytes) in the server env to manage keys in-app, or set{" "}
+                      <code className="font-[family-name:var(--font-mono)]">{p.env_key_var}</code>{" "}
+                      directly.
+                    </p>
+                  )}
+                </div>
                 {p.notes && (
                   <p className="mb-3 font-[family-name:var(--font-sans)] text-xs text-[var(--fg-muted)]">
                     {p.notes}

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { AppError } from "@peptide/shared";
 import { requireAdmin } from "@/lib/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { resolveProviderKey } from "@/lib/agent";
 import { jsonOk, jsonError, parseJson } from "@/lib/api";
 
 export const runtime = "nodejs";
@@ -44,7 +45,7 @@ export async function PATCH(req: Request) {
       .maybeSingle<{ display_name: string; ai_providers: { slug: string; env_key_var: string } }>();
     if (primaryModel) {
       const keyVar = primaryModel.ai_providers?.env_key_var;
-      const keyPresent = Boolean(keyVar && process.env[keyVar] && process.env[keyVar]!.trim() !== "");
+      const keyPresent = keyVar ? Boolean(await resolveProviderKey(keyVar)) : false;
       if (!keyPresent) {
         throw new AppError(
           "VALIDATION_FAILED",
