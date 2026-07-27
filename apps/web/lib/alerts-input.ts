@@ -10,6 +10,10 @@ import type { AlertScanInput } from "@peptide/shared/alerts";
 const OZ_TO_ML = 29.5735;
 const dayOf = (iso: string) => iso.slice(0, 10);
 
+// Adherence window. 28 days so even a once-weekly compound accumulates 4
+// expected doses — the engine's minimum before it will judge a percentage.
+export const DOSE_WINDOW_DAYS = 28;
+
 export async function buildAlertScanInput(
   supabase: SupabaseClient,
   userId: string,
@@ -18,6 +22,8 @@ export async function buildAlertScanInput(
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const doseWindowStart = new Date();
+  doseWindowStart.setDate(doseWindowStart.getDate() - DOSE_WINDOW_DAYS);
 
   const [
     profile,
@@ -64,12 +70,15 @@ export async function buildAlertScanInput(
       .eq("user_id", userId)
       .gte("logged_at", sevenDaysAgo.toISOString())
       .order("logged_at", { ascending: false }),
+    // Time-bounded, not `.limit(30)`. A count-bounded query makes the window
+    // itself depend on how much the user logged, which is the same circularity
+    // the adherence denominator had.
     supabase
       .from("peptide_doses")
       .select("taken_at,adherence")
       .eq("user_id", userId)
-      .order("taken_at", { ascending: false })
-      .limit(30),
+      .gte("taken_at", doseWindowStart.toISOString())
+      .order("taken_at", { ascending: false }),
     supabase
       .from("goal_metrics")
       .select("metric_key,value,logged_at")
@@ -168,6 +177,10 @@ export async function buildAlertScanInput(
       taken_at: d.taken_at as string,
       adherence: d.adherence as string,
     })),
+    doseWindowDays: DOSE_WINDOW_DAYS,
+    // What the active regimen says SHOULD have been taken in that window. This
+    // is the denominator; without it a skipped-and-unlogged dose is invisible.
+    scheduledDoses: (regimen?.currentItems ?? []).map((it) => ({ frequency: it.frequency })),
     metrics: (metrics.data ?? []).map((m) => ({
       metric_key: m.metric_key as string,
       value: Number(m.value),

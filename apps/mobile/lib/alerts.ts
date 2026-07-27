@@ -40,9 +40,15 @@ export interface AlertsView {
   openCount: number;
 }
 
+// Must match apps/web/lib/alerts-input.ts DOSE_WINDOW_DAYS — both feed the same
+// pure engine, so a divergence would make web and mobile disagree on adherence.
+const DOSE_WINDOW_DAYS = 28;
+
 async function buildAlertScanInput(userId: string): Promise<AlertScanInput> {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const doseWindowStart = new Date();
+  doseWindowStart.setDate(doseWindowStart.getDate() - DOSE_WINDOW_DAYS);
 
   const [
     profile,
@@ -85,12 +91,14 @@ async function buildAlertScanInput(userId: string): Promise<AlertScanInput> {
       .eq("user_id", userId)
       .gte("logged_at", sevenDaysAgo.toISOString())
       .order("logged_at", { ascending: false }),
+    // Time-bounded rather than count-bounded, so the window doesn't depend on
+    // how much was logged. Web parity: apps/web/lib/alerts-input.ts.
     supabase
       .from("peptide_doses")
       .select("taken_at,adherence")
       .eq("user_id", userId)
-      .order("taken_at", { ascending: false })
-      .limit(30),
+      .gte("taken_at", doseWindowStart.toISOString())
+      .order("taken_at", { ascending: false }),
     supabase
       .from("goal_metrics")
       .select("metric_key,value,logged_at")
@@ -178,6 +186,11 @@ async function buildAlertScanInput(userId: string): Promise<AlertScanInput> {
     doses: ((doses.data ?? []) as any[]).map((d) => ({
       taken_at: d.taken_at as string,
       adherence: d.adherence as string,
+    })),
+    doseWindowDays: DOSE_WINDOW_DAYS,
+    // Denominator: what the active regimen scheduled in that window.
+    scheduledDoses: (regimen?.currentItems ?? []).map((it: any) => ({
+      frequency: (it.frequency ?? null) as string | null,
     })),
     metrics: ((metrics.data ?? []) as any[]).map((m) => ({
       metric_key: m.metric_key as string,

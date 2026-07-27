@@ -11,11 +11,56 @@ export interface Purchase {
   purchasedOn: string; // ISO date (YYYY-MM-DD)
 }
 
-/** Convert a dose value to mg; null when the unit isn't mass-based (iu/units/ml). */
-export function doseToMg(value: number, unit: string): number | null {
+/**
+ * The reconstituted mix a dose was drawn from. Supplying it lets volume-based
+ * doses (ml / units) be converted to mass exactly, instead of being dropped.
+ */
+export interface DoseMassContext {
+  /** mg per mL of the mix — `reconstitution_records.concentration_mg_per_ml`. */
+  concentrationMgPerMl?: number | null;
+  /** Syringe calibration, U-100 → 100 units/mL — `…syringe_units_per_ml`. */
+  syringeUnitsPerMl?: number | null;
+}
+
+/**
+ * Convert a dose to mg for inventory depletion.
+ *
+ * mg/mcg are pure mass and always convert. `ml` and `units` are VOLUME, so they
+ * only convert when the mix is known — passing no context returns null, which is
+ * the original behaviour and keeps every existing caller correct.
+ *
+ * Two things are deliberately never guessed:
+ *  - **Syringe calibration.** 20 units is 0.2 mL on a U-100 and 0.5 mL on a U-40
+ *    — a 2.5x difference in mg consumed. Assuming U-100 would silently under-
+ *    count for anyone using another barrel, so an unknown calibration returns null.
+ *  - **iu.** It measures biological activity, not volume. mg-per-IU is compound
+ *    specific and is not in the catalog, so there is nothing to convert with.
+ *
+ * Returning null is always safe: callers skip the dose, which under-counts
+ * consumption. That is the same failure the old code had for every non-mass unit,
+ * so nothing regresses — it just now applies to far fewer doses.
+ */
+export function doseToMg(
+  value: number,
+  unit: string,
+  ctx: DoseMassContext = {},
+): number | null {
+  if (!Number.isFinite(value) || value <= 0) return null;
   if (unit === "mg") return value;
   if (unit === "mcg") return value / 1000;
-  return null;
+
+  const conc = ctx.concentrationMgPerMl;
+  if (conc === null || conc === undefined || !(conc > 0)) return null;
+
+  if (unit === "ml") return value * conc;
+
+  if (unit === "units") {
+    const cal = ctx.syringeUnitsPerMl;
+    if (cal === null || cal === undefined || !(cal > 0)) return null;
+    return (value / cal) * conc;
+  }
+
+  return null; // 'iu' and anything unrecognised
 }
 
 export function purchaseMg(p: Purchase): number {

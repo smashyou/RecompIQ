@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Test harness for the safety-alert engine. Runs via `pnpm test:alerts`.
 import assert from "node:assert/strict";
-import { scanRecentLogs, fingerprintOf, reconcileAlerts, selectAlertsToNotify, didEscalate } from "../packages/peptides/src/alerts.ts";
+import { scanRecentLogs, fingerprintOf, reconcileAlerts, selectAlertsToNotify, didEscalate, dosesPerWeekFromFrequency } from "../packages/peptides/src/alerts.ts";
 
 let passed = 0, failed = 0;
 function it(name, fn) {
@@ -65,6 +65,142 @@ it("adherence_drop is two-tier: warn below the critical cut, info between", () =
   assert.equal(warn.severity, "warn");
   const info = scanRecentLogs({ ...base(), doses: taken(75) }).find((x) => x.kind === "adherence_drop"); // 60 ≤ 75 < 80
   assert.equal(info.severity, "info");
+});
+
+// ---- adherence denominator: the schedule, not just what you bothered to log ----
+
+const daysAgo = (n) => new Date(Date.parse(NOW) - n * 86400000).toISOString();
+
+it("dosesPerWeekFromFrequency parses the common forms", () => {
+  assert.equal(dosesPerWeekFromFrequency("daily"), 7);
+  assert.equal(dosesPerWeekFromFrequency("Every day"), 7);
+  assert.equal(dosesPerWeekFromFrequency("EOD"), 3.5);
+  assert.equal(dosesPerWeekFromFrequency("every other day"), 3.5);
+  assert.equal(dosesPerWeekFromFrequency("weekly"), 1);
+  assert.equal(dosesPerWeekFromFrequency("once weekly"), 1);
+  assert.equal(dosesPerWeekFromFrequency("2x/week"), 2);
+  assert.equal(dosesPerWeekFromFrequency("3x wk"), 3);
+  assert.equal(dosesPerWeekFromFrequency("twice weekly"), 2);
+  assert.equal(dosesPerWeekFromFrequency("5 times per week"), 5);
+  assert.equal(dosesPerWeekFromFrequency("twice daily"), 14);
+});
+
+it("dosesPerWeekFromFrequency returns null rather than guessing", () => {
+  assert.equal(dosesPerWeekFromFrequency(null), null);
+  assert.equal(dosesPerWeekFromFrequency(""), null);
+  assert.equal(dosesPerWeekFromFrequency("as needed"), null);
+  assert.equal(dosesPerWeekFromFrequency("when I remember"), null);
+  assert.equal(dosesPerWeekFromFrequency("cycle 5 on 2 off"), null);
+  // "biweekly" means twice a week OR every two weeks depending on who wrote it
+  // — a 4x spread in the denominator, so it must not be resolved by guessing.
+  assert.equal(dosesPerWeekFromFrequency("biweekly"), null);
+  assert.equal(dosesPerWeekFromFrequency("bi-weekly"), null);
+});
+
+it("dosesPerWeekFromFrequency handles the unambiguous long-interval forms", () => {
+  assert.equal(dosesPerWeekFromFrequency("every other week"), 0.5);
+  assert.equal(dosesPerWeekFromFrequency("fortnightly"), 0.5);
+});
+
+it("REGRESSION: doses never logged now count against adherence", () => {
+  // A daily item over 28 days = 28 expected doses. Only 10 were ever logged,
+  // every one of them as "taken". The old math divided by what was logged and
+  // read 100%; the schedule basis reads 10/28 = 36%.
+  const doses = Array.from({ length: 10 }, (_, i) => ({ taken_at: daysAgo(i * 2), adherence: "taken" }));
+  const f = scanRecentLogs({
+    ...base(),
+    doses,
+    doseWindowDays: 28,
+    scheduledDoses: [{ frequency: "daily" }],
+  }).find((x) => x.kind === "adherence_drop");
+  assert.ok(f, "expected adherence_drop to fire on 10 of 28 scheduled doses");
+  assert.equal(f.evidence.basis, "schedule");
+  assert.equal(f.evidence.expected, 28);
+  assert.equal(f.evidence.taken, 10);
+  assert.equal(f.evidence.pct, 36);
+  assert.equal(f.severity, "warn"); // 36% < criticalAt 60
+});
+
+it("perfect logging against the schedule does NOT fire", () => {
+  const doses = Array.from({ length: 28 }, (_, i) => ({ taken_at: daysAgo(i), adherence: "taken" }));
+  const f = scanRecentLogs({
+    ...base(),
+    doses,
+    doseWindowDays: 28,
+    scheduledDoses: [{ frequency: "daily" }],
+  }).find((x) => x.kind === "adherence_drop");
+  assert.equal(f, undefined);
+});
+
+it("multiple scheduled items sum their expected doses", () => {
+  // daily (7/wk) + 2x/week = 9/wk → over 14 days = 18 expected.
+  const doses = Array.from({ length: 9 }, (_, i) => ({ taken_at: daysAgo(i), adherence: "taken" }));
+  const f = scanRecentLogs({
+    ...base(),
+    doses,
+    doseWindowDays: 14,
+    scheduledDoses: [{ frequency: "daily" }, { frequency: "2x/week" }],
+  }).find((x) => x.kind === "adherence_drop");
+  assert.ok(f);
+  assert.equal(f.evidence.expected, 18);
+  assert.equal(f.evidence.pct, 50);
+});
+
+it("over-logging caps at 100% and does not fire", () => {
+  const doses = Array.from({ length: 20 }, (_, i) => ({ taken_at: daysAgo(i % 14), adherence: "taken" }));
+  const f = scanRecentLogs({
+    ...base(),
+    doses,
+    doseWindowDays: 14,
+    scheduledDoses: [{ frequency: "weekly" }], // only 2 expected
+  }).find((x) => x.kind === "adherence_drop");
+  assert.equal(f, undefined, "100% adherence must not raise an alert");
+});
+
+it("an unparseable frequency falls back to the logged basis, never invents a denominator", () => {
+  const doses = Array.from({ length: 10 }, (_, i) => ({ taken_at: daysAgo(i), adherence: "taken" }));
+  const f = scanRecentLogs({
+    ...base(),
+    doses,
+    doseWindowDays: 28,
+    scheduledDoses: [{ frequency: "as needed" }],
+  }).find((x) => x.kind === "adherence_drop");
+  assert.equal(f, undefined, "10/10 taken on the logged basis is 100% — no alert");
+});
+
+it("doses outside the window are excluded from the count", () => {
+  // 28-day window; 8 taken inside, 20 taken long ago. Only the 8 count, so
+  // 8/28 = 29% fires rather than the ancient history papering over it.
+  const inside = Array.from({ length: 8 }, (_, i) => ({ taken_at: daysAgo(i), adherence: "taken" }));
+  const ancient = Array.from({ length: 20 }, (_, i) => ({ taken_at: daysAgo(200 + i), adherence: "taken" }));
+  const f = scanRecentLogs({
+    ...base(),
+    doses: [...inside, ...ancient],
+    doseWindowDays: 28,
+    scheduledDoses: [{ frequency: "daily" }],
+  }).find((x) => x.kind === "adherence_drop");
+  assert.ok(f);
+  assert.equal(f.evidence.taken, 8);
+  assert.equal(f.evidence.expected, 28);
+});
+
+it("a schedule too small to judge (expected < 4) does not fire", () => {
+  const f = scanRecentLogs({
+    ...base(),
+    doses: [{ taken_at: daysAgo(1), adherence: "taken" }],
+    doseWindowDays: 14,
+    scheduledDoses: [{ frequency: "weekly" }], // 2 expected — too few to judge
+  }).find((x) => x.kind === "adherence_drop");
+  assert.equal(f, undefined);
+});
+
+it("adherence message still observes, never instructs", () => {
+  const doses = Array.from({ length: 5 }, (_, i) => ({ taken_at: daysAgo(i), adherence: "taken" }));
+  const f = scanRecentLogs({
+    ...base(), doses, doseWindowDays: 28, scheduledDoses: [{ frequency: "daily" }],
+  }).find((x) => x.kind === "adherence_drop");
+  assert.ok(f);
+  assert.ok(!/you should|take your|increase|resume/i.test(f.message), "must not instruct");
 });
 
 it("rapid_weight_loss fires on a sustained >2 lb/wk slope", () => {

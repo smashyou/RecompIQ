@@ -7,6 +7,17 @@ export interface AlertScanInput {
   proteinByDay: { day: string; protein_g: number }[];      // recent days
   proteinGoalMin: number | null;
   doses: { taken_at: string; adherence: string }[];        // recent window
+  /**
+   * Days the adherence window covers. The engine filters `doses` to it and uses
+   * it to scale the scheduled-dose denominator. Omit and adherence falls back to
+   * the logged-dose basis (which cannot see a dose that was never logged).
+   */
+  doseWindowDays?: number;
+  /**
+   * Regimen items active in that window. `frequency` is free text as the user
+   * typed it; the engine parses what it can and ignores the rest.
+   */
+  scheduledDoses?: { frequency: string | null }[];
   metrics: { metric_key: string; value: number; logged_at: string }[]; // self-checks (neuro_severity, nausea_severity…)
   symptoms: { logged_at: string; nausea: boolean | null }[];
   waterByDay: { day: string; ml: number }[];

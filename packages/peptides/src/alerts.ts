@@ -50,6 +50,55 @@ function pushThreshold(
   });
 }
 
+/**
+ * Free-text dosing frequency → doses per week, or null when it can't be read.
+ *
+ * `regimen_items.frequency` and `protocol_schedule_weeks.frequency` are both
+ * free text typed by the user, so this handles the forms people actually write
+ * and refuses everything else. Returning null is important: an unreadable
+ * frequency must degrade to "we don't know what was expected", never to a
+ * guessed denominator that would manufacture a false adherence figure.
+ *
+ * Deliberately NOT parsed: cycling patterns ("5 on 2 off"), PRN / "as needed",
+ * and anything tapering. Those have no constant weekly rate.
+ */
+export function dosesPerWeekFromFrequency(freq: string | null | undefined): number | null {
+  if (!freq) return null;
+  const s = freq.trim().toLowerCase();
+  if (!s) return null;
+
+  // Anything conditional or cycling has no fixed weekly rate.
+  if (/\b(prn|as needed|as required|when|if|cycle|on\s*\/?\s*off|taper)\b/.test(s)) return null;
+
+  const NUM_WORD: Record<string, number> = { once: 1, one: 1, twice: 2, two: 2, thrice: 3, three: 3, four: 4, five: 5, six: 6, seven: 7 };
+
+  // "twice daily", "3x/day", "2 times per day"
+  const perDay = s.match(/(\d+(?:\.\d+)?|once|twice|thrice|one|two|three|four|five|six|seven)\s*(?:x|times)?\s*(?:\/|per|a|each)?\s*(?:day|daily|d)\b/);
+  if (perDay) {
+    const n = NUM_WORD[perDay[1]!] ?? Number(perDay[1]);
+    if (Number.isFinite(n) && n > 0) return n * 7;
+  }
+
+  // "2x/week", "3 times per week", "twice weekly"
+  const perWeek = s.match(/(\d+(?:\.\d+)?|once|twice|thrice|one|two|three|four|five|six|seven)\s*(?:x|times)?\s*(?:\/|per|a|each)?\s*(?:week|weekly|wk|w)\b/);
+  if (perWeek) {
+    const n = NUM_WORD[perWeek[1]!] ?? Number(perWeek[1]);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+
+  // "biweekly" means both "twice a week" and "every two weeks" in ordinary
+  // English — a 4x spread in the denominator. Refuse it rather than pick one.
+  if (/\bbi[- ]?weekly\b/.test(s)) return null;
+
+  // Every-other-day before plain daily, so "every other day" isn't read as daily.
+  if (/\b(eod|every other day|alternate days?|q2d)\b/.test(s)) return 3.5;
+  if (/\b(daily|every ?day|qd|od)\b/.test(s)) return 7;
+  if (/\b(every other week|q2w|fortnight(ly)?)\b/.test(s)) return 0.5;
+  if (/\b(weekly|every ?week|qw)\b/.test(s)) return 1;
+
+  return null;
+}
+
 export function scanRecentLogs(input: AlertScanInput): AlertFinding[] {
   const out: AlertFinding[] = [];
   const nowMs = Date.parse(input.now);
@@ -123,24 +172,68 @@ export function scanRecentLogs(input: AlertScanInput): AlertFinding[] {
     }
   }
 
-  // --- adherence drop: % taken over the dose window ---
-  if (input.doses.length >= 4) {
-    const taken = input.doses.filter((d) => d.adherence === "taken" || d.adherence === "partial").length;
-    const pct = (taken / input.doses.length) * 100;
-    const rule = ruleFor("adherence_drop");
-    // adherence_drop two-tier: < criticalAt(60) → warn (lower adherence is worse);
-    // criticalAt..warnAt(80) → info. Both use the "low" bucket — one active row.
-    const adhCrit = rule.criticalAt !== undefined && pct < rule.criticalAt;
-    const adhWarn = rule.warnAt !== undefined && pct < rule.warnAt;
-    if (adhCrit || adhWarn) {
-      const severity = adhCrit ? "warn" : "info";
-      out.push({
-        kind: "adherence_drop", severity, title: rule.title,
-        message: interp(adhCrit && rule.messageCritical ? rule.messageCritical : rule.messageWarn, `${Math.round(pct)}`),
-        evidence: { pct: Math.round(pct), taken, total: input.doses.length },
-        evidenceLevel: rule.evidenceLevel, citation: rule.citation,
-        fingerprint: fingerprintOf("adherence_drop", "low"),
-      });
+  // --- adherence drop: taken vs. SCHEDULED doses over the window ---
+  //
+  // The denominator used to be `input.doses.length` — the doses the user
+  // bothered to log. A dose that was skipped and therefore never recorded was
+  // absent from both sides of the fraction, so the rule could not detect the
+  // single most common failure and read highest exactly when adherence was
+  // worst. The rule's own copy already said "recent SCHEDULED doses"; this makes
+  // the arithmetic honour it.
+  //
+  // Denominator = max(expected from the schedule, doses actually logged):
+  //  - expected wins when doses are missing → skipped doses now cost you.
+  //  - logged wins when you logged more than planned (extra doses, or an
+  //    explicitly-logged "missed") → percentage stays truthful and ≤ 100.
+  // With no parseable frequency there is no way to know what was expected, so
+  // it degrades to the logged basis rather than inventing a denominator.
+  {
+    const windowDays = input.doseWindowDays ?? null;
+    const cutoff = windowDays !== null ? Date.parse(input.now) - windowDays * 86_400_000 : null;
+    const inWindow =
+      cutoff === null
+        ? input.doses
+        : input.doses.filter((d) => {
+            const t = Date.parse(d.taken_at);
+            return Number.isFinite(t) && t >= cutoff;
+          });
+
+    let perWeek = 0;
+    for (const s of input.scheduledDoses ?? []) {
+      const f = dosesPerWeekFromFrequency(s.frequency);
+      if (f !== null) perWeek += f;
+    }
+    const expectedFromSchedule =
+      perWeek > 0 && windowDays !== null ? (perWeek * windowDays) / 7 : 0;
+
+    const taken = inWindow.filter((d) => d.adherence === "taken" || d.adherence === "partial").length;
+    const denominator = Math.max(expectedFromSchedule, inWindow.length);
+    const basis = expectedFromSchedule > inWindow.length ? "schedule" : "logged";
+
+    if (denominator >= 4) {
+      const pct = Math.min(100, (taken / denominator) * 100);
+      const rule = ruleFor("adherence_drop");
+      // adherence_drop two-tier: < criticalAt(60) → warn (lower adherence is worse);
+      // criticalAt..warnAt(80) → info. Both use the "low" bucket — one active row.
+      const adhCrit = rule.criticalAt !== undefined && pct < rule.criticalAt;
+      const adhWarn = rule.warnAt !== undefined && pct < rule.warnAt;
+      if (adhCrit || adhWarn) {
+        const severity = adhCrit ? "warn" : "info";
+        out.push({
+          kind: "adherence_drop", severity, title: rule.title,
+          message: interp(adhCrit && rule.messageCritical ? rule.messageCritical : rule.messageWarn, `${Math.round(pct)}`),
+          evidence: {
+            pct: Math.round(pct),
+            taken,
+            expected: Math.round(denominator),
+            basis,
+            windowDays,
+            total: inWindow.length,
+          },
+          evidenceLevel: rule.evidenceLevel, citation: rule.citation,
+          fingerprint: fingerprintOf("adherence_drop", "low"),
+        });
+      }
     }
   }
 

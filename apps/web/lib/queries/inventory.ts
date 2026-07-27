@@ -47,7 +47,7 @@ interface Range {
 export async function loadInventory(userId: string, range: Range = {}): Promise<InventoryView> {
   const supabase = await createSupabaseServerClient();
 
-  const [purchasesRes, dosesRes, weightsRes, regimen] = await Promise.all([
+  const [purchasesRes, dosesRes, weightsRes, regimen, mixesRes] = await Promise.all([
     supabase
       .from("peptide_purchases")
       .select("id,compound_id,vial_mg,vial_count,price_usd,vendor,purchased_on,notes, compounds(slug,name)")
@@ -55,7 +55,7 @@ export async function loadInventory(userId: string, range: Range = {}): Promise<
       .order("purchased_on", { ascending: false }),
     supabase
       .from("peptide_doses")
-      .select("compound_id,dose_value,dose_unit,adherence")
+      .select("compound_id,dose_value,dose_unit,adherence,regimen_item_id")
       .eq("user_id", userId)
       .in("adherence", ["taken", "partial"]),
     supabase
@@ -64,7 +64,37 @@ export async function loadInventory(userId: string, range: Range = {}): Promise<
       .eq("user_id", userId)
       .order("logged_at", { ascending: true }),
     loadActiveRegimen(userId),
+    // The mix behind each regimen item. Doses recorded in ml/units are volumes,
+    // so without this they convert to no mass at all and the vial never depletes
+    // — which is how most reconstituted peptides are actually dosed.
+    supabase
+      .from("regimen_items")
+      .select(
+        "id, reconstitution_records(concentration_mg_per_ml,syringe_units_per_ml)",
+      )
+      .eq("user_id", userId)
+      .not("reconstitution_record_id", "is", null),
   ]);
+
+  const firstOf = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? (v[0] ?? null) : v);
+
+  // regimen_item_id → the mix it draws from.
+  const mixByItem = new Map<string, { concentrationMgPerMl: number | null; syringeUnitsPerMl: number | null }>();
+  for (const row of (mixesRes.data ?? []) as Array<{
+    id: string;
+    reconstitution_records:
+      | { concentration_mg_per_ml: number | string | null; syringe_units_per_ml: number | null }
+      | { concentration_mg_per_ml: number | string | null; syringe_units_per_ml: number | null }[]
+      | null;
+  }>) {
+    const rec = firstOf(row.reconstitution_records);
+    if (!rec) continue;
+    mixByItem.set(row.id, {
+      concentrationMgPerMl:
+        rec.concentration_mg_per_ml !== null ? Number(rec.concentration_mg_per_ml) : null,
+      syringeUnitsPerMl: rec.syringe_units_per_ml ?? null,
+    });
+  }
 
   const rawPurchases = (purchasesRes.data ?? []) as Array<{
     id: string;
@@ -97,19 +127,30 @@ export async function loadInventory(userId: string, range: Range = {}): Promise<
     };
   });
 
-  // Consumed mg per compound (mass units only).
+  // Consumed mg per compound. Volume doses (ml/units) resolve through the mix
+  // attached to their regimen item; without one they still contribute nothing.
   const consumedMg = new Map<string, number>();
-  for (const d of (dosesRes.data ?? []) as Array<{ compound_id: string; dose_value: number | string; dose_unit: string }>) {
-    const mg = doseToMg(Number(d.dose_value), d.dose_unit);
+  for (const d of (dosesRes.data ?? []) as Array<{
+    compound_id: string;
+    dose_value: number | string;
+    dose_unit: string;
+    regimen_item_id: string | null;
+  }>) {
+    const mix = d.regimen_item_id ? mixByItem.get(d.regimen_item_id) : undefined;
+    const mg = doseToMg(Number(d.dose_value), d.dose_unit, mix ?? {});
     if (mg === null) continue;
     consumedMg.set(d.compound_id, (consumedMg.get(d.compound_id) ?? 0) + mg);
   }
 
-  // Active dose per compound (mg) from the current regimen items.
+  // Active dose per compound (mg) from the current regimen items — same mix
+  // resolution, so a unit-dosed item still yields cost-per-dose and days-left.
   const activeDose = new Map<string, { mg: number | null; label: string | null }>();
   for (const it of regimen?.currentItems ?? []) {
     if (activeDose.has(it.compound_id)) continue;
-    const mg = it.dose_value !== null && it.dose_unit ? doseToMg(it.dose_value, it.dose_unit) : null;
+    const mg =
+      it.dose_value !== null && it.dose_unit
+        ? doseToMg(it.dose_value, it.dose_unit, mixByItem.get(it.id) ?? {})
+        : null;
     const label = it.dose_value !== null && it.dose_unit ? `${it.dose_value} ${it.dose_unit}` : null;
     activeDose.set(it.compound_id, { mg, label });
   }

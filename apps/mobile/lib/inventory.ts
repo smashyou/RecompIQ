@@ -41,7 +41,7 @@ export async function loadInventory(
   userId: string,
   range: { from?: string; to?: string } = {},
 ): Promise<InventoryView> {
-  const [purchasesRes, dosesRes, weightsRes, regimen] = await Promise.all([
+  const [purchasesRes, dosesRes, weightsRes, regimen, mixesRes] = await Promise.all([
     supabase
       .from("peptide_purchases")
       .select("id,compound_id,vial_mg,vial_count,price_usd,vendor,purchased_on, compounds(name)")
@@ -49,12 +49,32 @@ export async function loadInventory(
       .order("purchased_on", { ascending: false }),
     supabase
       .from("peptide_doses")
-      .select("compound_id,dose_value,dose_unit,adherence")
+      .select("compound_id,dose_value,dose_unit,adherence,regimen_item_id")
       .eq("user_id", userId)
       .in("adherence", ["taken", "partial"]),
     supabase.from("weights").select("logged_at,value_lb").eq("user_id", userId).order("logged_at", { ascending: true }),
     loadActiveRegimen(userId),
+    // Mix behind each regimen item — lets ml/units doses deplete the vial.
+    // Web parity: apps/web/lib/queries/inventory.ts does the same resolution.
+    supabase
+      .from("regimen_items")
+      .select("id, reconstitution_records(concentration_mg_per_ml,syringe_units_per_ml)")
+      .eq("user_id", userId)
+      .not("reconstitution_record_id", "is", null),
   ]);
+
+  const mixByItem = new Map<string, { concentrationMgPerMl: number | null; syringeUnitsPerMl: number | null }>();
+  for (const row of (mixesRes.data ?? []) as any[]) {
+    const rec = one<any>(row.reconstitution_records);
+    if (!rec) continue;
+    mixByItem.set(row.id, {
+      concentrationMgPerMl:
+        rec.concentration_mg_per_ml !== null && rec.concentration_mg_per_ml !== undefined
+          ? Number(rec.concentration_mg_per_ml)
+          : null,
+      syringeUnitsPerMl: rec.syringe_units_per_ml ?? null,
+    });
+  }
 
   const purchases: PurchaseRow[] = ((purchasesRes.data ?? []) as any[]).map((p) => {
     const c = one<any>(p.compounds);
@@ -72,7 +92,8 @@ export async function loadInventory(
 
   const consumedMg = new Map<string, number>();
   for (const d of (dosesRes.data ?? []) as any[]) {
-    const mg = doseToMg(Number(d.dose_value), d.dose_unit);
+    const mix = d.regimen_item_id ? mixByItem.get(d.regimen_item_id) : undefined;
+    const mg = doseToMg(Number(d.dose_value), d.dose_unit, mix ?? {});
     if (mg === null) continue;
     consumedMg.set(d.compound_id, (consumedMg.get(d.compound_id) ?? 0) + mg);
   }
@@ -80,7 +101,10 @@ export async function loadInventory(
   const activeDose = new Map<string, { mg: number | null; label: string | null }>();
   for (const it of regimen?.currentItems ?? []) {
     if (activeDose.has(it.compound_id)) continue;
-    const mg = it.dose_value !== null && it.dose_unit ? doseToMg(it.dose_value, it.dose_unit) : null;
+    const mg =
+      it.dose_value !== null && it.dose_unit
+        ? doseToMg(it.dose_value, it.dose_unit, mixByItem.get(it.id) ?? {})
+        : null;
     const label = it.dose_value !== null && it.dose_unit ? `${it.dose_value} ${it.dose_unit}` : null;
     activeDose.set(it.compound_id, { mg, label });
   }

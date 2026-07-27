@@ -35,11 +35,43 @@ const P = (id, compoundId, vialMg, vialCount, priceUsd, purchasedOn) => ({
 });
 
 // ---- unit conversion ----
-it("doseToMg converts mcg→mg and passes mg through; non-mass → null", () => {
+it("doseToMg converts mcg→mg and passes mg through; volume units need a mix", () => {
   assert.equal(doseToMg(500, "mcg"), 0.5);
   assert.equal(doseToMg(2, "mg"), 2);
   assert.equal(doseToMg(10, "iu"), null);
+  // No mix context supplied → still null, exactly as before.
   assert.equal(doseToMg(5, "units"), null);
+  assert.equal(doseToMg(0.2, "ml"), null);
+});
+
+it("doseToMg: ml converts with the mix concentration", () => {
+  // 5 mg vial in 2 mL bac water → 2.5 mg/mL. Drawing 0.2 mL = 0.5 mg.
+  assert.ok(close(doseToMg(0.2, "ml", { concentrationMgPerMl: 2.5 }), 0.5));
+});
+
+it("doseToMg: units convert with concentration + syringe calibration", () => {
+  // 5 mg / 2 mL = 2.5 mg/mL. 20 units on a U-100 syringe = 0.2 mL = 0.5 mg.
+  assert.ok(close(doseToMg(20, "units", { concentrationMgPerMl: 2.5, syringeUnitsPerMl: 100 }), 0.5));
+  // Same 20 units on a U-40 syringe is 0.5 mL = 1.25 mg — 2.5x more. This is
+  // precisely why the calibration may not be assumed.
+  assert.ok(close(doseToMg(20, "units", { concentrationMgPerMl: 2.5, syringeUnitsPerMl: 40 }), 1.25));
+});
+
+it("doseToMg: units WITHOUT a calibration stay null (never guess U-100)", () => {
+  assert.equal(doseToMg(20, "units", { concentrationMgPerMl: 2.5 }), null);
+  assert.equal(doseToMg(20, "units", { concentrationMgPerMl: 2.5, syringeUnitsPerMl: 0 }), null);
+});
+
+it("doseToMg: iu is never convertible even with a full mix context", () => {
+  // IU is a biological-activity unit, not a volume. mg per IU is compound
+  // specific and is not in the catalog, so there is nothing to convert with.
+  assert.equal(doseToMg(10, "iu", { concentrationMgPerMl: 2.5, syringeUnitsPerMl: 100 }), null);
+});
+
+it("doseToMg: a missing or nonsense concentration does not silently zero out", () => {
+  assert.equal(doseToMg(20, "units", { concentrationMgPerMl: null, syringeUnitsPerMl: 100 }), null);
+  assert.equal(doseToMg(0.2, "ml", { concentrationMgPerMl: 0 }), null);
+  assert.equal(doseToMg(-1, "mg"), null);
 });
 
 it("purchaseMg + costPerMg use total price across vials", () => {
