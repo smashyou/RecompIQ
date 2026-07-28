@@ -34,6 +34,7 @@
     "test:metric-projection": "tsx scripts/test-metric-projection.mjs",
     "test:timeline": "tsx scripts/test-timeline.mjs",
     "test:alerts": "tsx scripts/test-alerts.mjs",
+    "test:energy": "tsx scripts/test-energy.mjs",
     "test:markdown": "tsx scripts/test-markdown.mjs"
   },
   "devDependencies": {

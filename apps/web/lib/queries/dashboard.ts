@@ -1,5 +1,7 @@
 import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { CalorieTarget, MacroTargets } from "@peptide/shared/goals/energy";
+import { averageSteps, buildEnergyBudget } from "@/lib/energy-budget";
 import {
   regimenSelectFields,
   shapeRegimen,
@@ -7,6 +9,13 @@ import {
 } from "@/lib/queries/regimen";
 
 export interface DashboardSnapshot {
+  /**
+   * Daily energy budget derived from the LATEST weigh-in. Null when BMR can't be
+   * established (no recorded sex and no body-fat reading, or missing height/age)
+   * — the UI prompts for the missing field rather than showing a guessed number.
+   */
+  energy: CalorieTarget | null;
+  macroTargets: MacroTargets | null;
   profile: { display_name: string | null; is_demo: boolean } | null;
   goal: {
     start_weight_lb: number;
@@ -81,6 +90,7 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
 
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  const stepsWindowStart = fourteenDaysAgo.toISOString().slice(0, 10);
 
   const [
     profile,
@@ -89,6 +99,7 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
     latestVital,
     latestSymptom,
     todaySteps,
+    recentSteps,
     todaySleep,
     todayFoods,
     activeRegimenRow,
@@ -98,8 +109,9 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
     userSettings,
   ] = await Promise.all([
       supabase
+        // dob/sex/height feed the BMR equation behind the calorie target.
         .from("profiles")
-        .select("display_name,is_demo")
+        .select("display_name,is_demo,dob,sex,height_in")
         .eq("user_id", userId)
         .maybeSingle(),
       supabase
@@ -112,10 +124,17 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         .limit(1)
         .maybeSingle(),
       supabase
+        // body_fat_pct / lean_mass_lb are nullable smart-scale fields. When
+        // present they switch BMR to Katch-McArdle, which drops the fat-mass
+        // term that makes weight-based equations drift at high body fat.
+        // DESCENDING + limit, then reversed below. Ascending + limit returns the
+        // OLDEST 60 rows, so past 60 weigh-ins the dashboard would have frozen
+        // on old data forever — the weight card, the projection and the calorie
+        // target all read the last element of this series.
         .from("weights")
-        .select("logged_at,value_lb")
+        .select("logged_at,value_lb,body_fat_pct,lean_mass_lb")
         .eq("user_id", userId)
-        .order("logged_at", { ascending: true })
+        .order("logged_at", { ascending: false })
         .limit(60),
       supabase
         .from("vitals")
@@ -137,6 +156,15 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         .eq("user_id", userId)
         .eq("day", today)
         .maybeSingle(),
+      // Recent steps → a MEASURED activity factor for TDEE. One day is too
+      // noisy; this averages the logged days in the window and stays null when
+      // nothing is logged (absent steps are not evidence of being sedentary).
+      supabase
+        .from("steps_logs")
+        .select("day,count")
+        .eq("user_id", userId)
+        .gte("day", stepsWindowStart)
+        .order("day", { ascending: false }),
       supabase
         .from("sleep_logs")
         .select("duration_min")
@@ -185,7 +213,10 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
         .maybeSingle(),
     ]);
 
-  const weightSeries = (weights.data ?? []).map((w) => ({
+  // Fetched newest-first (see the query); flip back to chronological order,
+  // which every downstream consumer — chart, projection, latestWeight — assumes.
+  const weightRowsAsc = [...(weights.data ?? [])].reverse();
+  const weightSeries = weightRowsAsc.map((w) => ({
     logged_at: w.logged_at as string,
     value_lb: Number(w.value_lb),
   }));
@@ -195,7 +226,26 @@ export async function loadDashboard(userId: string): Promise<DashboardSnapshot> 
   const latestWeight =
     weightSeries.length > 0 ? weightSeries[weightSeries.length - 1]! : null;
 
+  // ---- energy budget -------------------------------------------------------
+  // Computed off the LATEST weigh-in, not the onboarding start weight, so the
+  // target tracks the body it is describing instead of freezing on day one.
+  // From the chronological copy — the raw rows are newest-first.
+  const latestWeightRow = weightRowsAsc.at(-1) as
+    | { value_lb: number | string; body_fat_pct: number | null; lean_mass_lb: number | null }
+    | undefined;
+
+  const { energy, macros } = buildEnergyBudget({
+    profile: profile.data ?? null,
+    latestWeight: latestWeightRow ?? null,
+    goal: goal.data ?? null,
+    avgStepsPerDay: averageSteps(
+      (recentSteps.data ?? []) as Array<{ count: number | string }>,
+    ),
+  });
+
   return {
+    energy,
+    macroTargets: macros,
     profile: profile.data
       ? { display_name: profile.data.display_name, is_demo: profile.data.is_demo }
       : null,

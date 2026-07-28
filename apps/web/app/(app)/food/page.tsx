@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, MetricBox } from "@/components/kit";
+import { averageSteps, buildEnergyBudget } from "@/lib/energy-budget";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,9 @@ export default async function FoodPage() {
   const today = new Date().toISOString().slice(0, 10);
   const supabase = await createSupabaseServerClient();
 
-  const [logsRes, goalRes] = await Promise.all([
+  const stepsWindowStart = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
+
+  const [logsRes, goalRes, profileRes, latestWeightRes, stepsRes] = await Promise.all([
     supabase
       .from("food_logs")
       .select("id,description,brand,amount,unit,calories_kcal,protein_g,carbs_g,fat_g,meal_type,logged_at")
@@ -45,15 +48,45 @@ export default async function FoodPage() {
       .order("logged_at", { ascending: true }),
     supabase
       .from("goals")
-      .select("protein_target_g_min,protein_target_g_max")
+      .select(
+        "protein_target_g_min,protein_target_g_max,goal_weight_lb_min,goal_weight_lb_max,timeline_weeks",
+      )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Same energy budget the dashboard shows — assembled by the shared
+    // buildEnergyBudget so the two surfaces cannot disagree.
+    supabase
+      .from("profiles")
+      .select("dob,sex,height_in")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("weights")
+      .select("value_lb,body_fat_pct,lean_mass_lb")
+      .eq("user_id", user.id)
+      .order("logged_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("steps_logs")
+      .select("count")
+      .eq("user_id", user.id)
+      .gte("day", stepsWindowStart),
   ]);
 
   const logs = (logsRes.data ?? []) as FoodLogRow[];
   const goal = goalRes.data;
+
+  const { energy, macros } = buildEnergyBudget({
+    profile: profileRes.data ?? null,
+    latestWeight: latestWeightRes.data ?? null,
+    goal: goal ?? null,
+    avgStepsPerDay: averageSteps(
+      (stepsRes.data ?? []) as Array<{ count: number | string }>,
+    ),
+  });
 
   const totals = logs.reduce(
     (a, r) => ({
@@ -65,9 +98,17 @@ export default async function FoodPage() {
     { cal: 0, p: 0, c: 0, f: 0 },
   );
 
-  const proteinTarget = goal
-    ? `target ${goal.protein_target_g_min}–${goal.protein_target_g_max} g`
-    : null;
+  const r = Math.round;
+  const targetLine = macros
+    ? `Targets · ${energy ? `${r(energy.targetKcal)} kcal · ` : ""}` +
+      `P ${r(macros.proteinGMin)}–${r(macros.proteinGMax)} g · ` +
+      `C ${r(macros.carbGMin)}–${r(macros.carbGMax)} g · ` +
+      `F ${r(macros.fatGMin)}–${r(macros.fatGMax)} g`
+    : goal
+      ? `Protein target ${goal.protein_target_g_min}–${goal.protein_target_g_max} g`
+      : null;
+
+  const kcalRemaining = energy ? r(energy.targetKcal) - r(totals.cal) : null;
 
   const grouped = new Map<string, FoodLogRow[]>();
   for (const log of logs) {
@@ -106,9 +147,17 @@ export default async function FoodPage() {
           <MetricBox label="Fat" value={Math.round(totals.f)} unit="g" />
           <MetricBox label="Calories" value={Math.round(totals.cal)} unit="kcal" />
         </div>
-        {proteinTarget && (
-          <p className="mt-3 font-[family-name:var(--font-sans)] text-2xs uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
-            Protein {proteinTarget}
+        {kcalRemaining !== null && (
+          <p className="mt-3 font-[family-name:var(--font-sans)] text-sm text-[var(--fg-muted)]">
+            <span className="font-[family-name:var(--font-mono)] tabular-nums text-foreground">
+              {Math.abs(kcalRemaining)}
+            </span>{" "}
+            kcal {kcalRemaining >= 0 ? "left today" : "over today"}
+          </p>
+        )}
+        {targetLine && (
+          <p className="mt-2 font-[family-name:var(--font-sans)] text-2xs uppercase tracking-[0.08em] text-[var(--fg-subtle)]">
+            {targetLine}
           </p>
         )}
       </Card>
