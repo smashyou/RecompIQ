@@ -67,10 +67,18 @@ async function chatOpenAILike(
 }
 
 // ---------------------------------------------------------------------------
-// Vercel AI Gateway — OpenAI-compatible at https://gateway.ai.vercel.com/v1
+// Vercel AI Gateway — OpenAI-compatible at https://ai-gateway.vercel.sh/v1
+//
+// NOTE: the host is `ai-gateway.vercel.sh`, NOT `gateway.ai.vercel.com`. The
+// latter no longer completes a TLS handshake (verified from two networks) and
+// was the real cause of the "gateway unreachable" 502 that pushed every feature
+// onto direct providers in 2026-05. Model ids here are dotted upstream slugs
+// (`anthropic/claude-sonnet-4.6`), never the hyphenated direct-API form.
 // ---------------------------------------------------------------------------
+export const VERCEL_GATEWAY_BASE_URL = "https://ai-gateway.vercel.sh/v1";
+
 const chatVercelGateway: ChatExec = (req, model, apiKey) =>
-  chatOpenAILike("https://gateway.ai.vercel.com/v1", req, model, apiKey);
+  chatOpenAILike(VERCEL_GATEWAY_BASE_URL, req, model, apiKey);
 
 // ---------------------------------------------------------------------------
 // OpenRouter — OpenAI-compatible at https://openrouter.ai/api/v1
@@ -449,7 +457,7 @@ async function* chatStreamGoogleDirect(
 }
 
 export const CHAT_STREAM_PROVIDERS: Record<ProviderKind, ChatStreamExec | null> = {
-  vercel_gateway: (req, m, k) => chatStreamOpenAILike("https://gateway.ai.vercel.com/v1", req, m, k),
+  vercel_gateway: (req, m, k) => chatStreamOpenAILike(VERCEL_GATEWAY_BASE_URL, req, m, k),
   openrouter: (req, m, k) =>
     chatStreamOpenAILike("https://openrouter.ai/api/v1", req, m, k, {
       "HTTP-Referer": "https://recompiq.vercel.app",
