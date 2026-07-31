@@ -91,8 +91,29 @@ const PRESCRIBING_DIRECTIVE = new RegExp(
   "i",
 );
 
-const DIAGNOSTIC_PHRASE =
-  /\b(diagnos\w*|you have (?:a |an )?(?:condition|disease|disorder|syndrome|deficiency)|is a sign of|indicates? (?:that )?you)\b/i;
+/**
+ * The app asserting a diagnosis. Note what is deliberately NOT here: the noun
+ * "diagnosis" and the passive "diagnosed with". Users disclose conditions during
+ * onboarding, so an insight referring to "your prediabetes diagnosis" is citing
+ * the user's own clinical record, not making a call — and blocking that phrasing
+ * rejected an otherwise good insight in testing. Only the active verb forms,
+ * where the app is the one doing the diagnosing, are blocked.
+ */
+const DIAGNOSTIC_PHRASE = new RegExp(
+  [
+    // Active verb forms only. The trailing boundary matters: without it
+    // "diagnose" matches inside "diagnosed", which blocks the passive
+    // "you were diagnosed with …" this rule is meant to allow.
+    "\\bdiagnos(?:e|es|ing)\\b",
+    "\\bdiagnostic of\\b",
+    "\\byou (?:probably |likely |may |might |could )?have (?:a |an )?(?:condition|disease|disorder|syndrome|deficiency)\\b",
+    "\\bis a sign of\\b",
+    "\\bis indicative of\\b",
+    "\\bindicates? (?:that )?you\\b",
+    "\\bsuggests? (?:that )?you (?:have|are)\\b",
+  ].join("|"),
+  "i",
+);
 
 /** Keywords that make an insight clinical enough to require the clinician line. */
 const CLINICAL_TOPIC =
@@ -121,7 +142,21 @@ export function findStatedDoses(text: string): string[] {
   return hits;
 }
 
-/** Whole-word, case-insensitive presence of a compound name in text. */
+/**
+ * Length at or below which a compound name is matched CASE-SENSITIVELY.
+ *
+ * The catalog contains blend names that are also ordinary English — GLOW, KALM,
+ * KLOW. Matched case-insensitively, an insight legitimately describing a
+ * skin-quality trend as a "glow" would be rejected as naming a compound the user
+ * never logged, and the user would silently get no insight that day. Every short
+ * name in the catalog is an all-caps or capitalised token, so requiring exact
+ * case costs nothing and removes the collision. Longer names (oxytocin,
+ * glutathione, sentinel) stay case-insensitive — those appearing in an insight
+ * for someone not taking them is a real violation, not a false positive.
+ */
+const CASE_SENSITIVE_MAX_LEN = 6;
+
+/** Whole-word presence of a compound name in text. */
 function mentions(text: string, compound: string): boolean {
   const name = compound.trim();
   if (name.length < 3) return false;
@@ -130,7 +165,8 @@ function mentions(text: string, compound: string): boolean {
   const pattern = name
     .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     .replace(/[\s-]+/g, "[\\s-]+");
-  return new RegExp(`(^|[^\\w-])${pattern}([^\\w-]|$)`, "i").test(text);
+  const flags = name.length <= CASE_SENSITIVE_MAX_LEN ? "" : "i";
+  return new RegExp(`(^|[^\\w-])${pattern}([^\\w-]|$)`, flags).test(text);
 }
 
 /**
@@ -224,10 +260,14 @@ export function checkInsight(
     }
   }
 
-  if (DIAGNOSTIC_PHRASE.test(all)) {
+  // Report the matched phrase, not just the rule. A generic "reads as a
+  // diagnosis" says nothing about which wording to fix, and this is the rule
+  // most likely to need tuning against real model output.
+  const diagnostic = DIAGNOSTIC_PHRASE.exec(all);
+  if (diagnostic) {
     violations.push({
       rule: "diagnostic_language",
-      detail: "reads as a diagnosis rather than an observation",
+      detail: `diagnostic phrasing: "${diagnostic[0]}"`,
     });
   }
 

@@ -339,12 +339,23 @@ Write the insight now."""
 # Run
 # ---------------------------------------------------------------------------
 
-try:
-    due = app("/api/cron/insights")
-except Exception as e:
-    detail = getattr(e, "read", lambda: b"")().decode()[:200]
-    print(f"{LOG()} FATAL snapshot fetch failed: {e} {detail}")
-    sys.exit(1)
+# --snapshot-file <path> feeds a hand-written snapshot instead of calling the
+# app. The prompt is the part of this script most likely to be wrong and the
+# hardest to check — until a real user has a fortnight of logs there is nothing
+# live to run it against, and "wait for real data" is how a prompt bug ships.
+# The generated insight still goes through the real guard on the real POST.
+DRY_RUN = "--snapshot-file" in sys.argv
+if DRY_RUN:
+    path = sys.argv[sys.argv.index("--snapshot-file") + 1]
+    due = {"snapshots": [json.load(open(path))], "skipped": []}
+    print(f"{LOG()} DRY-RUN snapshot from {path}")
+else:
+    try:
+        due = app("/api/cron/insights")
+    except Exception as e:
+        detail = getattr(e, "read", lambda: b"")().decode()[:200]
+        print(f"{LOG()} FATAL snapshot fetch failed: {e} {detail}")
+        sys.exit(1)
 
 snapshots = due.get("snapshots") or []
 skipped = due.get("skipped") or []
@@ -376,6 +387,12 @@ for snap in snapshots:
         "source": "vps_cli" if BACKEND == "cli" else "gateway",
         "model": CLI_MODEL if BACKEND == "cli" else GATEWAY_MODEL,
     })
+
+if DRY_RUN:
+    # Only ever reached with a hand-written snapshot, so this text describes
+    # nobody. On the live path the draft is never printed — it is a statement
+    # about a real person's health and the log is replicated off-box.
+    print(f"{LOG()} DRY-RUN draft:\n{json.dumps(drafts, indent=2)}")
 
 if not drafts:
     print(f"{LOG()} DONE nothing generated")

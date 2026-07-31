@@ -114,6 +114,28 @@ it("a compound name embedded in a word is not a mention", () => {
   assert.deepEqual(findUnknownCompounds("semaglutides-like effects", CTX), []);
 });
 
+// The catalog really does contain GLOW, KALM and KLOW as blend names, and
+// "glow" is the natural English word for a skin-quality trend. Matched
+// case-insensitively these silently kill an insight a day.
+const BLEND_CTX = {
+  knownCompounds: ["retatrutide"],
+  catalogCompounds: ["retatrutide", "GLOW", "KALM", "KLOW", "oxytocin", "Sentinel"],
+};
+
+it("a short all-caps blend name does NOT match the ordinary English word", () => {
+  assert.deepEqual(findUnknownCompounds("your skin has more glow this month", BLEND_CTX), []);
+  assert.deepEqual(findUnknownCompounds("you seem calm and kalm-ish", BLEND_CTX), []);
+});
+
+it("but the short blend name in its real form still matches", () => {
+  assert.deepEqual(findUnknownCompounds("consider GLOW for skin", BLEND_CTX), ["GLOW"]);
+});
+
+it("longer compound names stay case-insensitive — naming them IS a violation", () => {
+  assert.deepEqual(findUnknownCompounds("oxytocin might help", BLEND_CTX), ["oxytocin"]);
+  assert.deepEqual(findUnknownCompounds("try sentinel", BLEND_CTX), ["Sentinel"]);
+});
+
 // ---- rule: prescribing_verb ----
 
 it("rejects a directive aimed at a compound the user IS taking", () => {
@@ -136,6 +158,34 @@ it("past-tense narration is not a directive", () => {
 it("rejects diagnostic phrasing", () => {
   assert.ok(rules(checkInsight(ok({ body: "This is a sign of insulin resistance." }), CTX)).includes("diagnostic_language"));
   assert.ok(rules(checkInsight(ok({ body: "These results diagnose prediabetes." }), CTX)).includes("diagnostic_language"));
+  assert.ok(rules(checkInsight(ok({ body: "The trend suggests you have a deficiency." }), CTX)).includes("diagnostic_language"));
+});
+
+it("ALLOWS referring to a condition the user disclosed themselves", () => {
+  // Conditions come from onboarding. Citing the user's own clinical record is
+  // not the app diagnosing — and blocking it rejected a good insight in testing.
+  const r = checkInsight(
+    ok({
+      body: "Given your prediabetes diagnosis, the glucose readings are the number to watch.",
+      clinicianPrompt: "Ask whether this glucose trend needs closer monitoring.",
+    }),
+    CTX,
+  );
+  assert.equal(r.ok, true, JSON.stringify(r.violations));
+  const r2 = checkInsight(
+    ok({
+      body: "You were diagnosed with hypertension, so the blood pressure trend matters here.",
+      clinicianPrompt: "Raise the blood-pressure trend at your next visit.",
+    }),
+    CTX,
+  );
+  assert.equal(r2.ok, true, JSON.stringify(r2.violations));
+});
+
+it("names the offending phrase so a prompt bug is fixable", () => {
+  const r = checkInsight(ok({ body: "This is a sign of trouble." }), CTX);
+  const v = r.violations.find((x) => x.rule === "diagnostic_language");
+  assert.ok(v.detail.includes("is a sign of"), v.detail);
 });
 
 // ---- rule: missing_clinician_prompt ----
