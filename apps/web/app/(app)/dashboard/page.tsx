@@ -18,6 +18,7 @@ import { DashboardAddPeptide } from "@/components/dashboard/add-peptide";
 import { GoalCards } from "@/components/dashboard/goal-cards";
 import { loadGoalCards } from "@/lib/queries/goal-cards";
 import { deriveInsight } from "@/components/dashboard/derive";
+import { loadLatestInsight } from "@/lib/queries/insights";
 import { loadAlerts } from "@/lib/queries/alerts";
 import { AutoGrid } from "@/components/ui/layout";
 
@@ -28,11 +29,12 @@ export default async function DashboardPage() {
   const snapshot = await loadDashboard(user.id);
 
   const supabase = await createSupabaseServerClient();
-  const [conditionsRes, medicationsRes, spend, goalCards] = await Promise.all([
+  const [conditionsRes, medicationsRes, spend, goalCards, generatedInsight] = await Promise.all([
     supabase.from("conditions").select("name").eq("user_id", user.id).eq("active", true),
     supabase.from("medications").select("name").eq("user_id", user.id).eq("active", true),
     loadSpendSnapshot(user.id),
     loadGoalCards(user.id),
+    loadLatestInsight(user.id),
   ]);
   const conditions = (conditionsRes.data ?? []).map((c) => c.name as string);
   const medications = (medicationsRes.data ?? []).map((m) => m.name as string);
@@ -93,7 +95,7 @@ export default async function DashboardPage() {
         <VitalsCard snapshot={snapshot} />
         <MacrosCard snapshot={snapshot} />
         <AdherenceCard snapshot={snapshot} />
-        <CoachInsightCard insight={insight} />
+        <CoachInsightCard insight={insight} generated={generatedInsight} />
       </AutoGrid>
 
       <GoalCards cards={goalCards} />

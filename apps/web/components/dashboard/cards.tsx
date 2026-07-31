@@ -9,8 +9,10 @@ import {
 import { buildProjection } from "@peptide/projections";
 import type { EvidenceLevel } from "@peptide/shared";
 import type { DashboardSnapshot } from "@/lib/queries/dashboard";
+import type { DashboardInsight } from "@/lib/queries/insights";
 import { EvidenceBadge } from "@/components/peptides/evidence-badge";
 import { SafetyDisclaimer } from "@/components/peptides/safety-disclaimer";
+import { InsightDismiss } from "./insight-dismiss";
 import { Card, Ring, Sparkline, Stat } from "./primitives";
 
 const fmtDay = (iso: string) =>
@@ -502,17 +504,72 @@ export function AdherenceCard({ snapshot }: { snapshot: DashboardSnapshot }) {
 // ---------------------------------------------------------------------------
 // Coach insight
 // ---------------------------------------------------------------------------
-export function CoachInsightCard({ insight }: { insight: string }) {
+/**
+ * The insight card. `generated` is a real AI insight when the daily generator has
+ * run; `insight` is the derived fallback template for when it hasn't (a new
+ * account, or a missed run). Only one is shown, and the card says which — a
+ * generated insight is dated and dismissible, the fallback is neither, so the
+ * two can never be mistaken for each other.
+ */
+export function CoachInsightCard({
+  insight,
+  generated = null,
+}: {
+  insight: string;
+  generated?: DashboardInsight | null;
+}) {
   return (
-    <Card title="Coach insight" hint="AI">
-      <div className="flex gap-[10px]">
-        <span className="grid h-7 w-7 flex-none place-items-center rounded-[8px] bg-[linear-gradient(150deg,var(--primary),var(--positive))] text-[var(--primary-foreground)]">
-          <Activity size={15} />
-        </span>
-        <p className="font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
-          {insight}
-        </p>
-      </div>
+    <Card title="Coach insight" hint={generated ? fmtDay(generated.generatedFor) : "AI"}>
+      {generated ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-[10px]">
+            <span className="grid h-7 w-7 flex-none place-items-center rounded-[8px] bg-[linear-gradient(150deg,var(--primary),var(--positive))] text-[var(--primary-foreground)]">
+              <Activity size={15} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-[family-name:var(--font-sans)] text-xs font-semibold leading-[1.4] text-foreground">
+                {generated.headline}
+              </p>
+              <p className="mt-1 font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
+                {generated.body}
+              </p>
+            </div>
+            <InsightDismiss id={generated.id} />
+          </div>
+
+          {generated.observations.length > 0 && (
+            // Every claim on the card traces back to a logged number. Without
+            // this the insight is unfalsifiable prose about someone's health.
+            <ul className="flex flex-col gap-1 border-t border-border pt-2">
+              {generated.observations.map((o, i) => (
+                <li
+                  key={`${o.signal}-${i}`}
+                  className="font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.45] text-[var(--fg-subtle)]"
+                >
+                  <span className="font-medium text-[var(--fg-muted)]">{o.signal}</span> — {o.detail}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {generated.clinicianPrompt && (
+            <p className="rounded-[var(--r-sm)] border border-[var(--primary-line)] bg-[var(--primary-wash)] px-3 py-2 font-[family-name:var(--font-sans)] text-[11.5px] leading-[1.45] text-[var(--fg-muted)]">
+              For your clinician: {generated.clinicianPrompt}
+            </p>
+          )}
+
+          <SafetyDisclaimer variant="compact" />
+        </div>
+      ) : (
+        <div className="flex gap-[10px]">
+          <span className="grid h-7 w-7 flex-none place-items-center rounded-[8px] bg-[linear-gradient(150deg,var(--primary),var(--positive))] text-[var(--primary-foreground)]">
+            <Activity size={15} />
+          </span>
+          <p className="font-[family-name:var(--font-sans)] text-xs leading-[1.5] text-[var(--fg-muted)]">
+            {insight}
+          </p>
+        </div>
+      )}
       <Link
         href="/coach"
         className="mt-3 flex w-full items-center justify-center gap-2 rounded-[var(--r-sm)] border border-border bg-transparent px-3 py-2 font-[family-name:var(--font-sans)] text-xs font-medium text-foreground transition-colors hover:bg-[var(--surface-2)]"

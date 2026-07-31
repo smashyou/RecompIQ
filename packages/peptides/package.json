@@ -10,7 +10,8 @@
     "./reconstitution": "./src/reconstitution.ts",
     "./compounds": "./src/compounds.ts",
     "./alerts": "./src/alerts.ts",
-    "./inventory": "./src/inventory.ts"
+    "./inventory": "./src/inventory.ts",
+    "./insights": "./src/insights.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -19,6 +20,11 @@
     "build": "echo 'sources consumed directly' && exit 0",
     "clean": "rm -rf .turbo *.tsbuildinfo"
   },
-  "dependencies": { "@peptide/shared": "workspace:*", "zod": "^3.24.1" },
-  "devDependencies": { "typescript": "^5.7.3" }
+  "dependencies": {
+    "@peptide/shared": "workspace:*",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
 }

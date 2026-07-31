@@ -41,3 +41,7 @@ supabase/.temp/
 
 # vercel
 .vercel
+
+# python bytecode (VPS scripts)
+__pycache__/
+*.pyc

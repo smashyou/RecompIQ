@@ -35,7 +35,8 @@
     "test:timeline": "tsx scripts/test-timeline.mjs",
     "test:alerts": "tsx scripts/test-alerts.mjs",
     "test:energy": "tsx scripts/test-energy.mjs",
-    "test:markdown": "tsx scripts/test-markdown.mjs"
+    "test:markdown": "tsx scripts/test-markdown.mjs",
+    "test:insight-guard": "tsx scripts/test-insight-guard.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
